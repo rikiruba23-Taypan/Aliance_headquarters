@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Альянс «Гармония» — Боевые Калькуляторы (Whiteout Survival)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            slate: {
+              850: '#141c2b',
+              925: '#0b111e',
+              950: '#060a12'
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #060a12; color: #f1f5f9; }
+    .glass-card { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(14px); border: 1px solid rgba(51, 65, 85, 0.65); }
+    .nav-pill.active { background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); color: #ffffff; border-color: #38bdf8; box-shadow: 0 4px 16px rgba(2, 132, 199, 0.35); }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-sky-500 selection:text-white">
+
+  <!-- ==================== ШАПКА И ЕДИНОЕ МЕНЮ ==================== -->
+  <header class="sticky top-0 z-30 bg-slate-925/95 backdrop-blur-md border-b border-slate-800 px-4 py-2.5">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 to-blue-700 flex items-center justify-center shadow-md border border-sky-400/30">
+          <i class="fa-solid fa-shield-halved text-white text-sm"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold text-sm tracking-tight text-white">ГАРМОНИЯ</span>
+            <span id="userRankBadge" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30">R1-R3</span>
+          </div>
+          <div class="text-[11px] text-slate-400" id="headerUserNick">Боец</div>
+        </div>
+      </div>
+
+      <!-- Единое полноценное меню навигации (все 5 кнопок) -->
+      <nav class="flex flex-wrap items-center gap-1.5 text-xs">
+        <a href="index.html" class="nav-pill px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-medium flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-id-card text-sky-400"></i>
+          <span>Моя карточка</span>
+        </a>
+        <a href="calculators.html" class="nav-pill active px-3 py-1.5 rounded-xl border border-transparent font-semibold flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-calculator"></i>
+          <span>Калькуляторы</span>
+        </a>
+        <a href="roster.html" id="navOfficerRoster" class="hidden nav-pill px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-amber-500/30 text-amber-200 hover:text-white font-semibold flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-users-gear text-amber-400"></i>
+          <span>Таблица Альянса</span>
+        </a>
+        <a href="raids.html" id="navOfficerRaids" class="hidden nav-pill px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-rose-500/30 text-rose-200 hover:text-white font-semibold flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-chess-knight text-rose-400"></i>
+          <span>Штаб Рейдов</span>
+        </a>
+        <a href="guides.html" class="nav-pill px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-medium flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-book-open text-emerald-400"></i>
+          <span>Гайды и Герои</span>
+        </a>
+      </nav>
+
+      <div class="flex items-center gap-2">
+        <button onclick="logoutPortal()" class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-rose-950/70 border border-slate-700 text-xs text-slate-300 hover:text-rose-200 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-right-from-bracket text-rose-400"></i>
+          <span>Выйти</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== ОСНОВНОЙ КОНТЕНТ ==================== -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-6 space-y-6">
+
+    <!-- 1. КАЛЬКУЛЯТОР ПРОПОРЦИЙ ОТРЯДА И СБОРА -->
+    <section class="glass-card rounded-3xl p-5 sm:p-7 shadow-xl border border-slate-800 space-y-5">
+      <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+        <div>
+          <h2 class="text-lg font-extrabold text-white flex items-center gap-2">
+            <i class="fa-solid fa-people-group text-amber-400"></i> Калькулятор Пропорций Марша и Сбора
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">Быстрый расчёт точного количества Пехоты, Копейщиков и Стрелков под вашу вместимость.</p>
+        </div>
+        <div class="flex flex-wrap gap-1.5 text-xs">
+          <button type="button" onclick="applyRatioPreset(10, 20, 70)" class="px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-semibold transition">
+            🐻 Медведь (10 / 20 / 70)
+          </button>
+          <button type="button" onclick="applyRatioPreset(50, 20, 30)" class="px-3 py-1.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/30 border border-sky-500/40 text-sky-300 font-semibold transition">
+            ⚔️ Штурм (50 / 20 / 30)
+          </button>
+          <button type="button" onclick="applyRatioPreset(60, 20, 20)" class="px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 font-semibold transition">
+            🛡️ Гарнизон (60 / 20 / 20)
+          </button>
+          <button type="button" onclick="applyRatioPreset(40, 20, 40)" class="px-3 py-1.5 rounded-xl bg-purple-500/15 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 font-semibold transition">
+            👑 Капитолий (40 / 20 / 40)
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 space-y-2">
+          <label class="block text-xs font-semibold text-slate-300">Размер вашего марша / сбора</label>
+          <input id="calcCapInput" type="number" min="1000" step="500" value="150000" oninput="calculateTroopSplit()"
+            class="w-full bg-slate-950 border border-sky-500/50 rounded-xl px-3.5 py-2.5 text-sm font-mono font-bold text-white focus:outline-none" />
+          <div class="flex gap-2 pt-1">
+            <button type="button" onclick="useMyCardCap('march')" class="flex-1 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] text-sky-300 transition">Мой марш</button>
+            <button type="button" onclick="useMyCardCap('rally')" class="flex-1 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] text-amber-300 transition">Мой сбор</button>
+          </div>
+        </div>
+
+        <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 space-y-2">
+          <div class="flex justify-between text-xs font-bold text-amber-300">
+            <span>🛡️ Пехота (%)</span>
+            <span id="infPctLabel" class="font-mono">50%</span>
+          </div>
+          <input id="ratioInf" type="number" min="0" max="100" value="50" oninput="calculateTroopSplit()"
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm font-mono text-white" />
+          <div class="text-xs text-slate-400">Войск: <b id="resInfCount" class="text-base font-mono text-white">75 000</b></div>
+        </div>
+
+        <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 space-y-2">
+          <div class="flex justify-between text-xs font-bold text-sky-300">
+            <span>⚔️ Копейщики (%)</span>
+            <span id="lanPctLabel" class="font-mono">20%</span>
+          </div>
+          <input id="ratioLan" type="number" min="0" max="100" value="20" oninput="calculateTroopSplit()"
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm font-mono text-white" />
+          <div class="text-xs text-slate-400">Войск: <b id="resLanCount" class="text-base font-mono text-white">30 000</b></div>
+        </div>
+
+        <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 space-y-2">
+          <div class="flex justify-between text-xs font-bold text-emerald-300">
+            <span>🏹 Стрелки (%)</span>
+            <span id="mrkPctLabel" class="font-mono">30%</span>
+          </div>
+          <input id="ratioMrk" type="number" min="0" max="100" value="30" oninput="calculateTroopSplit()"
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm font-mono text-white" />
+          <div class="text-xs text-slate-400">Войск: <b id="resMrkCount" class="text-base font-mono text-white">45 000</b></div>
+        </div>
+      </div>
+
+      <div id="ratioWarning" class="hidden text-xs text-rose-400 font-semibold bg-rose-950/50 border border-rose-500/40 rounded-xl px-3.5 py-2">
+        Внимание: сумма процентов не равна 100%! Проверьте значения.
+      </div>
+    </section>
+
+    <!-- 2. КАЛЬКУЛЯТОР УСКОРЕНИЙ И КАЛЬКУЛЯТОР ОСКОЛКОВ ГЕРОЯ -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      <!-- Калькулятор ускорений -->
+      <section class="glass-card rounded-3xl p-5 sm:p-6 shadow-xl border border-slate-800 space-y-4">
+        <div class="pb-3 border-b border-slate-800">
+          <h2 class="text-base font-extrabold text-white flex items-center gap-2">
+            <i class="fa-solid fa-stopwatch text-sky-400"></i> Подсчёт запаса ускорений
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">Укажите количество ваших ускорений для расчёта общего времени в днях и часах (под СВС и Сильнейшего Вождя).</p>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+          <div>
+            <label class="block text-slate-400 mb-1">По 1 минуте</label>
+            <input id="spd1m" type="number" min="0" value="0" oninput="calcSpeedups()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono text-white" />
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">По 5 минут</label>
+            <input id="spd5m" type="number" min="0" value="0" oninput="calcSpeedups()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono text-white" />
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">По 15 минут</label>
+            <input id="spd15m" type="number" min="0" value="0" oninput="calcSpeedups()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono text-white" />
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">По 60 минут (1 ч)</label>
+            <input id="spd60m" type="number" min="0" value="0" oninput="calcSpeedups()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono text-white" />
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">По 3 часа</label>
+            <input id="spd3h" type="number" min="0" value="0" oninput="calcSpeedups()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono text-white" />
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">По 8 часов</label>
+            <input id="spd8h" type="number" min="0" value="0" oninput="calcSpeedups()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono text-white" />
+          </div>
+        </div>
+
+        <div class="bg-slate-900/90 border border-sky-500/30 rounded-2xl p-4 flex items-center justify-between">
+          <div>
+            <div class="text-xs text-slate-400">Итоговый запас времени:</div>
+            <div id="spdTotalText" class="text-lg font-extrabold font-mono text-sky-300 mt-0.5">0 дн. 0 ч. 0 мин.</div>
+          </div>
+          <div class="text-right font-mono text-xs text-slate-400">
+            <div>Всего минут:</div>
+            <div id="spdTotalMinutes" class="text-white font-bold">0</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Калькулятор осколков героев -->
+      <section class="glass-card rounded-3xl p-5 sm:p-6 shadow-xl border border-slate-800 space-y-4">
+        <div class="pb-3 border-b border-slate-800">
+          <h2 class="text-base font-extrabold text-white flex items-center gap-2">
+            <i class="fa-solid fa-star text-amber-400"></i> Калькулятор Осколков Героя
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">Расчёт необходимого числа фрагментов между звёздами (всего на 5★ требуется 1065 осколков).</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+          <div class="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800 space-y-2">
+            <div class="font-bold text-slate-300">Текущая прокачка героя</div>
+            <select id="shardFromStar" onchange="calcHeroShards()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 font-mono text-amber-300">
+              <option value="0">0★ (Только открыт — 0 оск.)</option>
+              <option value="1">1★ полная (10 оск.)</option>
+              <option value="2">2★ полные (50 оск.)</option>
+              <option value="3">3★ полные (165 оск.)</option>
+              <option value="4" selected>4★ полные (465 оск.)</option>
+            </select>
+          </div>
+
+          <div class="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800 space-y-2">
+            <div class="font-bold text-slate-300">Желаемая цель</div>
+            <select id="shardToStar" onchange="calcHeroShards()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 font-mono text-emerald-300">
+              <option value="1">1★ полная</option>
+              <option value="2">2★ полные</option>
+              <option value="3">3★ полные</option>
+              <option value="4">4★ полные (открывает 5 ур. навыков)</option>
+              <option value="5" selected>5★ полные (Максимум)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="bg-slate-900/90 border border-amber-500/30 rounded-2xl p-4 flex items-center justify-between">
+          <div>
+            <div class="text-xs text-slate-400">Требуется осколков для апа:</div>
+            <div id="shardNeededResult" class="text-xl font-extrabold font-mono text-amber-300 mt-0.5">600 шт.</div>
+          </div>
+          <div class="text-right text-[11px] font-mono text-slate-400 space-y-0.5">
+            <div>1★: 10 | 2★: +40</div>
+            <div>3★: +115 | 4★: +300 | 5★: +600</div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwsX-LADURoQu_MsQ2XJVsSPsHAgMebI4_QDXmpPpi3OcpW3ScwPep9ukQBFJfDMrjQ7g/exec';
+    let sessionCard = null;
+
+    function getStoredPasscode() {
+      return sessionStorage.getItem('harmony_passcode') || localStorage.getItem('harmony_passcode') || '';
+    }
+
+    function applyHeaderFromSession(data) {
+      if (!data || !data.user) return;
+      const u = data.user;
+      sessionCard = data.myCard || {};
+
+      document.getElementById('headerUserNick').textContent = u.playerId ? `${u.nick} (ID: ${u.playerId})` : u.nick;
+      const rankBadge = document.getElementById('userRankBadge');
+      rankBadge.textContent = u.isOfficer ? `ОФИЦЕР ${u.rank || 'R4–R5'}` : `БОЕЦ ${u.rank || 'R1–R3'}`;
+      if (u.isOfficer) {
+        document.getElementById('navOfficerRoster').classList.remove('hidden');
+        document.getElementById('navOfficerRaids').classList.remove('hidden');
+      }
+
+      if (sessionCard.marchCap && Number(sessionCard.marchCap) > 0) {
+        document.getElementById('calcCapInput').value = Number(sessionCard.marchCap);
+        calculateTroopSplit();
+      }
+    }
+
+    function useMyCardCap(type) {
+      if (!sessionCard) return;
+      if (type === 'march' && sessionCard.marchCap) {
+        document.getElementById('calcCapInput').value = Number(sessionCard.marchCap);
+      } else if (type === 'rally' && sessionCard.rallyCap) {
+        document.getElementById('calcCapInput').value = Number(sessionCard.rallyCap);
+      }
+      calculateTroopSplit();
+    }
+
+    function applyRatioPreset(inf, lan, mrk) {
+      document.getElementById('ratioInf').value = inf;
+      document.getElementById('ratioLan').value = lan;
+      document.getElementById('ratioMrk').value = mrk;
+      calculateTroopSplit();
+    }
+
+    function calculateTroopSplit() {
+      const cap = Number(document.getElementById('calcCapInput').value) || 0;
+      const infP = Number(document.getElementById('ratioInf').value) || 0;
+      const lanP = Number(document.getElementById('ratioLan').value) || 0;
+      const mrkP = Number(document.getElementById('ratioMrk').value) || 0;
+
+      document.getElementById('infPctLabel').textContent = infP + '%';
+      document.getElementById('lanPctLabel').textContent = lanP + '%';
+      document.getElementById('mrkPctLabel').textContent = mrkP + '%';
+
+      const sum = infP + lanP + mrkP;
+      const warn = document.getElementById('ratioWarning');
+      if (sum !== 100) warn.classList.remove('hidden');
+      else warn.classList.add('hidden');
+
+      const infCount = Math.round(cap * (infP / 100));
+      const lanCount = Math.round(cap * (lanP / 100));
+      const mrkCount = Math.max(0, cap - infCount - lanCount);
+
+      document.getElementById('resInfCount').textContent = infCount.toLocaleString('ru-RU');
+      document.getElementById('resLanCount').textContent = lanCount.toLocaleString('ru-RU');
+      document.getElementById('resMrkCount').textContent = mrkCount.toLocaleString('ru-RU');
+    }
+
+    function calcSpeedups() {
+      const m1 = Number(document.getElementById('spd1m').value) || 0;
+      const m5 = Number(document.getElementById('spd5m').value) || 0;
+      const m15 = Number(document.getElementById('spd15m').value) || 0;
+      const m60 = Number(document.getElementById('spd60m').value) || 0;
+      const h3 = Number(document.getElementById('spd3h').value) || 0;
+      const h8 = Number(document.getElementById('spd8h').value) || 0;
+
+      const totalMins = m1 + (m5 * 5) + (m15 * 15) + (m60 * 60) + (h3 * 180) + (h8 * 480);
+      const days = Math.floor(totalMins / 1440);
+      const remMins = totalMins % 1440;
+      const hours = Math.floor(remMins / 60);
+      const mins = remMins % 60;
+
+      document.getElementById('spdTotalText').textContent = `${days} дн. ${hours} ч. ${mins} мин.`;
+      document.getElementById('spdTotalMinutes').textContent = totalMins.toLocaleString('ru-RU');
+    }
+
+    function calcHeroShards() {
+      const cumulative = { 0: 0, 1: 10, 2: 50, 3: 165, 4: 465, 5: 1065 };
+      const fromS = Number(document.getElementById('shardFromStar').value) || 0;
+      const toS = Number(document.getElementById('shardToStar').value) || 5;
+      const diff = Math.max(0, (cumulative[toS] || 0) - (cumulative[fromS] || 0));
+      document.getElementById('shardNeededResult').textContent = diff.toLocaleString('ru-RU') + ' шт.';
+    }
+
+    function logoutPortal() {
+      sessionStorage.removeItem('harmony_passcode');
+      localStorage.removeItem('harmony_passcode');
+      sessionStorage.removeItem('harmony_session_cache');
+      window.location.href = 'index.html';
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      calculateTroopSplit();
+      calcSpeedups();
+      calcHeroShards();
+
+      const cached = sessionStorage.getItem('harmony_session_cache');
+      if (cached) {
+        try { applyHeaderFromSession(JSON.parse(cached)); return; } catch (e) {}
+      }
+      const code = getStoredPasscode();
+      if (!code) {
+        window.location.href = 'index.html';
+        return;
+      }
+      fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'sync', passcode: code, page: 'calculators.html' })
+      })
+        .then(r => r.json())
+        .then(res => {
+          if (res.ok) {
+            sessionStorage.setItem('harmony_session_cache', JSON.stringify(res));
+            applyHeaderFromSession(res);
+          } else {
+            window.location.href = 'index.html';
+          }
+        });
+    });
+  </script>
+</body>
+</html>

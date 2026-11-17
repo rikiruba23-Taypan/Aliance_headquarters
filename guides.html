@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Альянс «Гармония» — Гайды и База Героев (Whiteout Survival)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            slate: {
+              850: '#141c2b',
+              925: '#0b111e',
+              950: '#060a12'
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #060a12; color: #f1f5f9; }
+    .glass-card { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(14px); border: 1px solid rgba(51, 65, 85, 0.65); }
+    .nav-pill.active { background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); color: #ffffff; border-color: #38bdf8; box-shadow: 0 4px 16px rgba(2, 132, 199, 0.35); }
+    .hero-card-item { transition: all 0.2s ease; }
+    .hero-card-item:hover { transform: translateY(-3px); border-color: #38bdf8; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-sky-500 selection:text-white">
+
+  <!-- ==================== ШАПКА И ЕДИНОЕ МЕНЮ ==================== -->
+  <header class="sticky top-0 z-30 bg-slate-925/95 backdrop-blur-md border-b border-slate-800 px-4 py-2.5">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 to-blue-700 flex items-center justify-center shadow-md border border-sky-400/30">
+          <i class="fa-solid fa-shield-halved text-white text-sm"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold text-sm tracking-tight text-white">ГАРМОНИЯ</span>
+            <span id="userRankBadge" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30">R1-R3</span>
+          </div>
+          <div class="text-[11px] text-slate-400" id="headerUserNick">Боец</div>
+        </div>
+      </div>
+
+      <!-- Единое полноценное меню навигации (все 5 кнопок) -->
+      <nav class="flex flex-wrap items-center gap-1.5 text-xs">
+        <a href="index.html" class="nav-pill px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-medium flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-id-card text-sky-400"></i>
+          <span>Моя карточка</span>
+        </a>
+        <a href="calculators.html" class="nav-pill px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-medium flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-calculator text-amber-400"></i>
+          <span>Калькуляторы</span>
+        </a>
+        <a href="roster.html" id="navOfficerRoster" class="hidden nav-pill px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-amber-500/30 text-amber-200 hover:text-white font-semibold flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-users-gear text-amber-400"></i>
+          <span>Таблица Альянса</span>
+        </a>
+        <a href="raids.html" id="navOfficerRaids" class="hidden nav-pill px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-rose-500/30 text-rose-200 hover:text-white font-semibold flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-chess-knight text-rose-400"></i>
+          <span>Штаб Рейдов</span>
+        </a>
+        <a href="guides.html" class="nav-pill active px-3 py-1.5 rounded-xl border border-transparent font-semibold flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-book-open"></i>
+          <span>Гайды и Герои</span>
+        </a>
+      </nav>
+
+      <div class="flex items-center gap-2">
+        <button onclick="logoutPortal()" class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-rose-950/70 border border-slate-700 text-xs text-slate-300 hover:text-rose-200 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-right-from-bracket text-rose-400"></i>
+          <span>Выйти</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== ОСНОВНОЙ КОНТЕНТ ==================== -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-6 space-y-6">
+
+    <!-- БОЕВЫЕ ПАМЯТКИ АЛЬЯНСА -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="glass-card rounded-3xl p-5 border border-amber-500/30 space-y-2.5">
+        <div class="flex items-center gap-2 text-amber-400 font-extrabold text-sm">
+          <i class="fa-solid fa-paw"></i>
+          <span>Охота на Медведя</span>
+        </div>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          В чужие сборы (филлером) ставим первым слотом строго героев атаки: <b>Джесси, Джассер, Со Юн, Райна, Джеронимо</b>. Никогда не ставьте первым слотом Джину или синих героев сбора ресурсов!
+        </p>
+        <div class="text-[11px] font-mono text-amber-300 bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
+          Рекомендуемая пропорция: 10% Пех / 20% Коп / 70% Стр
+        </div>
+      </div>
+
+      <div class="glass-card rounded-3xl p-5 border border-sky-500/30 space-y-2.5">
+        <div class="flex items-center gap-2 text-sky-400 font-extrabold text-sm">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>Крепости, Капитолий и Гарнизон</span>
+        </div>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          При подкреплении гарнизона или турели первым слотом ставим строго <b>Сергея</b> или <b>Патрика</b> (с верхним навыком экспедиции 5 уровня). При штурме — только <b>Джесси</b>.
+        </p>
+        <div class="text-[11px] font-mono text-sky-300 bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
+          Гарнизон: 60/20/20 • Штурм: 50/20/30
+        </div>
+      </div>
+
+      <div class="glass-card rounded-3xl p-5 border border-emerald-500/30 space-y-2.5">
+        <div class="flex items-center gap-2 text-emerald-400 font-extrabold text-sm">
+          <i class="fa-solid fa-arrows-rotate"></i>
+          <span>Перекидное ТОП-снаряжение</span>
+        </div>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          Качайте только <b>3 основных комплекта мифического снаряжения</b> (1 на Пехоту, 1 на Копейщиков, 1 на Стрелков) и переставляйте их на активных героев перед боем.
+        </p>
+        <div class="text-[11px] font-mono text-emerald-300 bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
+          Пехота: Перчатки/Пояс • Стрелки и Копья: Очки/Сапоги
+        </div>
+      </div>
+    </section>
+
+    <!-- СПРАВОЧНИК И ОФИЦИАЛЬНЫЕ КАРТОЧКИ ВСЕХ 65 ГЕРОЕВ -->
+    <section class="glass-card rounded-3xl p-5 sm:p-7 shadow-xl border border-slate-800 space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+        <div>
+          <h2 class="text-lg font-extrabold text-white flex items-center gap-2">
+            <i class="fa-solid fa-book-atlas text-emerald-400"></i> Энциклопедия и Карточки Героев (1–17 Поколения)
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">Нажмите на любого героя, чтобы открыть его официальную карточку.</p>
+        </div>
+
+        <div class="relative w-full sm:w-64">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
+          <input id="guideHeroSearch" type="text" oninput="renderGuideHeroes()" placeholder="Найти героя по имени..."
+            class="w-full bg-slate-900 border border-slate-700 focus:border-sky-500 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none" />
+        </div>
+      </div>
+
+      <div id="guideHeroesContainer" class="space-y-4"></div>
+    </section>
+
+  </main>
+
+  <!-- МОДАЛЬНОЕ ОКНО ПРОСМОТРА КАРТОЧКИ ГЕРОЯ -->
+  <div id="previewModal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="glass-card max-w-xl w-full rounded-3xl p-5 space-y-4 border border-slate-700 text-center">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+        <h3 id="previewTitle" class="text-sm font-bold text-white">Карточка героя</h3>
+        <button type="button" onclick="document.getElementById('previewModal').classList.add('hidden')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="flex justify-center bg-slate-950 p-2 rounded-2xl border border-slate-800 max-h-[75vh] overflow-auto">
+        <img id="previewImg" src="" alt="Карточка героя" class="rounded-xl max-h-[70vh] object-contain" />
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwsX-LADURoQu_MsQ2XJVsSPsHAgMebI4_QDXmpPpi3OcpW3ScwPep9ukQBFJfDMrjQ7g/exec';
+
+    const ALL_HEROES = [
+      { key: 'смит', name: 'Смит', gen: 1 },
+      { key: 'юджин', name: 'Юджин', gen: 1 },
+      { key: 'чарли', name: 'Чарли', gen: 1 },
+      { key: 'клорис', name: 'Клорис', gen: 1 },
+      { key: 'сергей', name: 'Сергей', gen: 1 },
+      { key: 'джесси', name: 'Джесси', gen: 1 },
+      { key: 'патрик', name: 'Патрик', gen: 1 },
+      { key: 'лумак_бокан', name: 'Лумак Бокан', gen: 1 },
+      { key: 'лин сюэ', name: 'Лин Сюэ', gen: 1 },
+      { key: 'джина', name: 'Джина', gen: 1 },
+      { key: 'бахити', name: 'Бахити', gen: 1 },
+      { key: 'джассер', name: 'Джассер', gen: 1 },
+      { key: 'со юн', name: 'Со Юн', gen: 1 },
+      { key: 'наталия', name: 'Наталия', gen: 1 },
+      { key: 'молли', name: 'Молли', gen: 1 },
+      { key: 'джеронимо', name: 'Джеронимо', gen: 1 },
+      { key: 'зинман', name: 'Зинман', gen: 1 },
+      { key: 'флинт', name: 'Флинт', gen: 2 },
+      { key: 'филли', name: 'Филли', gen: 2 },
+      { key: 'алонсо', name: 'Алонсо', gen: 2 },
+      { key: 'логан', name: 'Логан', gen: 3 },
+      { key: 'мия', name: 'Мия', gen: 3 },
+      { key: 'грег', name: 'Грег', gen: 3 },
+      { key: 'яхмос', name: 'Яхмос', gen: 4 },
+      { key: 'райна', name: 'Райна', gen: 4 },
+      { key: 'линн', name: 'Линн', gen: 4 },
+      { key: 'гектор', name: 'Гектор', gen: 5 },
+      { key: 'нора', name: 'Нора', gen: 5 },
+      { key: 'гвен', name: 'Гвен', gen: 5 },
+      { key: 'ву минг', name: 'Ву Минг', gen: 6 },
+      { key: 'рене', name: 'Рене', gen: 6 },
+      { key: 'уэйн', name: 'Уэйн', gen: 6 },
+      { key: 'эдит', name: 'Эдит', gen: 7 },
+      { key: 'гордон', name: 'Гордон', gen: 7 },
+      { key: 'брэдли', name: 'Брэдли', gen: 7 },
+      { key: 'гатот', name: 'Гатот', gen: 8 },
+      { key: 'соня', name: 'Соня', gen: 8 },
+      { key: 'гендрик', name: 'Гендрик', gen: 8 },
+      { key: 'магнус', name: 'Магнус', gen: 9 },
+      { key: 'фред', name: 'Фред', gen: 9 },
+      { key: 'ксура', name: 'Ксура', gen: 9 },
+      { key: 'грегори', name: 'Грегори', gen: 10 },
+      { key: 'фрея', name: 'Фрея', gen: 10 },
+      { key: 'бланшет', name: 'Бланшет', gen: 10 },
+      { key: 'элеонора', name: 'Элеонора', gen: 11 },
+      { key: 'ллойд', name: 'Ллойд', gen: 11 },
+      { key: 'руфус', name: 'Руфус', gen: 11 },
+      { key: 'гервор', name: 'Гервор', gen: 12 },
+      { key: 'карол', name: 'Карол', gen: 12 },
+      { key: 'лигейя', name: 'Лигейя', gen: 12 },
+      { key: 'гисела', name: 'Гисела', gen: 13 },
+      { key: 'флора', name: 'Флора', gen: 13 },
+      { key: 'вулканс', name: 'Вулканс', gen: 13 },
+      { key: 'элиф', name: 'Элиф', gen: 14 },
+      { key: 'доминик', name: 'Доминик', gen: 14 },
+      { key: 'кара', name: 'Кара', gen: 14 },
+      { key: 'хэнк', name: 'Хэнк', gen: 15 },
+      { key: 'эстрелла', name: 'Эстрелла', gen: 15 },
+      { key: 'вивека', name: 'Вивека', gen: 15 },
+      { key: 'сейгель', name: 'Сейгель', gen: 16 },
+      { key: 'урсар', name: 'Урсар', gen: 16 },
+      { key: 'эйслинг', name: 'Эйслинг', gen: 16 },
+      { key: 'эйден', name: 'Эйден', gen: 17 },
+      { key: 'берта', name: 'Берта', gen: 17 },
+      { key: 'элеанор', name: 'Элеанор', gen: 17 }
+    ];
+
+    function getStoredPasscode() {
+      return sessionStorage.getItem('harmony_passcode') || localStorage.getItem('harmony_passcode') || '';
+    }
+
+    function applyHeaderFromSession(data) {
+      if (!data || !data.user) return;
+      const u = data.user;
+      document.getElementById('headerUserNick').textContent = u.playerId ? `${u.nick} (ID: ${u.playerId})` : u.nick;
+      const rankBadge = document.getElementById('userRankBadge');
+      rankBadge.textContent = u.isOfficer ? `ОФИЦЕР ${u.rank || 'R4–R5'}` : `БОЕЦ ${u.rank || 'R1–R3'}`;
+      if (u.isOfficer) {
+        document.getElementById('navOfficerRoster').classList.remove('hidden');
+        document.getElementById('navOfficerRaids').classList.remove('hidden');
+      }
+    }
+
+    function renderGuideHeroes() {
+      const container = document.getElementById('guideHeroesContainer');
+      const q = (document.getElementById('guideHeroSearch').value || '').trim().toLowerCase();
+
+      let html = '';
+      for (let g = 1; g <= 17; g++) {
+        let list = ALL_HEROES.filter(h => h.gen === g);
+        if (q) {
+          list = list.filter(h => h.name.toLowerCase().includes(q));
+        }
+        if (list.length === 0) continue;
+
+        const cardsHtml = list.map(h => {
+          const safeName = h.name.replace(/'/g, "\\'");
+          return `
+            <div onclick="openGuideHeroCard('${safeName}')" class="hero-card-item bg-slate-900/90 border border-slate-800 rounded-2xl p-2.5 flex flex-col items-center cursor-pointer text-center">
+              <img src="Heroes/${h.name}.jpeg" onerror="if(this.src.includes('${h.name}')){this.src='Heroes/${h.name.replace(/-/g, ' ')}.jpeg';}else{this.src='https://via.placeholder.com/64?text=${h.name}';}" class="w-12 h-12 rounded-xl object-cover border border-slate-700 shadow" />
+              <div class="font-bold text-white text-xs mt-1.5 truncate w-full">${h.name}</div>
+              <div class="text-[9px] font-mono text-purple-300 mt-0.5">Карточка (+)</div>
+            </div>
+          `;
+        }).join('');
+
+        const titleText = (g === 1) ? '1 Поколение' : `${g} Поколение (Gen ${g})`;
+        html += `
+          <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-3.5 space-y-2.5">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-sky-400 font-mono">${titleText}</h4>
+            <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
+              ${cardsHtml}
+            </div>
+          </div>
+        `;
+      }
+
+      container.innerHTML = html || `<div class="py-8 text-center text-slate-500 text-xs">Герои не найдены</div>`;
+    }
+
+    function openGuideHeroCard(heroName) {
+      document.getElementById('previewTitle').textContent = `Карточка героя: ${heroName}+`;
+      const img = document.getElementById('previewImg');
+      img.src = `Hero_cards/${heroName}+.jpeg`;
+      img.onerror = function() {
+        this.src = `Hero_cards/${heroName.replace(/-/g, ' ')}+.jpeg`;
+      };
+      document.getElementById('previewModal').classList.remove('hidden');
+    }
+
+    function logoutPortal() {
+      sessionStorage.removeItem('harmony_passcode');
+      localStorage.removeItem('harmony_passcode');
+      sessionStorage.removeItem('harmony_session_cache');
+      window.location.href = 'index.html';
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderGuideHeroes();
+
+      const cached = sessionStorage.getItem('harmony_session_cache');
+      if (cached) {
+        try { applyHeaderFromSession(JSON.parse(cached)); return; } catch (e) {}
+      }
+      const code = getStoredPasscode();
+      if (!code) {
+        window.location.href = 'index.html';
+        return;
+      }
+      fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'sync', passcode: code, page: 'guides.html' })
+      })
+        .then(r => r.json())
+        .then(res => {
+          if (res.ok) {
+            sessionStorage.setItem('harmony_session_cache', JSON.stringify(res));
+            applyHeaderFromSession(res);
+          } else {
+            window.location.href = 'index.html';
+          }
+        });
+    });
+  </script>
+</body>
+</html>

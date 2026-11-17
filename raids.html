@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Альянс «Гармония» — Штаб Рейдов и Автосбор (Whiteout Survival)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            slate: {
+              850: '#141c2b',
+              925: '#0b111e',
+              950: '#060a12'
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #060a12; color: #f1f5f9; }
+    .glass-card { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(14px); border: 1px solid rgba(51, 65, 85, 0.65); }
+    .nav-pill.active { background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); color: #ffffff; border-color: #38bdf8; box-shadow: 0 4px 16px rgba(2, 132, 199, 0.35); }
+    .filter-pill.active { background: #0284c7; color: #ffffff; border-color: #38bdf8; }
+    .mode-pill.active { background: linear-gradient(135deg, #e11d48 0%, #be123c 100%); color: #ffffff; border-color: #fb7185; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-sky-500 selection:text-white">
+
+  <!-- ==================== ШАПКА И ЕДИНОЕ МЕНЮ ==================== -->
+  <header class="sticky top-0 z-30 bg-slate-925/95 backdrop-blur-md border-b border-slate-800 px-4 py-2.5">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 to-blue-700 flex items-center justify-center shadow-md border border-sky-400/30">
+          <i class="fa-solid fa-shield-halved text-white text-sm"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold text-sm tracking-tight text-white">ГАРМОНИЯ</span>
+            <span id="userRankBadge" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">ШТАБ ОФИЦЕРОВ</span>
+          </div>
+          <div class="text-[11px] text-slate-400" id="headerUserNick">Проверка доступа...</div>
+        </div>
+      </div>
+
+      <!-- Единое полноценное меню навигации (все 5 кнопок) -->
+      <nav class="flex flex-wrap items-center gap-1.5 text-xs">
+        <a href="index.html" class="nav-pill px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-medium flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-id-card text-sky-400"></i>
+          <span>Моя карточка</span>
+        </a>
+        <a href="calculators.html" class="nav-pill px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-medium flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-calculator text-amber-400"></i>
+          <span>Калькуляторы</span>
+        </a>
+        <a href="roster.html" id="navOfficerRoster" class="nav-pill px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-amber-500/30 text-amber-200 hover:text-white font-semibold flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-users-gear text-amber-400"></i>
+          <span>Таблица Альянса</span>
+        </a>
+        <a href="raids.html" id="navOfficerRaids" class="nav-pill active px-3 py-1.5 rounded-xl border border-transparent font-semibold flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-chess-knight"></i>
+          <span>Штаб Рейдов</span>
+        </a>
+        <a href="guides.html" class="nav-pill px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-medium flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-book-open text-emerald-400"></i>
+          <span>Гайды и Герои</span>
+        </a>
+      </nav>
+
+      <div class="flex items-center gap-2">
+        <button onclick="syncRaidsData(true)" class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs text-sky-300 transition flex items-center gap-1.5" title="Синхронизировать с таблицей">
+          <i id="syncIcon" class="fa-solid fa-rotate"></i>
+          <span class="hidden sm:inline">Обновить</span>
+        </button>
+        <button onclick="logoutPortal()" class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-rose-950/70 border border-slate-700 text-xs text-slate-300 hover:text-rose-200 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-right-from-bracket text-rose-400"></i>
+          <span>Выйти</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== ОСНОВНОЙ КОНТЕНТ ==================== -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6 space-y-6">
+
+    <!-- ПАНЕЛЬ ВЫБОРА ПОДРАЗДЕЛЕНИЯ И РЕЖИМА БОЯ -->
+    <section class="glass-card rounded-3xl p-5 sm:p-6 shadow-xl border border-slate-800 space-y-5">
+      <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
+        <div>
+          <h1 class="text-lg font-extrabold text-white flex items-center gap-2">
+            <i class="fa-solid fa-chess-knight text-rose-400"></i> Командный Центр и Автоформирование Сборов
+          </h1>
+          <p class="text-xs text-slate-400 mt-0.5">
+            Автоматический подбор лидеров сбора (с учётом кристальной печи, тира, ТОП-снаряжения и вместимости) и распределение филлеров.
+          </p>
+        </div>
+
+        <!-- Выбор подразделения: Основа / Академия / Все -->
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-xs text-slate-400">Подразделение:</span>
+          <div class="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs">
+            <button type="button" id="raidFilterAll" onclick="setRaidAlliance('ALL')" class="filter-pill px-3 py-1 rounded-lg font-semibold text-slate-300 transition">Все</button>
+            <button type="button" id="raidFilterMain" onclick="setRaidAlliance('Основа')" class="filter-pill active px-3 py-1 rounded-lg font-semibold text-slate-300 transition">Основа</button>
+            <button type="button" id="raidFilterAcad" onclick="setRaidAlliance('Академия')" class="filter-pill px-3 py-1 rounded-lg font-semibold text-slate-300 transition">Академия</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Настройки сценария рейда -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
+        <div class="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800 space-y-1.5">
+          <label class="block text-slate-400 font-semibold">Сценарий операции</label>
+          <select id="raidScenarioSelect" onchange="buildRaidPlan()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold">
+            <option value="bear">🐻 Охота на Медведя (Атака 10/20/70)</option>
+            <option value="attack" selected>⚔️ Штурм Капитолия / Крепости (50/20/30)</option>
+            <option value="garrison">🛡️ Удержание Гарнизона / Защита (60/20/20)</option>
+            <option value="foundry">🏭 Литейная / Каньон (Сводные группы)</option>
+          </select>
+        </div>
+
+        <div class="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800 space-y-1.5">
+          <label class="block text-slate-400 font-semibold">Количество сборов (Лидеров)</label>
+          <select id="raidCountSelect" onchange="buildRaidPlan()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 font-mono text-amber-300 font-bold">
+            <option value="1">1 сбор (Основной удар)</option>
+            <option value="2">2 сбора (Двойной ралли)</option>
+            <option value="3" selected>3 сбора (Стандарт Штаба)</option>
+            <option value="4">4 сбора (Капитолий + 3 Турели)</option>
+            <option value="5">5 сборов (Медвежья охота)</option>
+          </select>
+        </div>
+
+        <div class="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800 space-y-1.5">
+          <label class="block text-slate-400 font-semibold">Филлеров в каждый сбор</label>
+          <select id="fillersPerRaidSelect" onchange="buildRaidPlan()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 font-mono text-sky-300 font-bold">
+            <option value="4">До 4 участников</option>
+            <option value="6">До 6 участников</option>
+            <option value="8" selected>До 8 участников</option>
+            <option value="12">До 12 участников</option>
+            <option value="14">До 14 участников (Макс. ралли)</option>
+          </select>
+        </div>
+
+        <div class="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800 flex flex-col justify-between">
+          <label class="block text-slate-400 font-semibold">Генерация приказа</label>
+          <button type="button" onclick="copyRaidOrderText()" class="w-full py-2 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 font-extrabold text-white shadow-lg transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-copy"></i>
+            <span>Скопировать приказ в чат</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- СЕТКА СФОРМИРОВАННЫХ СБОРОВ (РАЛЛИ-ГРУППЫ) -->
+    <section class="space-y-4">
+      <div class="flex items-center justify-between px-1">
+        <h2 class="text-base font-extrabold text-white flex items-center gap-2">
+          <i class="fa-solid fa-flag-checkered text-amber-400"></i> Распределение Сборов и Экипажей
+        </h2>
+        <span id="raidPoolCounter" class="text-xs font-mono text-slate-400">Доступно активных бойцов: 0</span>
+      </div>
+
+      <div id="raidGroupsContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div class="glass-card rounded-3xl p-8 text-center text-slate-400 col-span-2">Формирование боевых расчётов...</div>
+      </div>
+    </section>
+
+    <!-- ТАБЛИЦА ГОТОВНОСТИ ГЕРОЕВ ПЕРВОГО СЛОТА У ВСЕХ БОЙЦОВ (ДЖЕССИ, ДЖАССЕР, СО ЮН, РАЙНА, СЕРГЕЙ, ПАТРИК) -->
+    <section class="glass-card rounded-3xl p-5 sm:p-6 border border-slate-800 space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+        <div>
+          <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+            <i class="fa-solid fa-medal text-emerald-400"></i> Аудит Героев Первого Слота для Сборов (Навык Экспедиции Верхний)
+          </h3>
+          <p class="text-xs text-slate-400 mt-0.5">
+            Проверка ключевых бафферов атаки (Джесси, Джассер, Со Юн, Райна, Джеронимо) и защиты (Сергей, Патрик) у бойцов выбранного подразделения.
+          </p>
+        </div>
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
+          <input id="joinerSearchInput" type="text" oninput="renderJoinersAuditTable()" placeholder="Поиск бойца..."
+            class="bg-slate-900 border border-slate-700 focus:border-sky-500 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none w-48" />
+        </div>
+      </div>
+
+      <div class="overflow-x-auto max-h-96">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead class="sticky top-0 bg-slate-900 text-slate-400 font-mono text-[11px] uppercase border-b border-slate-800">
+            <tr>
+              <th class="py-2.5 px-3">Боец</th>
+              <th class="py-2.5 px-2.5">Печь / Войска</th>
+              <th class="py-2.5 px-2.5 text-right">Марш</th>
+              <th class="py-2.5 px-2.5 text-center">Джесси</th>
+              <th class="py-2.5 px-2.5 text-center">Джассер</th>
+              <th class="py-2.5 px-2.5 text-center">Со Юн</th>
+              <th class="py-2.5 px-2.5 text-center">Райна</th>
+              <th class="py-2.5 px-2.5 text-center">Сергей</th>
+              <th class="py-2.5 px-2.5 text-center">Патрик</th>
+            </tr>
+          </thead>
+          <tbody id="joinersAuditBody" class="divide-y divide-slate-800/60 font-mono">
+            <tr><td colspan="9" class="py-6 text-center text-slate-500">Загрузка матрицы героев первого слота...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- БЛОК ГОТОВОГО ТЕКСТА БОЕВОГО ПРИКАЗА ДЛЯ КОПИРОВАНИЯ -->
+    <section class="glass-card rounded-3xl p-5 sm:p-6 border border-slate-800 space-y-3">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+          <i class="fa-solid fa-bullhorn text-amber-400"></i> Сформированный Боевой Приказ (для чата Альянса / Telegram)
+        </h3>
+        <button type="button" onclick="copyRaidOrderText()" class="px-3.5 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-xs font-bold text-white transition flex items-center gap-1.5">
+          <i class="fa-solid fa-copy"></i><span>Скопировать текст</span>
+        </button>
+      </div>
+      <pre id="raidOrderPreview" class="bg-slate-950 border border-slate-800 rounded-2xl p-4 text-xs font-mono text-slate-200 whitespace-pre-wrap leading-relaxed select-all overflow-x-auto"></pre>
+    </section>
+
+  </main>
+
+  <div id="toastBanner" class="fixed bottom-5 right-5 z-50 bg-slate-900 border border-sky-500/50 text-sky-200 text-xs font-semibold px-4 py-2.5 rounded-xl shadow-2xl opacity-0 transition-opacity pointer-events-none">
+    Скопировано!
+  </div>
+
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwsX-LADURoQu_MsQ2XJVsSPsHAgMebI4_QDXmpPpi3OcpW3ScwPep9ukQBFJfDMrjQ7g/exec';
+    let allPlayers = [];
+    let activeAlliance = 'Основа';
+
+    // Полный справочник всех 65 героев со строго выверенными именами (Со Юн, Райна, Мия, Наталия, Лин Сюэ)
+    const ALL_HEROES = [
+      { key: 'смит', name: 'Смит', gen: 1 },
+      { key: 'юджин', name: 'Юджин', gen: 1 },
+      { key: 'чарли', name: 'Чарли', gen: 1 },
+      { key: 'клорис', name: 'Клорис', gen: 1 },
+      { key: 'сергей', name: 'Сергей', gen: 1 },
+      { key: 'джесси', name: 'Джесси', gen: 1 },
+      { key: 'патрик', name: 'Патрик', gen: 1 },
+      { key: 'лумак_бокан', name: 'Лумак Бокан', gen: 1 },
+      { key: 'лин_сюэ', name: 'Лин Сюэ', gen: 1 },
+      { key: 'джина', name: 'Джина', gen: 1 },
+      { key: 'бахити', name: 'Бахити', gen: 1 },
+      { key: 'джассер', name: 'Джассер', gen: 1 },
+      { key: 'со_юн', name: 'Со Юн', gen: 1 },
+      { key: 'наталия', name: 'Наталия', gen: 1 },
+      { key: 'молли', name: 'Молли', gen: 1 },
+      { key: 'джеронимо', name: 'Джеронимо', gen: 1 },
+      { key: 'зинман', name: 'Зинман', gen: 1 },
+      { key: 'флинт', name: 'Флинт', gen: 2 },
+      { key: 'филли', name: 'Филли', gen: 2 },
+      { key: 'алонсо', name: 'Алонсо', gen: 2 },
+      { key: 'логан', name: 'Логан', gen: 3 },
+      { key: 'мия', name: 'Мия', gen: 3 },
+      { key: 'грег', name: 'Грег', gen: 3 },
+      { key: 'яхмос', name: 'Яхмос', gen: 4 },
+      { key: 'рейна', name: 'Райна', gen: 4 },
+      { key: 'линн', name: 'Линн', gen: 4 },
+      { key: 'гектор', name: 'Гектор', gen: 5 },
+      { key: 'нора', name: 'Нора', gen: 5 },
+      { key: 'гвен', name: 'Гвен', gen: 5 },
+      { key: 'ву_минг', name: 'Ву Минг', gen: 6 },
+      { key: 'рене', name: 'Рене', gen: 6 },
+      { key: 'уэйн', name: 'Уэйн', gen: 6 },
+      { key: 'эдит', name: 'Эдит', gen: 7 },
+      { key: 'гордон', name: 'Гордон', gen: 7 },
+      { key: 'брэдли', name: 'Брэдли', gen: 7 },
+      { key: 'гатот', name: 'Гатот', gen: 8 },
+      { key: 'соня', name: 'Соня', gen: 8 },
+      { key: 'гендрик', name: 'Гендрик', gen: 8 },
+      { key: 'магнус', name: 'Магнус', gen: 9 },
+      { key: 'фред', name: 'Фред', gen: 9 },
+      { key: 'ксура', name: 'Ксура', gen: 9 },
+      { key: 'грегори', name: 'Грегори', gen: 10 },
+      { key: 'фрея', name: 'Фрея', gen: 10 },
+      { key: 'бланшет', name: 'Бланшет', gen: 10 },
+      { key: 'элеонора', name: 'Элеонора', gen: 11 },
+      { key: 'ллойд', name: 'Ллойд', gen: 11 },
+      { key: 'руфус', name: 'Руфус', gen: 11 },
+      { key: 'гервор', name: 'Гервор', gen: 12 },
+      { key: 'карол', name: 'Карол', gen: 12 },
+      { key: 'лигейя', name: 'Лигейя', gen: 12 },
+      { key: 'гисела', name: 'Гисела', gen: 13 },
+      { key: 'флора', name: 'Флора', gen: 13 },
+      { key: 'вулканс', name: 'Вулканс', gen: 13 },
+      { key: 'элиф', name: 'Элиф', gen: 14 },
+      { key: 'доминик', name: 'Доминик', gen: 14 },
+      { key: 'кара', name: 'Кара', gen: 14 },
+      { key: 'хэнк', name: 'Хэнк', gen: 15 },
+      { key: 'эстрелла', name: 'Эстрелла', gen: 15 },
+      { key: 'вивека', name: 'Вивека', gen: 15 },
+      { key: 'сейгель', name: 'Сейгель', gen: 16 },
+      { key: 'урсар', name: 'Урсар', gen: 16 },
+      { key: 'эйслинг', name: 'Эйслинг', gen: 16 },
+      { key: 'эйден', name: 'Эйден', gen: 17 },
+      { key: 'берта', name: 'Берта', gen: 17 },
+      { key: 'элеанор', name: 'Элеанор', gen: 17 }
+    ];
+
+    function getStoredPasscode() {
+      return sessionStorage.getItem('harmony_passcode') || localStorage.getItem('harmony_passcode') || '';
+    }
+
+    function setRaidAlliance(val) {
+      activeAlliance = val;
+      document.getElementById('raidFilterAll').classList.toggle('active', val === 'ALL');
+      document.getElementById('raidFilterMain').classList.toggle('active', val === 'Основа');
+      document.getElementById('raidFilterAcad').classList.toggle('active', val === 'Академия');
+      buildRaidPlan();
+      renderJoinersAuditTable();
+    }
+
+    // Функция чтения героя из карточки игрока с поддержкой любых старых/новых ключей
+    function getHeroRecord(heroesObj, canonicalKey, displayName) {
+      if (!heroesObj) return null;
+      if (heroesObj[canonicalKey] && heroesObj[canonicalKey].configured) return heroesObj[canonicalKey];
+      const altKey1 = displayName.toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_');
+      if (heroesObj[altKey1] && heroesObj[altKey1].configured) return heroesObj[altKey1];
+      if (canonicalKey === 'миа' && heroesObj['мия'] && heroesObj['мия'].configured) return heroesObj['мия'];
+      if (canonicalKey === 'рейна' && heroesObj['райна'] && heroesObj['райна'].configured) return heroesObj['райна'];
+      return null;
+    }
+
+    // Расчёт комплексного боевого рейтинга игрока для выбора Лидера Сбора
+    function calcLeaderPowerScore(p) {
+      let score = 0;
+
+      // 1. Вместимость сбора
+      score += (Number(p.rallyCap) || 0) / 1000;
+
+      // 2. Уровень печи (Кристальная печь имеет огромный приоритет перед обычной 1-30)
+      const fStr = String(p.furnaceLevel || '');
+      const fNum = Number(fStr.replace(/\D/g, '')) || 0;
+      const fCrystal = fStr.toLowerCase().includes('крист') || fStr.includes('💎');
+      score += fCrystal ? (1000 + fNum * 25) : (fNum * 10);
+
+      // 3. Тир войск (Кристальный тир даёт дополнительный вес)
+      const tStr = String(p.troopTier || '');
+      const tNum = Number(tStr.replace(/\D/g, '')) || 0;
+      const tCrystal = tStr.toLowerCase().includes('крист') || tStr.includes('💎');
+      score += tCrystal ? (600 + tNum * 40) : (tNum * 25);
+
+      // 4. Уровень перекидного ТОП-снаряжения
+      const topEq = p.topEquipmentData || (p.heroesData && p.heroesData._topEquipment) || {};
+      ['infantry', 'lancers', 'marksmen'].forEach(cat => {
+        const eq = topEq[cat];
+        if (eq) {
+          score += (Number(String(eq.gLvl || '').replace(/\D/g, '')) || 0) * 2;
+          score += (Number(String(eq.glLvl || '').replace(/\D/g, '')) || 0) * 2;
+          score += (Number(String(eq.bLvl || '').replace(/\D/g, '')) || 0) * 2;
+          score += (Number(String(eq.btLvl || '').replace(/\D/g, '')) || 0) * 2;
+        }
+      });
+
+      return Math.round(score);
+    }
+
+    // Определение лучшего героя 1-го слота для вступления в сбор (филлером)
+    function getBestJoinerHero(p, scenario) {
+      const hObj = p.heroesData || {};
+      const attackHeroes = [
+        { key: 'джесси', name: 'Джесси' },
+        { key: 'джассер', name: 'Джассер' },
+        { key: 'со_юн', name: 'Со Юн' },
+        { key: 'рейна', name: 'Райна' },
+        { key: 'джеронимо', name: 'Джеронимо' }
+      ];
+      const defenseHeroes = [
+        { key: 'сергей', name: 'Сергей' },
+        { key: 'патрик', name: 'Патрик' }
+      ];
+
+      const pool = (scenario === 'garrison') ? defenseHeroes : attackHeroes;
+      let best = null;
+
+      pool.forEach(item => {
+        const rec = getHeroRecord(hObj, item.key, item.name);
+        if (rec) {
+          const eTop = Number(rec.eTop !== undefined ? rec.eTop : (rec.e1 || 5));
+          if (!best || eTop > best.eTop) {
+            best = { name: item.name, eTop, stars: rec.starsFull ?? 5 };
+          }
+        }
+      });
+
+      if (!best) {
+        return {
+          name: scenario === 'garrison' ? 'Сергей / Патрик' : 'Джесси / Со Юн / Райна',
+          eTop: '—',
+          unconfigured: true
+        };
+      }
+      return best;
+    }
+
+    function buildRaidPlan() {
+      const scenario = document.getElementById('raidScenarioSelect').value;
+      const raidCount = Number(document.getElementById('raidCountSelect').value) || 3;
+      const fillersLimit = Number(document.getElementById('fillersPerRaidSelect').value) || 8;
+
+      const activePool = allPlayers.filter(p => {
+        if ((p.status || 'Активен') !== 'Активен') return false;
+        const pAll = p.alliance || 'Основа';
+        if (activeAlliance !== 'ALL' && pAll !== activeAlliance) return false;
+        return true;
+      });
+
+      document.getElementById('raidPoolCounter').textContent =
+        `Активных бойцов (${activeAlliance === 'ALL' ? 'Все' : activeAlliance}): ${activePool.length}`;
+
+      const container = document.getElementById('raidGroupsContainer');
+      if (activePool.length === 0) {
+        container.innerHTML = `<div class="glass-card rounded-3xl p-8 text-center text-slate-500 col-span-2">В выбранном подразделении пока нет активных карточек игроков.</div>`;
+        document.getElementById('raidOrderPreview').textContent = 'Нет данных для формирования приказа.';
+        return;
+      }
+
+      // Сортируем кандидатов в Лидеры Сборов по комплексному боевому весу
+      const sortedForLeaders = [...activePool].sort((a, b) => calcLeaderPowerScore(b) - calcLeaderPowerScore(a));
+      const leaders = sortedForLeaders.slice(0, raidCount);
+      const leaderKeys = new Set(leaders.map(l => l.playerId || l.nick));
+
+      // Остальные бойцы распределяются филлерами по размеру марша и уровню войск
+      const fillersPool = activePool
+        .filter(p => !leaderKeys.has(p.playerId || p.nick))
+        .sort((a, b) => (Number(b.marchCap) || 0) - (Number(a.marchCap) || 0));
+
+      const groups = leaders.map((ldr, idx) => ({
+        index: idx + 1,
+        leader: ldr,
+        score: calcLeaderPowerScore(ldr),
+        fillers: []
+      }));
+
+      // Равномерное распределение филлеров (змейкой) по сборам
+      fillersPool.forEach((flr, i) => {
+        if (groups.length === 0) return;
+        const targetGroupIdx = i % groups.length;
+        if (groups[targetGroupIdx].fillers.length < fillersLimit) {
+          groups[targetGroupIdx].fillers.push(flr);
+        }
+      });
+
+      const ratioHint = scenario === 'bear'
+        ? '10% Пехота / 20% Копейщики / 70% Стрелки'
+        : scenario === 'garrison'
+        ? '60% Пехота / 20% Копейщики / 20% Стрелки'
+        : '50% Пехота / 20% Копейщики / 30% Стрелки';
+
+      container.innerHTML = groups.map(g => {
+        const ldr = g.leader;
+        const rallyCapNum = Number(ldr.rallyCap) || 0;
+        const sumFillersMarch = g.fillers.reduce((acc, f) => acc + (Number(f.marchCap) || 0), 0);
+
+        const fillersHtml = g.fillers.length === 0
+          ? `<div class="text-xs text-slate-500 py-3 text-center">Свободные филлеры отсутствуют</div>`
+          : g.fillers.map((f, fIdx) => {
+              const bestHero = getBestJoinerHero(f, scenario);
+              return `
+                <div class="flex items-center justify-between bg-slate-950/80 border border-slate-800/90 rounded-xl px-3 py-2 text-xs">
+                  <div class="flex items-center gap-2">
+                    <span class="text-slate-500 font-mono w-4">${fIdx + 1}.</span>
+                    <div>
+                      <div class="font-bold text-white">${f.nick}</div>
+                      <div class="text-[10px] font-mono text-slate-400">Печь: ${f.furnaceLevel || '—'} • Войска: ${f.troopTier || '—'}</div>
+                    </div>
+                  </div>
+                  <div class="text-right font-mono">
+                    <div class="text-sky-300 font-bold text-[11px]">
+                      1-й слот: ${bestHero.name} ${bestHero.unconfigured ? '' : `(Экв.В: ${bestHero.eTop})`}
+                    </div>
+                    <div class="text-[10px] text-slate-400">Марш: ${(Number(f.marchCap) || 0).toLocaleString('ru-RU')}</div>
+                  </div>
+                </div>
+              `;
+            }).join('');
+
+        return `
+          <div class="glass-card rounded-3xl p-5 border border-slate-800 space-y-4">
+            <div class="flex items-start justify-between gap-3 pb-3 border-b border-slate-800">
+              <div>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                  СБОР #${g.index} • ${ldr.alliance || 'Основа'}
+                </span>
+                <h3 class="text-base font-extrabold text-white mt-1.5 flex items-center gap-2">
+                  <i class="fa-solid fa-crown text-amber-400"></i>
+                  <span>Лидер: ${ldr.nick}</span>
+                </h3>
+                <div class="text-xs font-mono text-slate-400 mt-0.5">
+                  Печь: <b class="text-sky-300">${ldr.furnaceLevel || '—'}</b> • Войска: <b class="text-rose-300">${ldr.troopTier || '—'}</b> • Рейтинг: <b class="text-emerald-300">${g.score}</b>
+                </div>
+              </div>
+              <div class="text-right font-mono">
+                <div class="text-[10px] text-slate-400">Вместимость сбора:</div>
+                <div class="text-sm font-extrabold text-amber-300">${rallyCapNum.toLocaleString('ru-RU')}</div>
+                <div class="text-[10px] text-slate-400 mt-0.5">Марши группы: ${sumFillersMarch.toLocaleString('ru-RU')}</div>
+              </div>
+            </div>
+
+            <div class="bg-slate-900/90 border border-slate-800 rounded-xl px-3 py-2 text-[11px] font-mono text-amber-200 flex items-center justify-between">
+              <span>Пропорция войск:</span>
+              <b>${ratioHint}</b>
+            </div>
+
+            <div class="space-y-1.5">
+              <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-1">
+                Вступающие в сбор (${g.fillers.length} чел.):
+              </div>
+              <div class="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+                ${fillersHtml}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Формируем текстовый боевой приказ
+      const scenarioTitles = {
+        bear: '🐻 ОХОТА НА МЕДВЕДЯ',
+        attack: '⚔️ ШТУРМ КАПИТОЛИЯ / КРЕПОСТИ',
+        garrison: '🛡️ УДЕРЖАНИЕ ГАРНИЗОНА',
+        foundry: '🏭 ЛИТЕЙНАЯ / КАНЬОН'
+      };
+
+      let orderLines = [
+        `🛡️ АЛЬЯНС «ГАРМОНИЯ» (${activeAlliance === 'ALL' ? 'Общий сбор' : activeAlliance})`,
+        `📢 БОЕВОЙ ПРИКАЗ: ${scenarioTitles[scenario]}`,
+        `⚖️ Пропорция войск: ${ratioHint}`,
+        `----------------------------------------`
+      ];
+
+      groups.forEach(g => {
+        const ldr = g.leader;
+        orderLines.push(
+          `\n🔥 СБОР #${g.index} — ЛИДЕР: ${ldr.nick} [Печь: ${ldr.furnaceLevel || '—'} | ${ldr.troopTier || '—'} | Сбор: ${(Number(ldr.rallyCap) || 0).toLocaleString('ru-RU')}]`
+        );
+        if (g.fillers.length === 0) {
+          orderLines.push(`   • Свободный набор по команде`);
+        } else {
+          g.fillers.forEach((f, idx) => {
+            const bh = getBestJoinerHero(f, scenario);
+            orderLines.push(
+              `   ${idx + 1}. ${f.nick} — 1-й герой: ${bh.name} (Марш: ${(Number(f.marchCap) || 0).toLocaleString('ru-RU')})`
+            );
+          });
+        }
+      });
+
+      document.getElementById('raidOrderPreview').textContent = orderLines.join('\n');
+    }
+
+    // Таблица аудита героев первого слота (Джесси, Джассер, Со Юн, Райна, Сергей, Патрик)
+    function renderJoinersAuditTable() {
+      const tbody = document.getElementById('joinersAuditBody');
+      const q = (document.getElementById('joinerSearchInput').value || '').trim().toLowerCase();
+
+      const list = allPlayers.filter(p => {
+        if ((p.status || 'Активен') !== 'Активен') return false;
+        const pAll = p.alliance || 'Основа';
+        if (activeAlliance !== 'ALL' && pAll !== activeAlliance) return false;
+        if (q && !(p.nick || '').toLowerCase().includes(q)) return false;
+        return true;
+      });
+
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="py-6 text-center text-slate-500">Бойцы не найдены</td></tr>`;
+        return;
+      }
+
+      const targetCols = [
+        { key: 'джесси', name: 'Джесси' },
+        { key: 'джассер', name: 'Джассер' },
+        { key: 'со_юн', name: 'Со Юн' },
+        { key: 'рейна', name: 'Райна' },
+        { key: 'сергей', name: 'Сергей' },
+        { key: 'патрик', name: 'Патрик' }
+      ];
+
+      tbody.innerHTML = list.map(p => {
+        const hObj = p.heroesData || {};
+        const cellsHtml = targetCols.map(tc => {
+          const rec = getHeroRecord(hObj, tc.key, tc.name);
+          if (!rec) {
+            return `<td class="py-2 px-2.5 text-center text-slate-600">—</td>`;
+          }
+          const eTop = Number(rec.eTop !== undefined ? rec.eTop : (rec.e1 || 5));
+          const badgeCls = eTop === 5
+            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+            : 'bg-amber-500/20 text-amber-300 border border-amber-500/40';
+          return `
+            <td class="py-2 px-2.5 text-center">
+              <span class="px-2 py-0.5 rounded-lg text-[11px] font-bold ${badgeCls}">
+                ${rec.starsFull ?? 5}★ • Экв.В:${eTop}
+              </span>
+            </td>
+          `;
+        }).join('');
+
+        return `
+          <tr class="hover:bg-slate-900/50 transition">
+            <td class="py-2.5 px-3 font-bold text-white">${p.nick} <span class="text-[10px] text-sky-400">(${p.alliance || 'Основа'})</span></td>
+            <td class="py-2.5 px-2.5 text-slate-300">${p.furnaceLevel || '—'} / ${p.troopTier || '—'}</td>
+            <td class="py-2.5 px-2.5 text-right text-amber-300 font-bold">${(Number(p.marchCap) || 0).toLocaleString('ru-RU')}</td>
+            ${cellsHtml}
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function copyRaidOrderText() {
+      const text = document.getElementById('raidOrderPreview').textContent;
+      navigator.clipboard.writeText(text);
+      const el = document.getElementById('toastBanner');
+      el.textContent = 'Боевой приказ скопирован в буфер обмена!';
+      el.classList.remove('opacity-0');
+      setTimeout(() => el.classList.add('opacity-0'), 2500);
+    }
+
+    function applyRaidsSession(data, autoSetAlliance = false) {
+      if (!data || !data.user || !data.user.isOfficer) {
+        alert('Доступ в Штаб Рейдов открыт только офицерам R4–R5!');
+        window.location.href = 'index.html';
+        return;
+      }
+      const u = data.user;
+      allPlayers = data.allPlayers || [];
+
+      document.getElementById('headerUserNick').textContent = `${u.nick} (${u.alliance || 'Основа'} • ${u.rank})`;
+      document.getElementById('userRankBadge').textContent = `ОФИЦЕР ${u.rank}`;
+
+      if (autoSetAlliance && u.alliance) {
+        setRaidAlliance(u.alliance);
+      } else {
+        buildRaidPlan();
+        renderJoinersAuditTable();
+      }
+    }
+
+    async function syncRaidsData(showSpin = true) {
+      const code = getStoredPasscode();
+      if (!code) {
+        window.location.href = 'index.html';
+        return;
+      }
+      const icon = document.getElementById('syncIcon');
+      if (showSpin && icon) icon.classList.add('fa-spin');
+
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'sync', passcode: code, page: 'raids.html', userAgent: navigator.userAgent })
+        }).then(r => r.json());
+
+        if (res.ok) {
+          sessionStorage.setItem('harmony_session_cache', JSON.stringify(res));
+          applyRaidsSession(res, false);
+        } else {
+          window.location.href = 'index.html';
+        }
+      } finally {
+        if (icon) icon.classList.remove('fa-spin');
+      }
+    }
+
+    function logoutPortal() {
+      sessionStorage.removeItem('harmony_passcode');
+      localStorage.removeItem('harmony_passcode');
+      sessionStorage.removeItem('harmony_session_cache');
+      window.location.href = 'index.html';
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const cached = sessionStorage.getItem('harmony_session_cache');
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (parsed && parsed.allPlayers) {
+            applyRaidsSession(parsed, true);
+            syncRaidsData(false);
+            return;
+          }
+        } catch (e) {}
+      }
+      syncRaidsData(true);
+    });
+  </script>
+</body>
+</html>

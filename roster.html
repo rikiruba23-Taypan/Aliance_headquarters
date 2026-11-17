@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Альянс «Гармония» — Таблица Альянса и Управление (Whiteout Survival)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            slate: {
+              850: '#141c2b',
+              925: '#0b111e',
+              950: '#060a12'
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #060a12; color: #f1f5f9; }
+    .glass-card { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(14px); border: 1px solid rgba(51, 65, 85, 0.65); }
+    .nav-pill.active { background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); color: #ffffff; border-color: #38bdf8; box-shadow: 0 4px 16px rgba(2, 132, 199, 0.35); }
+    .filter-pill.active { background: #0284c7; color: #ffffff; border-color: #38bdf8; }
+    .log-tab-btn.active { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #060a12; font-weight: 800; border-color: #fbbf24; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-sky-500 selection:text-white">
+
+  <!-- ==================== ШАПКА И ЕДИНОЕ МЕНЮ ==================== -->
+  <header class="sticky top-0 z-30 bg-slate-925/95 backdrop-blur-md border-b border-slate-800 px-4 py-2.5">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 to-blue-700 flex items-center justify-center shadow-md border border-sky-400/30">
+          <i class="fa-solid fa-shield-halved text-white text-sm"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold text-sm tracking-tight text-white">ГАРМОНИЯ</span>
+            <span id="userRankBadge" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">ОФИЦЕР R4–R5</span>
+          </div>
+          <div class="text-[11px] text-slate-400" id="headerUserNick">Проверка доступа...</div>
+        </div>
+      </div>
+
+      <!-- Единое полноценное меню навигации (все 5 вкладок) -->
+      <nav class="flex flex-wrap items-center gap-1.5 text-xs">
+        <a href="index.html" class="nav-pill px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-medium flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-id-card text-sky-400"></i>
+          <span>Моя карточка</span>
+        </a>
+        <a href="calculators.html" class="nav-pill px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-medium flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-calculator text-amber-400"></i>
+          <span>Калькуляторы</span>
+        </a>
+        <a href="roster.html" id="navOfficerRoster" class="nav-pill active px-3 py-1.5 rounded-xl border border-transparent font-semibold flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-users-gear"></i>
+          <span>Таблица Альянса</span>
+        </a>
+        <a href="raids.html" id="navOfficerRaids" class="nav-pill px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-rose-500/30 text-rose-200 hover:text-white font-semibold flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-chess-knight text-rose-400"></i>
+          <span>Штаб Рейдов</span>
+        </a>
+        <a href="guides.html" class="nav-pill px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-medium flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-book-open text-emerald-400"></i>
+          <span>Гайды и Герои</span>
+        </a>
+      </nav>
+
+      <div class="flex items-center gap-2">
+        <button onclick="syncAllData(true)" class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs text-sky-300 transition flex items-center gap-1.5" title="Обновить данные из Google Таблицы">
+          <i id="syncIcon" class="fa-solid fa-rotate"></i>
+          <span class="hidden sm:inline">Обновить</span>
+        </button>
+        <button onclick="logoutPortal()" class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-rose-950/70 border border-slate-700 text-xs text-slate-300 hover:text-rose-200 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-right-from-bracket text-rose-400"></i>
+          <span>Выйти</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== ОСНОВНОЙ КОНТЕНТ ==================== -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6 space-y-6">
+
+    <!-- БЛОК БЫСТРЫХ КАРТОЧЕК СТАТИСТИКИ -->
+    <section class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div class="glass-card rounded-2xl p-4 border border-slate-800">
+        <div class="text-[11px] text-slate-400">Бойцов в выборке</div>
+        <div id="statTotalPlayers" class="text-2xl font-extrabold font-mono text-white mt-0.5">0</div>
+      </div>
+      <div class="glass-card rounded-2xl p-4 border border-slate-800">
+        <div class="text-[11px] text-slate-400">Активных / В строю</div>
+        <div id="statActivePlayers" class="text-2xl font-extrabold font-mono text-emerald-400 mt-0.5">0</div>
+      </div>
+      <div class="glass-card rounded-2xl p-4 border border-slate-800">
+        <div class="text-[11px] text-slate-400">Кристальных печей (💎)</div>
+        <div id="statCrystalPlayers" class="text-2xl font-extrabold font-mono text-amber-300 mt-0.5">0</div>
+      </div>
+      <div class="glass-card rounded-2xl p-4 border border-slate-800">
+        <div class="text-[11px] text-slate-400">Нужно обновить (>3 дн.)</div>
+        <div id="statOutdatedPlayers" class="text-2xl font-extrabold font-mono text-rose-400 mt-0.5">0</div>
+      </div>
+    </section>
+
+    <!-- БЛОК ОФИЦЕРСКОГО УПРАВЛЕНИЯ: ДОБАВЛЕНИЕ, ДЕАКТИВАЦИЯ И СООБЩЕНИЕ ИГРОКУ -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+      <!-- 1. Добавление нового игрока -->
+      <div class="glass-card rounded-2xl p-4 border border-slate-800 space-y-3">
+        <h3 class="text-xs font-extrabold uppercase tracking-wider text-emerald-400 flex items-center gap-2">
+          <i class="fa-solid fa-user-plus"></i> Добавить нового игрока
+        </h3>
+        <form onsubmit="handleAddMember(event)" class="space-y-2.5 text-xs">
+          <div class="grid grid-cols-2 gap-2">
+            <input id="newMemberNick" type="text" required placeholder="Ник игрока *" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:border-sky-500 focus:outline-none" />
+            <input id="newMemberId" type="text" placeholder="ID игрока" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono text-amber-300 focus:border-sky-500 focus:outline-none" />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <select id="newMemberAlliance" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white">
+              <option value="Основа">Альянс: Основа</option>
+              <option value="Академия">Альянс: Академия</option>
+            </select>
+            <select id="newMemberRank" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono text-white">
+              <option value="R1">Ранг: R1</option>
+              <option value="R2">Ранг: R2</option>
+              <option value="R3" selected>Ранг: R3</option>
+              <option value="R4">Ранг: R4 (Офицер)</option>
+              <option value="R5">Ранг: R5 (Глава)</option>
+            </select>
+          </div>
+          <button id="addMemberBtn" type="submit" class="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-bold text-white shadow transition flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-plus"></i><span>Создать карточку и выдать код</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- 2. Быстрая деактивация / изменение статуса игрока -->
+      <div class="glass-card rounded-2xl p-4 border border-slate-800 space-y-3">
+        <h3 class="text-xs font-extrabold uppercase tracking-wider text-rose-400 flex items-center gap-2">
+          <i class="fa-solid fa-user-lock"></i> Деактивация / Статус игрока
+        </h3>
+        <div class="space-y-2.5 text-xs">
+          <select id="deactivateSelectPlayer" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white">
+            <option value="">— Выберите игрока из списка —</option>
+          </select>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" onclick="handleQuickStatusChange('Деактивирован')" class="py-2 rounded-xl bg-rose-900/60 hover:bg-rose-800 border border-rose-500/40 font-bold text-rose-200 transition flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-ban"></i><span>Деактивировать</span>
+            </button>
+            <button type="button" onclick="handleQuickStatusChange('Активен')" class="py-2 rounded-xl bg-slate-800 hover:bg-emerald-900/50 border border-slate-700 font-bold text-emerald-300 transition flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-check"></i><span>Вернуть в строй</span>
+            </button>
+          </div>
+          <p class="text-[11px] text-slate-400 leading-tight">
+            Деактивированный игрок не может войти на портал и не учитывается в автосборах рейдов.
+          </p>
+        </div>
+      </div>
+
+      <!-- 3. Отправка сообщения игроку от имени офицеров -->
+      <div class="glass-card rounded-2xl p-4 border border-slate-800 space-y-3">
+        <h3 class="text-xs font-extrabold uppercase tracking-wider text-sky-400 flex items-center gap-2">
+          <i class="fa-solid fa-envelope-open-text"></i> Сообщение игроку от Штаба
+        </h3>
+        <div class="space-y-2.5 text-xs">
+          <select id="messageSelectPlayer" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white">
+            <option value="">— Выберите получателя —</option>
+          </select>
+          <div class="flex gap-2">
+            <input id="quickMessageInput" type="text" placeholder="Текст уведомления для игрока..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:border-sky-500 focus:outline-none" />
+            <button type="button" onclick="handleQuickSendMessage()" class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 font-bold text-white shadow transition flex items-center gap-1.5 shrink-0">
+              <i class="fa-solid fa-paper-plane"></i><span>Отправить</span>
+            </button>
+          </div>
+          <p class="text-[11px] text-slate-400 leading-tight">
+            Сообщение запишется в карточку бойца и отобразится в таблице альянса.
+          </p>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ОСНОВНАЯ ТАБЛИЦА АЛЬЯНСА (БЕЗ КОЛОНКИ ЛИЧНЫХ ПАРОЛЕЙ) -->
+    <section class="glass-card rounded-3xl p-5 sm:p-6 shadow-xl border border-slate-800 space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+        <div>
+          <h2 class="text-lg font-extrabold text-white flex items-center gap-2">
+            <i class="fa-solid fa-table-list text-amber-400"></i> Сводная Таблица Альянса
+          </h2>
+          <p class="text-xs text-slate-400">Нажмите на кнопку «Арсенал» в строке бойца для просмотра его 65 героев и ТОП-снаряжения.</p>
+        </div>
+
+        <!-- Фильтр подразделений: Основа / Академия / Все -->
+        <div class="flex flex-wrap items-center gap-2">
+          <div class="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs">
+            <button type="button" id="filterAllBtn" onclick="setAllianceFilter('ALL')" class="filter-pill px-3 py-1 rounded-lg font-semibold text-slate-300 transition">Все</button>
+            <button type="button" id="filterMainBtn" onclick="setAllianceFilter('Основа')" class="filter-pill active px-3 py-1 rounded-lg font-semibold text-slate-300 transition">Основа</button>
+            <button type="button" id="filterAcadBtn" onclick="setAllianceFilter('Академия')" class="filter-pill px-3 py-1 rounded-lg font-semibold text-slate-300 transition">Академия</button>
+          </div>
+
+          <select id="statusFilterSelect" onchange="renderRosterTable()" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-200">
+            <option value="ALL">Все статусы</option>
+            <option value="Активен" selected>Только Активные</option>
+            <option value="Деактивирован">Деактивированные / Бан</option>
+          </select>
+
+          <div class="relative">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
+            <input id="rosterSearchInput" type="text" oninput="renderRosterTable()" placeholder="Поиск по нику или ID..."
+              class="bg-slate-900 border border-slate-700 focus:border-sky-500 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none w-48 sm:w-56" />
+          </div>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="border-b border-slate-800 text-slate-400 font-mono text-[11px] uppercase bg-slate-900/60">
+              <th class="py-3 px-3">Боец / ID</th>
+              <th class="py-3 px-2.5">Альянс</th>
+              <th class="py-3 px-2.5">Ранг</th>
+              <th class="py-3 px-2.5">Статус</th>
+              <th class="py-3 px-2.5">Печь / Тир</th>
+              <th class="py-3 px-2.5 text-right">Сбор (Лидер)</th>
+              <th class="py-3 px-2.5 text-right">Марш (Филлер)</th>
+              <th class="py-3 px-2.5">ТОП-снаряжение / Герои</th>
+              <th class="py-3 px-2.5">Сообщение</th>
+              <th class="py-3 px-2.5">Обновлено</th>
+              <th class="py-3 px-3 text-right">Действия офицера</th>
+            </tr>
+          </thead>
+          <tbody id="rosterTableBody" class="divide-y divide-slate-800/70">
+            <tr>
+              <td colspan="11" class="py-8 text-center text-slate-400">Загрузка данных альянса...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ЖУРНАЛ БЕЗОПАСНОСТИ + РЕЙТИНГ АКТИВНОСТИ УЧАСТНИКОВ -->
+    <section class="glass-card rounded-3xl p-5 sm:p-6 border border-slate-800 space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+        <div class="flex flex-wrap items-center gap-3">
+          <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+            <i class="fa-solid fa-user-secret text-rose-400"></i>
+            <span>Журнал безопасности и лог событий</span>
+          </h3>
+
+          <!-- Переключатель: Кнопка "Активность" сразу после заголовка -->
+          <div class="flex items-center gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800">
+            <button type="button" id="btnShowActivity" onclick="switchSecurityTab('activity')"
+              class="log-tab-btn px-3 py-1 rounded-lg border border-amber-500/40 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 text-xs font-semibold transition flex items-center gap-1.5">
+              <i class="fa-solid fa-chart-Simple"></i>
+              <span>📊 Активность</span>
+            </button>
+            <button type="button" id="btnShowLogs" onclick="switchSecurityTab('logs')"
+              class="log-tab-btn active px-3 py-1 rounded-lg border border-transparent text-xs font-semibold transition flex items-center gap-1.5">
+              <i class="fa-solid fa-list-ul"></i>
+              <span>Хронология логов</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <div id="activitySearchWrapper" class="hidden relative">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2 text-slate-500 text-[11px]"></i>
+            <input id="activitySearchInput" type="text" oninput="renderActivityLeaderboard()" placeholder="Поиск участника..."
+              class="bg-slate-900 border border-slate-700 focus:border-amber-400 rounded-xl pl-8 pr-3 py-1 text-xs text-white placeholder-slate-500 focus:outline-none w-44" />
+          </div>
+          <span id="securitySubCaption" class="text-[11px] text-slate-400 font-mono">Сводка по журналу событий</span>
+        </div>
+      </div>
+
+      <!-- ВКЛАДКА 1: ХРОНОЛОГИЯ ЛОГОВ БЕЗОПАСНОСТИ -->
+      <div id="logsChronologyView" class="max-h-72 overflow-y-auto border border-slate-800 rounded-2xl bg-slate-950/60">
+        <table class="w-full text-left text-[11px] border-collapse">
+          <thead class="sticky top-0 bg-slate-900 text-slate-400 font-mono uppercase">
+            <tr>
+              <th class="py-2.5 px-3">Время (МСК)</th>
+              <th class="py-2.5 px-3">Игрок</th>
+              <th class="py-2.5 px-3">Альянс / Ранг</th>
+              <th class="py-2.5 px-3">Событие</th>
+              <th class="py-2.5 px-3">Детали</th>
+            </tr>
+          </thead>
+          <tbody id="securityLogsBody" class="divide-y divide-slate-800/60 font-mono text-slate-300">
+            <tr><td colspan="5" class="py-4 text-center text-slate-500">Логи загружаются...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ВКЛАДКА 2: ТАБЛИЦА РЕЙТИНГА АКТИВНОСТИ КАЖДОГО УЧАСТНИКА -->
+      <div id="activityLeaderboardView" class="hidden space-y-3">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+          <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3">
+            <div class="text-[10px] text-slate-400">Активных на портале</div>
+            <div id="actStatVisited" class="text-lg font-extrabold font-mono text-emerald-400 mt-0.5">0</div>
+          </div>
+          <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3">
+            <div class="text-[10px] text-slate-400">Ни разу не заходили</div>
+            <div id="actStatNever" class="text-lg font-extrabold font-mono text-rose-400 mt-0.5">0</div>
+          </div>
+          <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3">
+            <div class="text-[10px] text-slate-400">Всего входов (✅)</div>
+            <div id="actStatLogins" class="text-lg font-extrabold font-mono text-sky-300 mt-0.5">0</div>
+          </div>
+          <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3">
+            <div class="text-[10px] text-slate-400">Обновлений карточек (✏️)</div>
+            <div id="actStatUpdates" class="text-lg font-extrabold font-mono text-amber-300 mt-0.5">0</div>
+          </div>
+        </div>
+
+        <div class="max-h-96 overflow-y-auto border border-slate-800 rounded-2xl bg-slate-950/60">
+          <table class="w-full text-left text-[11px] border-collapse">
+            <thead class="sticky top-0 bg-slate-900 text-slate-400 font-mono uppercase">
+              <tr>
+                <th class="py-2.5 px-3">#</th>
+                <th class="py-2.5 px-3">Участник / ID</th>
+                <th class="py-2.5 px-2.5">Альянс / Ранг</th>
+                <th class="py-2.5 px-2.5 text-center">Всего действий</th>
+                <th class="py-2.5 px-2.5 text-center" title="Сколько раз заходил на портал">Входов (✅)</th>
+                <th class="py-2.5 px-2.5 text-center" title="Сколько раз сохранял/обновлял карточку и героев">Обновлений (✏️)</th>
+                <th class="py-2.5 px-2.5 text-center" title="Переходы по страницам калькуляторов, гайдов и штаба">Страниц (👁️)</th>
+                <th class="py-2.5 px-2.5 text-center" title="Офицерские действия: добавление игроков, сообщения, статусы">Офицер (⚙️)</th>
+                <th class="py-2.5 px-3">Что делал в последний раз</th>
+                <th class="py-2.5 px-3 text-right">Последний визит (МСК)</th>
+              </tr>
+            </thead>
+            <tbody id="activityTableBody" class="divide-y divide-slate-800/60 font-mono text-slate-200">
+              <tr><td colspan="10" class="py-6 text-center text-slate-500">Подсчёт рейтинга активности...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== МОДАЛЬНОЕ ОКНО: ИНСПЕКТОР АРСЕНАЛА ИГРОКА ==================== -->
+  <div id="arsenalModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="glass-card max-w-4xl w-full rounded-3xl p-6 space-y-5 border border-slate-700 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div>
+          <h3 id="arsenalModalTitle" class="text-base font-extrabold text-white">Арсенал бойца</h3>
+          <p id="arsenalModalSub" class="text-xs text-slate-400 font-mono mt-0.5"></p>
+        </div>
+        <button type="button" onclick="document.getElementById('arsenalModal').classList.add('hidden')" class="text-slate-400 hover:text-white text-base p-1">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Сводка ТОП-снаряжения игрока по 3 типам войск -->
+      <div class="space-y-2">
+        <h4 class="text-xs font-bold uppercase tracking-wider text-sky-400">Перекидное ТОП-снаряжение игрока</h4>
+        <div id="arsenalTopEqGrid" class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs"></div>
+      </div>
+
+      <!-- Таблица настроенных героев игрока -->
+      <div class="space-y-2">
+        <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400">Настроенные герои в арсенале</h4>
+        <div id="arsenalHeroesList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 text-xs"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== МОДАЛЬНОЕ ОКНО: РЕДАКТИРОВАНИЕ ИГРОКА ОФИЦЕРОМ ==================== -->
+  <div id="editMemberModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="glass-card max-w-lg w-full rounded-3xl p-6 space-y-4 border border-slate-700">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+        <h3 class="text-base font-extrabold text-white">Редактирование карточки бойца</h3>
+        <button type="button" onclick="document.getElementById('editMemberModal').classList.add('hidden')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form onsubmit="handleSaveOfficerEdit(event)" class="space-y-3 text-xs">
+        <input type="hidden" id="editOriginalNick" />
+        <input type="hidden" id="editOriginalId" />
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-400 mb-1">Ник игрока</label>
+            <input id="editNick" type="text" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white" />
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">ID игрока</label>
+            <input id="editPlayerId" type="text" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono text-amber-300" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block text-slate-400 mb-1">Альянс</label>
+            <select id="editAlliance" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2 text-white">
+              <option value="Основа">Основа</option>
+              <option value="Академия">Академия</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Ранг (R1–R5)</label>
+            <select id="editRank" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2 font-mono text-white">
+              <option value="R1">R1</option>
+              <option value="R2">R2</option>
+              <option value="R3">R3</option>
+              <option value="R4">R4</option>
+              <option value="R5">R5</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Статус</label>
+            <select id="editStatus" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2 text-white">
+              <option value="Активен">Активен</option>
+              <option value="Деактивирован">Деактивирован</option>
+              <option value="Бан">Бан</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-400 mb-1">Уровень печи</label>
+            <input id="editFurnace" type="text" placeholder="Напр: 30 (Крист)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono" />
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Тир войск</label>
+            <input id="editTier" type="text" placeholder="Напр: T10 (Крист)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block text-slate-400 mb-1">Сбор (Лидер)</label>
+            <input id="editRally" type="number" step="100" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono text-white" />
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Марш (Филлер)</label>
+            <input id="editMarch" type="number" step="100" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono text-white" />
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Посещаемость (%)</label>
+            <input id="editAttendance" type="number" min="0" max="100" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono text-white" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-400 mb-1">Сообщение игроку от офицеров</label>
+          <input id="editOfficerMessage" type="text" placeholder="Уведомление или задача для бойца..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white" />
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-800">
+          <button type="button" onclick="document.getElementById('editMemberModal').classList.add('hidden')" class="px-4 py-2 rounded-xl bg-slate-900 text-slate-300">Отмена</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-bold text-white">Сохранить изменения</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== МОДАЛЬНОЕ ОКНО ПОКАЗА ВЫДАННОГО КОДА ДОСТУПА ==================== -->
+  <div id="passcodeNoticeModal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="glass-card max-w-md w-full rounded-3xl p-6 space-y-4 border border-emerald-500/50 text-center shadow-2xl">
+      <div class="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center mx-auto text-xl">
+        <i class="fa-solid fa-key"></i>
+      </div>
+      <h3 id="passModalTitle" class="text-base font-extrabold text-white">Индивидуальный код доступа создан</h3>
+      <p class="text-xs text-slate-300">Скопируйте и отправьте этот код игроку в личные сообщения (в общей таблице коды скрыты для безопасности):</p>
+      <div id="passModalCodeBox" class="bg-slate-950 border border-emerald-500/40 rounded-2xl py-3 px-4 font-mono text-lg font-extrabold text-emerald-300 tracking-wider select-all">
+        FGT-XXXXX
+      </div>
+      <button type="button" onclick="copyGeneratedPasscode()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white transition">
+        Скопировать код и закрыть
+      </button>
+    </div>
+  </div>
+
+  <div id="toastBanner" class="fixed bottom-5 right-5 z-50 bg-slate-900 border border-sky-500/50 text-sky-200 text-xs font-semibold px-4 py-2.5 rounded-xl shadow-2xl opacity-0 transition-opacity pointer-events-none">
+    Успешно!
+  </div>
+
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwsX-LADURoQu_MsQ2XJVsSPsHAgMebI4_QDXmpPpi3OcpW3ScwPep9ukQBFJfDMrjQ7g/exec';
+    let allPlayersList = [];
+    let allLogsList = [];
+    let currentOfficer = null;
+    let activeAllianceFilter = 'Основа';
+    let currentSecurityTab = 'logs';
+
+    const ALL_HEROES_MAP = {
+      'смит': 'Смит (G1)', 'юджин': 'Юджин (G1)', 'чарли': 'Чарли (G1)', 'клорис': 'Клорис (G1)',
+      'сергей': 'Сергей (G1)', 'джесси': 'Джесси (G1)', 'патрик': 'Патрик (G1)', 'лумак_бокан': 'Лумак Бокан (G1)',
+      'лин_сюэ': 'Лин Сюэ (G1)', 'джина': 'Джина (G1)', 'бахити': 'Бахити (G1)', 'джассер': 'Джассер (G1)',
+      'со_юн': 'Со-Юн (G1)', 'наталия': 'Наталия (G1)', 'молли': 'Молли (G1)', 'джеронимо': 'Джеронимо (G1)',
+      'зинман': 'Зинман (G1)', 'флинт': 'Флинт (G2)', 'филли': 'Филли (G2)', 'алонсо': 'Алонсо (G2)',
+      'логан': 'Логан (G3)', 'миа': 'Миа (G3)', 'грег': 'Грег (G3)', 'яхмос': 'Яхмос (G4)',
+      'рейна': 'Рейна (G4)', 'линн': 'Линн (G4)', 'гектор': 'Гектор (G5)', 'нора': 'Нора (G5)',
+      'гвен': 'Гвен (G5)', 'ву_минг': 'Ву Минг (G6)', 'рене': 'Рене (G6)', 'уэйн': 'Уэйн (G6)',
+      'эдит': 'Эдит (G7)', 'гордон': 'Гордон (G7)', 'брэдли': 'Брэдли (G7)', 'гатот': 'Гатот (G8)',
+      'соня': 'Соня (G8)', 'гендрик': 'Гендрик (G8)', 'магнус': 'Магнус (G9)', 'фред': 'Фред (G9)',
+      'ксура': 'Ксура (G9)', 'грегори': 'Грегори (G10)', 'фрея': 'Фрея (G10)', 'бланшет': 'Бланшет (G10)',
+      'элеонора': 'Элеонора (G11)', 'ллойд': 'Ллойд (G11)', 'руфус': 'Руфус (G11)', 'гервор': 'Гервор (G12)',
+      'карол': 'Карол (G12)', 'лигейя': 'Лигейя (G12)', 'гисела': 'Гисела (G13)', 'флора': 'Флора (G13)',
+      'вулканс': 'Вулканс (G13)', 'элиф': 'Элиф (G14)', 'доминик': 'Доминик (G14)', 'кара': 'Кара (G14)',
+      'хэнк': 'Хэнк (G15)', 'эстрелла': 'Эстрелла (G15)', 'вивека': 'Вивека (G15)', 'сейгель': 'Сейгель (G16)',
+      'урсар': 'Урсар (G16)', 'эйслинг': 'Эйслинг (G16)', 'эйден': 'Эйден (G17)', 'берта': 'Берта (G17)',
+      'элеанор': 'Элеанор (G17)'
+    };
+
+    function getStoredPasscode() {
+      return sessionStorage.getItem('harmony_passcode') || localStorage.getItem('harmony_passcode') || '';
+    }
+
+    async function callHarmonyApi(payload) {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ ...payload, page: 'roster.html', userAgent: navigator.userAgent })
+      });
+      return await res.json();
+    }
+
+    function checkIsOutdated(dateStr) {
+      if (!dateStr || dateStr === 'Ещё не сохранялось' || dateStr === '—') return true;
+      const parts = dateStr.match(/(\d{2})\.(\d{2})\.(\d{4})\s+(\d{2}):(\d{2}):(\d{2})/);
+      if (!parts) return false;
+      const updatedDate = new Date(
+        Number(parts[3]), Number(parts[2]) - 1, Number(parts[1]),
+        Number(parts[4]), Number(parts[5]), Number(parts[6])
+      );
+      return (Date.now() - updatedDate.getTime()) > (3 * 24 * 60 * 60 * 1000);
+    }
+
+    function setAllianceFilter(filterVal) {
+      activeAllianceFilter = filterVal;
+      document.getElementById('filterAllBtn').classList.toggle('active', filterVal === 'ALL');
+      document.getElementById('filterMainBtn').classList.toggle('active', filterVal === 'Основа');
+      document.getElementById('filterAcadBtn').classList.toggle('active', filterVal === 'Академия');
+      populateOfficerDropdowns();
+      renderRosterTable();
+      renderActivityLeaderboard();
+    }
+
+    // Переключение между Хронологией логов и Рейтингом активности
+    function switchSecurityTab(tabName) {
+      currentSecurityTab = tabName;
+      const isActivity = (tabName === 'activity');
+
+      document.getElementById('btnShowActivity').classList.toggle('active', isActivity);
+      document.getElementById('btnShowLogs').classList.toggle('active', !isActivity);
+
+      document.getElementById('activityLeaderboardView').classList.toggle('hidden', !isActivity);
+      document.getElementById('logsChronologyView').classList.toggle('hidden', isActivity);
+      document.getElementById('activitySearchWrapper').classList.toggle('hidden', !isActivity);
+
+      document.getElementById('securitySubCaption').textContent = isActivity
+        ? 'Рейтинг участников по действиям'
+        : `Записей в выборке: ${allLogsList.length}`;
+
+      if (isActivity) {
+        renderActivityLeaderboard();
+      }
+    }
+
+    function populateOfficerDropdowns() {
+      const deactSel = document.getElementById('deactivateSelectPlayer');
+      const msgSel = document.getElementById('messageSelectPlayer');
+
+      const filtered = allPlayersList.filter(p =>
+        activeAllianceFilter === 'ALL' || (p.alliance || 'Основа') === activeAllianceFilter
+      );
+
+      const optionsHtml = '<option value="">— Выберите игрока (' + (activeAllianceFilter === 'ALL' ? 'Все' : activeAllianceFilter) + ') —</option>' +
+        filtered.map(p => {
+          const keyVal = p.playerId ? `ID:${p.playerId}` : `NICK:${p.nick}`;
+          return `<option value="${keyVal}">${p.nick} [${p.alliance || 'Основа'} • ${p.rank || 'R3'} • ${p.status || 'Активен'}]</option>`;
+        }).join('');
+
+      deactSel.innerHTML = optionsHtml;
+      msgSel.innerHTML = optionsHtml;
+    }
+
+    function applyRosterSession(data, autoSetAlliance = false) {
+      if (!data || !data.user || !data.user.isOfficer) {
+        alert('Доступ к Таблице Альянса открыт только офицерам R4–R5!');
+        window.location.href = 'index.html';
+        return;
+      }
+
+      currentOfficer = data.user;
+      allPlayersList = data.allPlayers || [];
+      allLogsList = data.logs || [];
+
+      document.getElementById('headerUserNick').textContent =
+        `${currentOfficer.nick} (${currentOfficer.alliance || 'Основа'} • ${currentOfficer.rank})`;
+      document.getElementById('userRankBadge').textContent = `ОФИЦЕР ${currentOfficer.rank}`;
+
+      if (autoSetAlliance && currentOfficer.alliance) {
+        setAllianceFilter(currentOfficer.alliance);
+      } else {
+        populateOfficerDropdowns();
+        renderRosterTable();
+      }
+
+      renderLogs(allLogsList);
+      renderActivityLeaderboard();
+    }
+
+    function renderRosterTable() {
+      const tbody = document.getElementById('rosterTableBody');
+      const search = (document.getElementById('rosterSearchInput').value || '').trim().toLowerCase();
+      const statusFilter = document.getElementById('statusFilterSelect').value;
+
+      const filtered = allPlayersList.filter(p => {
+        const pAlliance = p.alliance || 'Основа';
+        if (activeAllianceFilter !== 'ALL' && pAlliance !== activeAllianceFilter) return false;
+
+        const st = p.status || 'Активен';
+        if (statusFilter === 'Активен' && st !== 'Активен') return false;
+        if (statusFilter === 'Деактивирован' && st === 'Активен') return false;
+
+        if (search) {
+          const matchNick = (p.nick || '').toLowerCase().includes(search);
+          const matchId = (p.playerId || '').toLowerCase().includes(search);
+          if (!matchNick && !matchId) return false;
+        }
+        return true;
+      });
+
+      const totalInAlliance = allPlayersList.filter(p => activeAllianceFilter === 'ALL' || (p.alliance || 'Основа') === activeAllianceFilter);
+      document.getElementById('statTotalPlayers').textContent = filtered.length;
+      document.getElementById('statActivePlayers').textContent = totalInAlliance.filter(p => (p.status || 'Активен') === 'Активен').length;
+      document.getElementById('statCrystalPlayers').textContent = filtered.filter(p =>
+        String(p.furnaceLevel || '').toLowerCase().includes('крист') || String(p.troopTier || '').toLowerCase().includes('крист')
+      ).length;
+      document.getElementById('statOutdatedPlayers').textContent = filtered.filter(p => checkIsOutdated(p.updatedAt)).length;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="11" class="py-8 text-center text-slate-500">Бойцы по заданному фильтру не найдены</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(p => {
+        const heroesObj = p.heroesData || {};
+        const configuredKeys = Object.keys(heroesObj).filter(k => !k.startsWith('_') && heroesObj[k] && heroesObj[k].configured);
+        const isOutdated = checkIsOutdated(p.updatedAt);
+        const isActive = (p.status || 'Активен') === 'Активен';
+        const safeNick = (p.nick || '').replace(/'/g, "\\'");
+        const safeId = (p.playerId || '').replace(/'/g, "\\'");
+
+        return `
+          <tr class="hover:bg-slate-900/50 transition ${!isActive ? 'opacity-55 bg-rose-950/10' : ''}">
+            <td class="py-3 px-3">
+              <div class="font-bold text-white">${p.nick || '—'}</div>
+              <div class="text-[10px] font-mono text-amber-300">ID: ${p.playerId || 'не указан'}</div>
+            </td>
+            <td class="py-3 px-2.5">
+              <span class="px-2 py-0.5 rounded-lg text-[10px] font-bold ${
+                (p.alliance || 'Основа') === 'Основа'
+                  ? 'bg-sky-500/15 text-sky-300 border border-sky-500/30'
+                  : 'bg-purple-500/15 text-purple-300 border border-purple-500/30'
+              }">${p.alliance || 'Основа'}</span>
+            </td>
+            <td class="py-3 px-2.5 font-mono font-bold text-slate-200">${p.rank || 'R3'}</td>
+            <td class="py-3 px-2.5">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                isActive ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+              }">${p.status || 'Активен'}</span>
+            </td>
+            <td class="py-3 px-2.5 font-mono">
+              <div class="text-sky-300">Печь: <b>${p.furnaceLevel || '—'}</b></div>
+              <div class="text-rose-300 text-[11px]">Войска: <b>${p.troopTier || '—'}</b></div>
+            </td>
+            <td class="py-3 px-2.5 text-right font-mono font-bold text-amber-300">
+              ${p.rallyCap ? Number(p.rallyCap).toLocaleString('ru-RU') : '0'}
+            </td>
+            <td class="py-3 px-2.5 text-right font-mono font-bold text-slate-200">
+              ${p.marchCap ? Number(p.marchCap).toLocaleString('ru-RU') : '0'}
+              <div class="text-[10px] text-slate-400 font-normal">${p.marchesCount || 5} маршей</div>
+            </td>
+            <td class="py-3 px-2.5">
+              <button type="button" onclick="openPlayerArsenal('${safeId}', '${safeNick}')"
+                class="px-2.5 py-1 rounded-xl bg-slate-900 hover:bg-sky-950 border border-sky-500/30 text-sky-300 font-mono text-[11px] transition flex items-center gap-1.5">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>Арсенал (${configuredKeys.length}/65)</span>
+              </button>
+            </td>
+            <td class="py-3 px-2.5 max-w-[180px]">
+              ${p.officerMessage
+                ? `<div class="text-[11px] text-amber-200 truncate" title="${p.officerMessage.replace(/"/g, '"')}">${p.officerMessage}</div>`
+                : `<span class="text-slate-600 text-[11px]">—</span>`
+              }
+            </td>
+            <td class="py-3 px-2.5 font-mono text-[11px]">
+              <div class="${isOutdated ? 'text-rose-400 font-bold' : 'text-slate-300'}">
+                ${p.updatedAt || 'Никогда'}
+              </div>
+              ${isOutdated ? '<span class="text-[9px] text-rose-400">Устарело (>3 дн.)</span>' : ''}
+            </td>
+            <td class="py-3 px-3 text-right">
+              <div class="flex items-center justify-end gap-1">
+                <button type="button" onclick="promptMessageToPlayer('${safeId}', '${safeNick}')"
+                  class="p-1.5 rounded-lg bg-slate-900 hover:bg-sky-900/60 border border-slate-700 text-sky-400" title="Отправить сообщение бойцу">
+                  <i class="fa-solid fa-envelope"></i>
+                </button>
+                <button type="button" onclick="openEditMemberModal('${safeId}', '${safeNick}')"
+                  class="p-1.5 rounded-lg bg-slate-900 hover:bg-amber-900/60 border border-slate-700 text-amber-400" title="Редактировать карточку">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+                <button type="button" onclick="toggleMemberStatusRow('${safeId}', '${safeNick}', '${isActive ? 'Деактивирован' : 'Активен'}')"
+                  class="p-1.5 rounded-lg bg-slate-900 hover:bg-rose-900/60 border border-slate-700 ${isActive ? 'text-rose-400' : 'text-emerald-400'}"
+                  title="${isActive ? 'Деактивировать игрока' : 'Активировать игрока'}">
+                  <i class="fa-solid ${isActive ? 'fa-user-slash' : 'fa-user-check'}"></i>
+                </button>
+                <button type="button" onclick="regenPlayerPass('${safeId}', '${safeNick}')"
+                  class="p-1.5 rounded-lg bg-slate-900 hover:bg-purple-900/60 border border-slate-700 text-purple-300" title="Сгенерировать новый личный пароль">
+                  <i class="fa-solid fa-key"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderLogs(logs) {
+      const tbody = document.getElementById('securityLogsBody');
+      if (!logs || logs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-slate-500">Записей пока нет</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = logs.slice(0, 100).map(l => `
+        <tr class="hover:bg-slate-900/40">
+          <td class="py-1.5 px-3 text-slate-400 whitespace-nowrap">${l.time}</td>
+          <td class="py-1.5 px-3 font-bold text-white">${l.nick}</td>
+          <td class="py-1.5 px-3 text-sky-300">${l.rank}</td>
+          <td class="py-1.5 px-3">${l.event}</td>
+          <td class="py-1.5 px-3 text-slate-400">${l.details}</td>
+        </tr>
+      `).join('');
+    }
+
+    // ПОДСЧЁТ И ОТРИСОВКА РЕЙТИНГА АКТИВНОСТИ КАЖДОГО УЧАСТНИКА
+    function renderActivityLeaderboard() {
+      const tbody = document.getElementById('activityTableBody');
+      if (!tbody) return;
+
+      const q = (document.getElementById('activitySearchInput')?.value || '').trim().toLowerCase();
+      const statsMap = new Map();
+
+      // 1. Сначала регистрируем всех игроков из базы альянса (чтобы видеть даже тех, у кого 0 входов)
+      allPlayersList.forEach(p => {
+        const key = p.playerId ? `ID:${p.playerId}` : `NICK:${(p.nick || '').toLowerCase()}`;
+        statsMap.set(key, {
+          nick: p.nick || '—',
+          playerId: p.playerId || '',
+          alliance: p.alliance || 'Основа',
+          rank: p.rank || 'R3',
+          status: p.status || 'Активен',
+          logins: 0,
+          updates: 0,
+          views: 0,
+          officerOps: 0,
+          totalActions: 0,
+          lastEvent: 'Не проявлял активности',
+          lastTime: p.updatedAt || '—'
+        });
+      });
+
+      // Helper поиска записи игрока по строке из лога вида "Виталий [ID:10001]"
+      function findStatEntry(actorLabel, rankCol) {
+        const raw = String(actorLabel || '').trim();
+        if (!raw || raw === 'НЕИЗВЕСТНЫЙ') return null;
+
+        const idMatch = raw.match(/\[ID:([^\]]+)\]/i);
+        const extractedId = idMatch ? idMatch[1].trim() : '';
+        const cleanNick = raw.replace(/\s*\[ID:[^\]]+\]/i, '').trim();
+
+        if (extractedId && statsMap.has(`ID:${extractedId}`)) {
+          return statsMap.get(`ID:${extractedId}`);
+        }
+        for (const entry of statsMap.values()) {
+          if (entry.nick.toLowerCase() === cleanNick.toLowerCase()) {
+            return entry;
+          }
+        }
+
+        // Если игрок был удалён из списка, но остался в исторических логах
+        const fallbackKey = extractedId ? `ID:${extractedId}` : `NICK:${cleanNick.toLowerCase()}`;
+        if (!statsMap.has(fallbackKey)) {
+          const rankParts = String(rankCol || '').split('•');
+          statsMap.set(fallbackKey, {
+            nick: cleanNick,
+            playerId: extractedId,
+            alliance: (rankParts[0] || 'Основа').trim(),
+            rank: (rankParts[1] || 'R3').trim(),
+            status: 'Архив',
+            logins: 0,
+            updates: 0,
+            views: 0,
+            officerOps: 0,
+            totalActions: 0,
+            lastEvent: '—',
+            lastTime: '—'
+          });
+        }
+        return statsMap.get(fallbackKey);
+      }
+
+      let sumLogins = 0;
+      let sumUpdates = 0;
+
+      // 2. Проходим по всем записям журнала безопасности (от новых к старым)
+      allLogsList.forEach(log => {
+        const entry = findStatEntry(log.nick, log.rank);
+        if (!entry) return;
+
+        const ev = String(log.event || '');
+        if (entry.totalActions === 0 && log.time) {
+          entry.lastTime = log.time;
+          entry.lastEvent = `${ev} (${log.details || ''})`;
+        }
+
+        if (ev.includes('Вход на портал') || ev.includes('✅')) {
+          entry.logins++;
+          entry.totalActions++;
+          sumLogins++;
+        } else if (ev.includes('Сохранение карточки') || ev.includes('Обновление карточки') || ev.includes('✏️')) {
+          entry.updates++;
+          entry.totalActions++;
+          sumUpdates++;
+        } else if (ev.includes('Переход') || ev.includes('👁️')) {
+          entry.views++;
+          entry.totalActions++;
+        } else if (
+          ev.includes('➕') || ev.includes('🔒') || ev.includes('✉️') ||
+          ev.includes('🗑️') || ev.includes('🔑')
+        ) {
+          entry.officerOps++;
+          entry.totalActions++;
+        } else {
+          entry.totalActions++;
+        }
+      });
+
+      // 3. Фильтруем по выбранному подразделению (Основа / Академия / Все) и поисковой строке
+      let rows = Array.from(statsMap.values()).filter(item => {
+        if (activeAllianceFilter !== 'ALL' && item.alliance !== activeAllianceFilter) return false;
+        if (q) {
+          const mNick = item.nick.toLowerCase().includes(q);
+          const mId = item.playerId.toLowerCase().includes(q);
+          if (!mNick && !mId) return false;
+        }
+        return true;
+      });
+
+      // Сортируем по убыванию общего числа действий, затем по числу обновлений карточки
+      rows.sort((a, b) => {
+        if (b.totalActions !== a.totalActions) return b.totalActions - a.totalActions;
+        return b.updates - a.updates;
+      });
+
+      const visitedCount = rows.filter(r => r.totalActions > 0).length;
+      const neverCount = rows.filter(r => r.totalActions === 0).length;
+
+      document.getElementById('actStatVisited').textContent = visitedCount;
+      document.getElementById('actStatNever').textContent = neverCount;
+      document.getElementById('actStatLogins').textContent = sumLogins;
+      document.getElementById('actStatUpdates').textContent = sumUpdates;
+
+      if (rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" class="py-6 text-center text-slate-500">Нет данных по выбранному фильтру</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = rows.map((r, idx) => {
+        const rankNum = idx + 1;
+        const medal = rankNum === 1 ? '🥇' : rankNum === 2 ? '🥈' : rankNum === 3 ? '🥉' : `${rankNum}.`;
+        const isZero = r.totalActions === 0;
+
+        return `
+          <tr class="hover:bg-slate-900/50 transition ${isZero ? 'opacity-60 bg-rose-950/10' : ''}">
+            <td class="py-2.5 px-3 font-bold ${rankNum <= 3 && !isZero ? 'text-amber-300' : 'text-slate-400'}">${medal}</td>
+            <td class="py-2.5 px-3">
+              <div class="font-bold text-white">${r.nick}</div>
+              <div class="text-[10px] text-amber-300/80">${r.playerId ? 'ID: ' + r.playerId : 'ID не указан'}</div>
+            </td>
+            <td class="py-2.5 px-2.5">
+              <span class="text-sky-300">${r.alliance}</span> • <span class="font-bold text-slate-200">${r.rank}</span>
+            </td>
+            <td class="py-2.5 px-2.5 text-center">
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold ${
+                r.totalActions >= 10
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                  : r.totalActions > 0
+                  ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
+                  : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+              }">${r.totalActions}</span>
+            </td>
+            <td class="py-2.5 px-2.5 text-center font-bold ${r.logins > 0 ? 'text-emerald-400' : 'text-slate-600'}">${r.logins}</td>
+            <td class="py-2.5 px-2.5 text-center font-bold ${r.updates > 0 ? 'text-amber-300' : 'text-slate-600'}">${r.updates}</td>
+            <td class="py-2.5 px-2.5 text-center ${r.views > 0 ? 'text-sky-300' : 'text-slate-600'}">${r.views}</td>
+            <td class="py-2.5 px-2.5 text-center ${r.officerOps > 0 ? 'text-purple-300 font-bold' : 'text-slate-600'}">${r.officerOps}</td>
+            <td class="py-2.5 px-3 text-slate-300 max-w-[240px] truncate" title="${r.lastEvent.replace(/"/g, '"')}">${r.lastEvent}</td>
+            <td class="py-2.5 px-3 text-right whitespace-nowrap ${isZero ? 'text-rose-400' : 'text-slate-300'}">${r.lastTime}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function findPlayerObj(playerId, nick) {
+      return allPlayersList.find(p =>
+        (playerId && String(p.playerId) === String(playerId)) ||
+        (!playerId && String(p.nick).toLowerCase() === String(nick).toLowerCase())
+      );
+    }
+
+    function openPlayerArsenal(playerId, nick) {
+      const p = findPlayerObj(playerId, nick);
+      if (!p) return;
+
+      document.getElementById('arsenalModalTitle').textContent = `Арсенал бойца: ${p.nick}`;
+      document.getElementById('arsenalModalSub').textContent =
+        `Альянс: ${p.alliance || 'Основа'} • Ранг: ${p.rank || 'R3'} • Печь: ${p.furnaceLevel || '—'} • Тир: ${p.troopTier || '—'}`;
+
+      const topEq = p.topEquipmentData || (p.heroesData && p.heroesData._topEquipment) || {};
+      const classes = [
+        { key: 'infantry', label: '🛡️ Пехота (ТОП)', color: 'text-amber-300' },
+        { key: 'lancers', label: '⚔️ Копейщики (ТОП)', color: 'text-sky-300' },
+        { key: 'marksmen', label: '🏹 Стрелки (ТОП)', color: 'text-emerald-300' }
+      ];
+
+      document.getElementById('arsenalTopEqGrid').innerHTML = classes.map(c => {
+        const eq = topEq[c.key] || {};
+        return `
+          <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-1 font-mono">
+            <div class="font-bold ${c.color}">${c.label}</div>
+            <div class="text-slate-300">🕶️ Очки: Ур.${eq.gLvl || '—'} (${eq.gTier || '—'})</div>
+            <div class="text-slate-300">🥊 Перчатки: Ур.${eq.glLvl || '—'} (${eq.glTier || '—'})</div>
+            <div class="text-slate-300">🥋 Пояс: Ур.${eq.bLvl || '—'} (${eq.bTier || '—'})</div>
+            <div class="text-slate-300">🥾 Сапоги: Ур.${eq.btLvl || '—'} (${eq.btTier || '—'})</div>
+          </div>
+        `;
+      }).join('');
+
+      const heroesObj = p.heroesData || {};
+      const configuredKeys = Object.keys(heroesObj).filter(k => !k.startsWith('_') && heroesObj[k] && heroesObj[k].configured);
+
+      if (configuredKeys.length === 0) {
+        document.getElementById('arsenalHeroesList').innerHTML =
+          `<div class="col-span-3 py-6 text-center text-slate-400">Боец ещё не настроил карточки героев.</div>`;
+      } else {
+        document.getElementById('arsenalHeroesList').innerHTML = configuredKeys.map(k => {
+          const h = heroesObj[k];
+          const title = ALL_HEROES_MAP[k] || k;
+          const sTop = h.sTop !== undefined ? h.sTop : (h.s1 || 5);
+          const sMid = h.sMid !== undefined ? h.sMid : (h.s2 || 5);
+          const sBot = h.sBot !== undefined ? h.sBot : (h.s3 || 5);
+          const eTop = h.eTop !== undefined ? h.eTop : (h.e1 || 5);
+          const eMid = h.eMid !== undefined ? h.eMid : 0;
+          const eBot = h.eBot !== undefined ? h.eBot : (h.e2 || 5);
+          const expStr = eMid === 0 ? `${eTop}/—/${eBot}` : `${eTop}/${eMid}/${eBot}`;
+
+          return `
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 space-y-1 font-mono">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-white text-xs">${title}</span>
+                <span class="text-amber-300 text-[11px]">Ур.${h.level || 70} • ${h.starsFull ?? 5}★ (${h.starsBars || 0} лыч.)</span>
+              </div>
+              <div class="text-[11px] text-slate-300">Освоение (В/С/Н): <b class="text-amber-300">${sTop}/${sMid}/${sBot}</b></div>
+              <div class="text-[11px] text-slate-300">Экспедиция (В/С/Н): <b class="text-sky-300">${expStr}</b></div>
+              <div class="text-[11px] text-slate-400">Пушка: <b class="${h.cannon ? 'text-emerald-300' : 'text-slate-500'}">${h.cannon ? 'Да (Ур.' + (h.cannonLvl || '1') + ')' : 'Нет'}</b></div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      document.getElementById('arsenalModal').classList.remove('hidden');
+    }
+
+    async function handleAddMember(e) {
+      e.preventDefault();
+      const code = getStoredPasscode();
+      const mNick = document.getElementById('newMemberNick').value.trim();
+      const mId = document.getElementById('newMemberId').value.trim();
+      const mAlliance = document.getElementById('newMemberAlliance').value;
+      const mRank = document.getElementById('newMemberRank').value;
+      if (!mNick) return;
+
+      const btn = document.getElementById('addMemberBtn');
+      btn.disabled = true;
+
+      try {
+        const res = await callHarmonyApi({
+          action: 'add_member',
+          passcode: code,
+          memberNick: mNick,
+          memberId: mId,
+          memberAlliance: mAlliance,
+          memberRank: mRank
+        });
+        if (res.ok) {
+          document.getElementById('newMemberNick').value = '';
+          document.getElementById('newMemberId').value = '';
+          if (res.generatedPass) {
+            showPassModal(`Боец ${mNick} добавлен!`, res.generatedPass);
+          }
+          await syncAllData(false);
+        } else {
+          alert(res.error || 'Ошибка добавления');
+        }
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function parseDropdownKey(val) {
+      if (!val) return { targetId: '', targetNick: '' };
+      if (val.startsWith('ID:')) return { targetId: val.slice(3), targetNick: '' };
+      if (val.startsWith('NICK:')) return { targetId: '', targetNick: val.slice(5) };
+      return { targetId: '', targetNick: val };
+    }
+
+    async function handleQuickStatusChange(newStatus) {
+      const selVal = document.getElementById('deactivateSelectPlayer').value;
+      if (!selVal) return alert('Сначала выберите игрока из выпадающего списка!');
+      const { targetId, targetNick } = parseDropdownKey(selVal);
+      await toggleMemberStatusRow(targetId, targetNick, newStatus);
+    }
+
+    async function toggleMemberStatusRow(targetId, targetNick, newStatus) {
+      const code = getStoredPasscode();
+      const res = await callHarmonyApi({
+        action: 'deactivate_member',
+        passcode: code,
+        targetId,
+        targetNick,
+        newStatus
+      });
+      if (res.ok) {
+        showToast(`Статус изменён на: ${res.status}`);
+        await syncAllData(false);
+      } else {
+        alert(res.error || 'Ошибка изменения статуса');
+      }
+    }
+
+    async function handleQuickSendMessage() {
+      const selVal = document.getElementById('messageSelectPlayer').value;
+      if (!selVal) return alert('Выберите получателя из списка!');
+      const msg = document.getElementById('quickMessageInput').value.trim();
+      const { targetId, targetNick } = parseDropdownKey(selVal);
+
+      const code = getStoredPasscode();
+      const res = await callHarmonyApi({
+        action: 'send_message',
+        passcode: code,
+        targetId,
+        targetNick,
+        message: msg
+      });
+      if (res.ok) {
+        document.getElementById('quickMessageInput').value = '';
+        showToast('Сообщение игроку сохранено!');
+        await syncAllData(false);
+      } else {
+        alert(res.error || 'Ошибка отправки сообщения');
+      }
+    }
+
+    async function promptMessageToPlayer(targetId, targetNick) {
+      const p = findPlayerObj(targetId, targetNick);
+      const currentMsg = p ? (p.officerMessage || '') : '';
+      const nextMsg = prompt(`Введите сообщение от штаба для игрока ${targetNick || targetId} (оставьте пустым для очистки):`, currentMsg);
+      if (nextMsg === null) return;
+
+      const code = getStoredPasscode();
+      const res = await callHarmonyApi({
+        action: 'send_message',
+        passcode: code,
+        targetId,
+        targetNick,
+        message: nextMsg.trim()
+      });
+      if (res.ok) {
+        showToast('Сообщение обновлено!');
+        await syncAllData(false);
+      } else {
+        alert(res.error || 'Ошибка');
+      }
+    }
+
+    function openEditMemberModal(targetId, targetNick) {
+      const p = findPlayerObj(targetId, targetNick);
+      if (!p) return;
+
+      document.getElementById('editOriginalNick').value = p.nick || '';
+      document.getElementById('editOriginalId').value = p.playerId || '';
+      document.getElementById('editNick').value = p.nick || '';
+      document.getElementById('editPlayerId').value = p.playerId || '';
+      document.getElementById('editAlliance').value = p.alliance || 'Основа';
+      document.getElementById('editRank').value = ['R1','R2','R3','R4','R5'].includes(p.rank) ? p.rank : 'R3';
+      document.getElementById('editStatus').value = p.status || 'Активен';
+      document.getElementById('editFurnace').value = p.furnaceLevel || '';
+      document.getElementById('editTier').value = p.troopTier || '';
+      document.getElementById('editRally').value = p.rallyCap || 0;
+      document.getElementById('editMarch').value = p.marchCap || 0;
+      document.getElementById('editAttendance').value = p.attendance !== undefined ? p.attendance : 100;
+      document.getElementById('editOfficerMessage').value = p.officerMessage || '';
+
+      document.getElementById('editMemberModal').classList.remove('hidden');
+    }
+
+    async function handleSaveOfficerEdit(e) {
+      e.preventDefault();
+      const code = getStoredPasscode();
+      const origId = document.getElementById('editOriginalId').value.trim();
+      const origNick = document.getElementById('editOriginalNick').value.trim();
+      const p = findPlayerObj(origId, origNick) || {};
+
+      const cardPayload = {
+        nick: document.getElementById('editNick').value.trim(),
+        playerId: document.getElementById('editPlayerId').value.trim(),
+        alliance: document.getElementById('editAlliance').value,
+        rank: document.getElementById('editRank').value,
+        status: document.getElementById('editStatus').value,
+        furnaceLevel: document.getElementById('editFurnace').value.trim(),
+        troopTier: document.getElementById('editTier').value.trim(),
+        rallyCap: Number(document.getElementById('editRally').value) || 0,
+        marchCap: Number(document.getElementById('editMarch').value) || 0,
+        marchesCount: p.marchesCount || 5,
+        attendance: Number(document.getElementById('editAttendance').value) || 100,
+        officerMessage: document.getElementById('editOfficerMessage').value.trim(),
+        heroesData: p.heroesData || {},
+        topEquipmentData: p.topEquipmentData || {}
+      };
+
+      const res = await callHarmonyApi({
+        action: 'save_card',
+        passcode: code,
+        targetId: origId,
+        targetNick: origNick,
+        card: cardPayload
+      });
+
+      if (res.ok) {
+        document.getElementById('editMemberModal').classList.add('hidden');
+        showToast('Карточка бойца обновлена!');
+        await syncAllData(false);
+      } else {
+        alert(res.error || 'Ошибка сохранения');
+      }
+    }
+
+    async function regenPlayerPass(targetId, targetNick) {
+      if (!confirm(`Сгенерировать новый индивидуальный код для игрока ${targetNick || targetId}? Старый код перестанет работать.`)) return;
+      const code = getStoredPasscode();
+      const res = await callHarmonyApi({
+        action: 'regen_pass',
+        passcode: code,
+        targetId,
+        targetNick
+      });
+      if (res.ok && res.newPass) {
+        showPassModal(`Новый код для ${targetNick || targetId}`, res.newPass);
+        await syncAllData(false);
+      } else {
+        alert(res.error || 'Ошибка сброса пароля');
+      }
+    }
+
+    function showPassModal(title, pass) {
+      document.getElementById('passModalTitle').textContent = title;
+      document.getElementById('passModalCodeBox').textContent = pass;
+      document.getElementById('passcodeNoticeModal').classList.remove('hidden');
+    }
+
+    function copyGeneratedPasscode() {
+      const code = document.getElementById('passModalCodeBox').textContent.trim();
+      navigator.clipboard.writeText(code);
+      document.getElementById('passcodeNoticeModal').classList.add('hidden');
+      showToast('Код скопирован в буфер обмена!');
+    }
+
+    async function syncAllData(showSpinner = true) {
+      const code = getStoredPasscode();
+      if (!code) {
+        window.location.href = 'index.html';
+        return;
+      }
+      const icon = document.getElementById('syncIcon');
+      if (showSpinner && icon) icon.classList.add('fa-spin');
+
+      try {
+        const res = await callHarmonyApi({ action: 'sync', passcode: code });
+        if (res.ok) {
+          sessionStorage.setItem('harmony_session_cache', JSON.stringify(res));
+          applyRosterSession(res, false);
+          if (showSpinner) showToast('Таблица и рейтинг активности обновлены');
+        } else {
+          window.location.href = 'index.html';
+        }
+      } finally {
+        if (icon) icon.classList.remove('fa-spin');
+      }
+    }
+
+    function showToast(msg) {
+      const el = document.getElementById('toastBanner');
+      el.textContent = msg;
+      el.classList.remove('opacity-0');
+      setTimeout(() => el.classList.add('opacity-0'), 2500);
+    }
+
+    function logoutPortal() {
+      sessionStorage.removeItem('harmony_passcode');
+      localStorage.removeItem('harmony_passcode');
+      sessionStorage.removeItem('harmony_session_cache');
+      window.location.href = 'index.html';
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const cached = sessionStorage.getItem('harmony_session_cache');
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (parsed && parsed.allPlayers) {
+            applyRosterSession(parsed, true);
+            syncAllData(false);
+            return;
+          }
+        } catch (e) {}
+      }
+      syncAllData(true);
+    });
+  </script>
+</body>
+</html>
