@@ -40,7 +40,7 @@
 </head>
 <body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-sky-500 selection:text-white relative">
 
-  <!-- Видеофон для экрана входа (поместите файл background.mp4 в папку assets/ в корне проекта) -->
+  <!-- Видеофон для экрана входа (файл assets/background.mp4) -->
   <video id="bgVideo" autoplay muted loop playsinline class="bg-video">
     <source src="assets/background.mp4" type="video/mp4">
   </video>
@@ -102,13 +102,13 @@
           <div>
             <div class="flex items-center gap-2">
               <span class="font-extrabold text-sm tracking-tight text-white">ГАРМОНИЯ</span>
-              <span id="userRankBadge" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30">R1-R3</span>
+              <span id="userRoleBadge" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30">Боец</span>
             </div>
             <div class="text-[11px] text-slate-400" id="headerUserNick">Боец</div>
           </div>
         </div>
 
-        <!-- Единое полноценное меню навигации -->
+        <!-- Единое меню навигации (все 5 вкладок) -->
         <nav class="flex flex-wrap items-center gap-1.5 text-xs">
           <a href="index.html" class="nav-pill active px-3 py-1.5 rounded-xl border border-transparent font-semibold flex items-center gap-1.5 transition">
             <i class="fa-solid fa-id-card"></i>
@@ -151,13 +151,46 @@
           </div>
           <h3 class="text-base font-extrabold text-white">Нужно обновить карточки героев!</h3>
           <p class="text-xs text-slate-300 leading-relaxed">
-            Вы не обновляли данные своей карточки и арсенал героев более 3 дней. Пожалуйста, проверьте актуальность уровня печи, тира войск, ТОП-снаряжения и прокачки героев, чтобы штаб мог точно рассчитывать сборы и рейды.
+            Вы не обновляли данные своей карточки и арсенал героев более 3 дней. Пожалуйста, проверьте актуальность уровня печи, тира войск, ТОП-снаряжения и прокачки героев.
           </p>
           <button type="button" onclick="document.getElementById('outdatedModal').classList.add('hidden')" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-xs font-bold text-slate-950 transition">
             Перейти к обновлению данных
           </button>
         </div>
       </div>
+
+      <!-- УВЕДОМЛЕНИЕ ОТ ОФИЦЕРОВ (ЕСЛИ ЕСТЬ СООБЩЕНИЕ В КАРТОЧКЕ) -->
+      <div id="officerMessageBanner" class="hidden rounded-2xl bg-amber-950/75 border border-amber-500/40 px-4 py-3 text-xs text-amber-200 flex items-center gap-3 shadow-lg">
+        <i class="fa-solid fa-envelope-open-text text-amber-400 text-base shrink-0"></i>
+        <div>
+          <div class="font-bold text-amber-300 uppercase text-[10px] tracking-wider">Сообщение от руководства альянса:</div>
+          <div id="officerMessageText" class="mt-0.5 font-medium"></div>
+        </div>
+      </div>
+
+      <!-- ПАНЕЛЬ ПЕРЕХОДА В СТУДИЮ ОСТРОВА РАССВЕТА + ПРИМЕЧАНИЕ ПРО LOLKA -->
+      <section class="glass-card rounded-3xl p-4 sm:p-5 border border-cyan-500/40 bg-gradient-to-r from-slate-900/95 via-sky-950/35 to-slate-900/95 shadow-xl flex flex-wrap items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center gap-3.5">
+          <a href="https://rikiruba23-taypan.github.io/island-studio/" target="_blank" rel="noopener noreferrer"
+            class="px-5 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-xs sm:text-sm font-extrabold text-white shadow-lg shadow-cyan-950/70 border border-cyan-300/30 transition flex items-center gap-2.5">
+            <i class="fa-solid fa-island-tropical text-base"></i>
+            <i class="fa-solid fa-compass text-base"></i>
+            <span>Студия проектирования Острова Рассвета</span>
+            <i class="fa-solid fa-arrow-up-right-from-square text-xs opacity-80"></i>
+          </a>
+
+          <div class="flex items-center gap-2 bg-slate-950/80 border border-amber-500/30 rounded-xl px-3.5 py-2 text-xs text-amber-200">
+            <i class="fa-solid fa-circle-info text-amber-400 shrink-0"></i>
+            <span>Для добавления в <b>lolka</b> нужно обратиться к <b>R4</b> или <b>R5</b>.</span>
+          </div>
+        </div>
+
+        <!-- Индикатор фонового автосохранения -->
+        <div id="autoSaveStatusBox" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/90 border border-slate-800 text-[11px] font-mono text-emerald-400">
+          <i id="autoSaveIcon" class="fa-solid fa-cloud-check"></i>
+          <span id="autoSaveText">Синхронизировано с базой</span>
+        </div>
+      </section>
 
       <!-- ОСНОВНАЯ КАРТОЧКА ИГРОКА -->
       <section class="glass-card rounded-3xl p-5 sm:p-7 shadow-xl border border-slate-800">
@@ -166,7 +199,7 @@
             <div class="flex items-center gap-2">
               <h2 class="text-lg font-extrabold text-white">Личная Боевая Карточка Игрока и Арсенал Героев</h2>
             </div>
-            <p class="text-xs text-slate-400 mt-0.5">Заполните базовые параметры марша, ТОП-снаряжение и настройте карточки каждого героя ниже.</p>
+            <p class="text-xs text-slate-400 mt-0.5">Все изменения сохраняются в базу автоматически сразу после ввода.</p>
           </div>
           <div class="text-right text-[11px] font-mono text-slate-400">
             <div>Обновлено:</div>
@@ -174,22 +207,27 @@
           </div>
         </div>
 
-        <form id="playerCardForm" onsubmit="handleSaveCard(event)" class="mt-5 space-y-6">
+        <form id="playerCardForm" onsubmit="event.preventDefault(); triggerAutoSave(true);" class="mt-5 space-y-6">
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label class="block text-xs font-semibold text-slate-300 mb-1">Ник в игре</label>
-              <input id="fieldNick" type="text" required class="w-full bg-slate-900 border border-slate-700 focus:border-sky-500 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none" />
+              <input id="fieldNick" type="text" required oninput="triggerAutoSave()"
+                class="w-full bg-slate-900 border border-slate-700 focus:border-sky-500 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none" />
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-1">Неизменный ID игрока <span class="text-amber-400">*</span></label>
-              <input id="fieldPlayerId" type="text" placeholder="Напр: 148920451" class="w-full bg-slate-900 border border-slate-700 focus:border-sky-500 rounded-xl px-3.5 py-2.5 text-sm font-mono text-amber-300 focus:outline-none" />
+              <label class="block text-xs font-semibold text-slate-300 mb-1">
+                Неизменный ID игрока <span class="text-[10px] text-slate-500 font-normal">(только просмотр)</span>
+              </label>
+              <div class="relative flex items-center">
+                <input id="fieldPlayerId" type="text" readonly tabindex="-1"
+                  class="w-full bg-slate-950/90 border border-slate-800 rounded-xl px-3.5 py-2.5 pr-9 text-sm font-mono text-amber-300/90 cursor-not-allowed select-all focus:outline-none" />
+                <i class="fa-solid fa-lock absolute right-3.5 text-slate-600 text-xs" title="ID защищён от изменения"></i>
+              </div>
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-300 mb-1">Альянс</label>
-              <select id="fieldAlliance" class="w-full bg-slate-900 border border-slate-700 focus:border-sky-500 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none">
-                <option value="Основа">Основа</option>
-                <option value="Академия">Академия</option>
-              </select>
+              <input id="fieldAllianceDisplay" type="text" readonly tabindex="-1"
+                class="w-full bg-slate-950/90 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-sky-300 font-semibold cursor-not-allowed focus:outline-none" />
             </div>
           </div>
 
@@ -199,22 +237,24 @@
               <div class="flex items-center justify-between">
                 <label class="text-xs font-semibold text-sky-300">Уровень печи (1–30)</label>
                 <label class="flex items-center gap-1.5 cursor-pointer text-[11px] text-amber-300">
-                  <input id="fieldFurnaceCrystal" type="checkbox" class="accent-amber-500 rounded w-3.5 h-3.5" />
+                  <input id="fieldFurnaceCrystal" type="checkbox" onchange="triggerAutoSave()" class="accent-amber-500 rounded w-3.5 h-3.5" />
                   <span>💎 Кристальная</span>
                 </label>
               </div>
-              <input id="fieldFurnace" type="number" min="1" max="30" placeholder="Ур (1-30)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white" />
+              <input id="fieldFurnace" type="number" min="1" max="30" placeholder="Ур (1-30)" oninput="triggerAutoSave()"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white" />
             </div>
 
             <div class="space-y-2">
               <div class="flex items-center justify-between">
                 <label class="text-xs font-semibold text-rose-300">Тир войск (1–10)</label>
                 <label class="flex items-center gap-1.5 cursor-pointer text-[11px] text-amber-300">
-                  <input id="fieldTroopTierCrystal" type="checkbox" class="accent-amber-500 rounded w-3.5 h-3.5" />
+                  <input id="fieldTroopTierCrystal" type="checkbox" onchange="triggerAutoSave()" class="accent-amber-500 rounded w-3.5 h-3.5" />
                   <span>💎 Кристальный</span>
                 </label>
               </div>
-              <input id="fieldTroopTier" type="number" min="1" max="10" placeholder="Тир (1-10)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white" />
+              <input id="fieldTroopTier" type="number" min="1" max="10" placeholder="Тир (1-10)" oninput="triggerAutoSave()"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white" />
             </div>
           </div>
 
@@ -222,15 +262,17 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label class="block text-xs font-semibold text-amber-300 mb-1">Вместимость сбора (Лидер)</label>
-                <input id="fieldRallyCap" type="number" min="0" step="100" class="w-full bg-slate-950 border border-amber-500/40 rounded-xl px-3.5 py-2.5 text-sm font-mono font-bold text-white focus:outline-none" />
+                <input id="fieldRallyCap" type="number" min="0" step="100" oninput="triggerAutoSave()"
+                  class="w-full bg-slate-950 border border-amber-500/40 rounded-xl px-3.5 py-2.5 text-sm font-mono font-bold text-white focus:outline-none" />
               </div>
               <div>
                 <label class="block text-xs font-semibold text-rose-300 mb-1">Размер марша (Филлер)</label>
-                <input id="fieldMarchCap" type="number" min="0" step="100" class="w-full bg-slate-950 border border-rose-500/40 rounded-xl px-3.5 py-2.5 text-sm font-mono font-bold text-white focus:outline-none" />
+                <input id="fieldMarchCap" type="number" min="0" step="100" oninput="triggerAutoSave()"
+                  class="w-full bg-slate-950 border border-rose-500/40 rounded-xl px-3.5 py-2.5 text-sm font-mono font-bold text-white focus:outline-none" />
               </div>
               <div>
                 <label class="block text-xs font-semibold text-slate-300 mb-1">Количество маршей</label>
-                <select id="fieldMarchesCount" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white">
+                <select id="fieldMarchesCount" onchange="triggerAutoSave()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white">
                   <option value="3">3 марша</option><option value="4">4 марша</option><option value="5" selected>5 маршей</option><option value="6">6 маршей</option>
                 </select>
               </div>
@@ -246,7 +288,6 @@
               <span class="text-[10px] text-slate-400">Настройте 1 лучший комплект на каждый класс войск</span>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <!-- Пехота -->
               <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
                 <div class="flex items-center justify-between font-bold text-xs text-amber-300">
                   <span>🛡️ Пехота (ТОП)</span>
@@ -254,7 +295,6 @@
                 </div>
                 <div id="topInfantrySummary" class="text-[11px] text-slate-400 font-mono truncate">Не настроено</div>
               </div>
-              <!-- Копейщики -->
               <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
                 <div class="flex items-center justify-between font-bold text-xs text-sky-300">
                   <span>⚔️ Копейщики (ТОП)</span>
@@ -262,7 +302,6 @@
                 </div>
                 <div id="topLancersSummary" class="text-[11px] text-slate-400 font-mono truncate">Не настроено</div>
               </div>
-              <!-- Стрелки -->
               <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
                 <div class="flex items-center justify-between font-bold text-xs text-emerald-300">
                   <span>🏹 Стрелки (ТОП)</span>
@@ -273,7 +312,7 @@
             </div>
           </div>
 
-          <!-- БЛОК ГАЛЕРЕИ ГЕРОЕВ С ПОИСКОМ И КНОПКОЙ СОХРАНЕНИЯ -->
+          <!-- БЛОК ГАЛЕРЕИ ГЕРОЕВ С ПОИСКОМ И ФИЛЬТРОМ ПОКОЛЕНИЙ -->
           <div class="space-y-4 pt-2">
             <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
               <div>
@@ -286,22 +325,15 @@
                 </div>
               </div>
 
-              <!-- Кнопка сохранения -->
-              <div class="flex items-center gap-3">
-                <div id="saveToast" class="text-xs font-semibold text-emerald-400 opacity-0 transition-opacity">
-                  <i class="fa-solid fa-circle-check mr-1"></i>Сохранено!
-                </div>
-                <button id="saveCardBtn" type="submit" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 text-xs font-extrabold text-slate-950 shadow-lg transition flex items-center gap-2">
-                  <i class="fa-solid fa-floppy-disk"></i><span>Сохранить всю карточку</span>
-                </button>
-              </div>
+              <button type="button" onclick="triggerAutoSave(true)" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-emerald-600/30 border border-emerald-500/40 text-xs font-bold text-emerald-300 transition flex items-center gap-2">
+                <i class="fa-solid fa-cloud-arrow-up"></i><span>Синхронизировать сейчас</span>
+              </button>
             </div>
 
             <!-- Строка: Счётчик, Поиск героя и Свернуть/Развернуть -->
             <div class="flex flex-wrap items-center justify-between gap-3 px-1">
               <span class="text-xs text-slate-400 font-mono" id="heroesFilledCount">Настроено: 0 / 65</span>
               
-              <!-- Окошко поиска героя -->
               <div class="relative flex-1 max-w-xs">
                 <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs pointer-events-none"></i>
                 <input id="heroSearchInput" type="text" oninput="filterHeroes()" placeholder="Поиск героя по имени..." 
@@ -322,7 +354,7 @@
     </main>
   </div>
 
-  <!-- МОДАЛЬНОЕ ОКНО НАСТРОЙКИ ТОП-СНАРЯЖЕНИЯ (КАК В ИГРЕ: СЛЕВА ОЧКИ/ПОЯС, СПРАВА ПЕРЧАТКИ/САПОГИ) -->
+  <!-- МОДАЛЬНОЕ ОКНО НАСТРОЙКИ ТОП-СНАРЯЖЕНИЯ (АВТОСОХРАНЕНИЕ ПРИ ИЗМЕНЕНИИ) -->
   <div id="topEquipmentModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
     <div class="glass-card max-w-lg w-full rounded-3xl p-6 space-y-5 border border-slate-700">
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
@@ -333,43 +365,41 @@
       <input type="hidden" id="topEqCategory" />
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-        <!-- Левая колонка: Очки и Пояс -->
         <div class="space-y-3">
           <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1.5">
             <div class="font-bold text-slate-300">🕶️ Очки</div>
-            <input id="teGogglesLvl" type="text" placeholder="Ур снаряжения (число)" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-white" />
-            <input id="teGogglesTier" type="text" placeholder="Мастерство (напр. 6 или Т2 2⭐)" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-white" />
+            <input id="teGogglesLvl" type="text" oninput="autoSaveTopEquipment()" placeholder="Ур снаряжения (число)" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-white" />
+            <input id="teGogglesTier" type="text" oninput="autoSaveTopEquipment()" placeholder="Мастерство (напр. 6 или Т2 2⭐)" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-white" />
           </div>
           <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1.5">
             <div class="font-bold text-slate-300">🥋 Пояс</div>
-            <input id="teBeltLvl" type="text" placeholder="Ур снаряжения (число)" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-white" />
-            <input id="teBeltTier" type="text" placeholder="Мастерство (напр. 6 или Т2 2⭐)" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-white" />
+            <input id="teBeltLvl" type="text" oninput="autoSaveTopEquipment()" placeholder="Ур снаряжения (число)" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-white" />
+            <input id="teBeltTier" type="text" oninput="autoSaveTopEquipment()" placeholder="Мастерство (напр. 6 или Т2 2⭐)" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-white" />
           </div>
         </div>
 
-        <!-- Правая колонка: Перчатки и Сапоги -->
         <div class="space-y-3">
           <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1.5">
             <div class="font-bold text-slate-300">🥊 Перчатки</div>
-            <input id="teGlovesLvl" type="text" placeholder="Ур снаряжения (число)" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-white" />
-            <input id="teGlovesTier" type="text" placeholder="Мастерство (напр. 6 или Т2 2⭐)" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-white" />
+            <input id="teGlovesLvl" type="text" oninput="autoSaveTopEquipment()" placeholder="Ур снаряжения (число)" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-white" />
+            <input id="teGlovesTier" type="text" oninput="autoSaveTopEquipment()" placeholder="Мастерство (напр. 6 или Т2 2⭐)" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-white" />
           </div>
           <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1.5">
             <div class="font-bold text-slate-300">🥾 Сапоги</div>
-            <input id="teBootsLvl" type="text" placeholder="Ур снаряжения (число)" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-white" />
-            <input id="teBootsTier" type="text" placeholder="Мастерство (напр. 6 или Т2 2⭐)" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-white" />
+            <input id="teBootsLvl" type="text" oninput="autoSaveTopEquipment()" placeholder="Ур снаряжения (число)" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-white" />
+            <input id="teBootsTier" type="text" oninput="autoSaveTopEquipment()" placeholder="Мастерство (напр. 6 или Т2 2⭐)" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-white" />
           </div>
         </div>
       </div>
 
-      <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
-        <button type="button" onclick="closeTopEquipmentModal()" class="px-4 py-2 rounded-xl bg-slate-900 text-xs text-slate-300">Отмена</button>
-        <button type="button" onclick="saveTopEquipmentData()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white shadow-lg">Сохранить ТОП-снаряжение</button>
+      <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+        <span class="text-[11px] text-emerald-400 font-mono"><i class="fa-solid fa-bolt mr-1"></i>Сохраняется автоматически</span>
+        <button type="button" onclick="closeTopEquipmentModal()" class="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-white">Готово</button>
       </div>
     </div>
   </div>
 
-  <!-- МОДАЛЬНОЕ ОКНО НАСТРОЙКИ ГЕРОЯ (УРОВЕНЬ, ЗВЁЗДЫ, НАВЫКИ, ПУШКА) -->
+  <!-- МОДАЛЬНОЕ ОКНО НАСТРОЙКИ ГЕРОЯ (ЛЫЧКИ 1-5, ЭКСПЕДИЦИЯ СРЕДНИЙ С "НЕТ", АВТОСОХРАНЕНИЕ) -->
   <div id="heroModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
     <div class="glass-card max-w-2xl w-full rounded-3xl p-6 space-y-5 border border-slate-700 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
@@ -381,7 +411,7 @@
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <button type="button" onclick="openHeroCardPreview()" class="px-3 py-1.5 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 border border-purple-500/50 text-xs text-purple-200 font-bold transition flex items-center gap-1.5" title="Посмотреть официальную карточку">
+          <button type="button" onclick="openHeroCardPreview()" class="px-3 py-1.5 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 border border-purple-500/50 text-xs text-purple-200 font-bold transition flex items-center gap-1.5">
             <i class="fa-solid fa-image"></i><span>Карточка героя (+)</span>
           </button>
           <button type="button" onclick="closeHeroModal()" class="text-slate-400 hover:text-white text-base p-1"><i class="fa-solid fa-xmark"></i></button>
@@ -390,26 +420,32 @@
 
       <input type="hidden" id="modalHeroKey" />
 
-      <!-- Уровень и Звёзды -->
+      <!-- Уровень и Звёзды (Полные 0-5 + Лычки неполной 1-5) -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
         <div>
           <label class="block text-xs font-semibold text-slate-300 mb-1">Уровень героя</label>
-          <input id="mhLevel" type="number" min="1" max="80" value="70" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm font-mono text-white" />
+          <input id="mhLevel" type="number" min="1" max="80" value="70" oninput="autoSaveActiveHero()"
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm font-mono text-white" />
         </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">Звёзды (Полные + Лычки неполной, 0-6)</label>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Звёзды (Полные + Лычки неполной, 1–5)</label>
           <div class="grid grid-cols-2 gap-2">
-            <select id="mhStarsFull" class="bg-slate-950 border border-slate-700 rounded-xl px-2 py-2 text-xs font-mono text-amber-300">
+            <select id="mhStarsFull" onchange="autoSaveActiveHero()" class="bg-slate-950 border border-slate-700 rounded-xl px-2 py-2 text-xs font-mono text-amber-300">
               <option value="0">0 звёзд</option><option value="1">1 звезда</option><option value="2">2 звезды</option><option value="3">3 звезды</option><option value="4">4 звезды</option><option value="5" selected>5 звёзд</option>
             </select>
-            <select id="mhStarsBars" class="bg-slate-950 border border-slate-700 rounded-xl px-2 py-2 text-xs font-mono text-sky-300">
-              <option value="0">0 лычек</option><option value="1">1 лычка</option><option value="2">2 лычки</option><option value="3">3 лычки</option><option value="4">4 лычки</option><option value="5">5 лычек</option><option value="6">6 лычек</option>
+            <select id="mhStarsBars" onchange="autoSaveActiveHero()" class="bg-slate-950 border border-slate-700 rounded-xl px-2 py-2 text-xs font-mono text-sky-300">
+              <option value="0">Без лычек (0)</option>
+              <option value="1">1 лычка</option>
+              <option value="2">2 лычки</option>
+              <option value="3">3 лычки</option>
+              <option value="4">4 лычки</option>
+              <option value="5">5 лычек</option>
             </select>
           </div>
         </div>
       </div>
 
-      <!-- Уровни навыков (1–5): Освоение слева, Экспедиция справа -->
+      <!-- Уровни навыков (1–5): все 3 навыка Экспедиции, в среднем есть пункт "Нет" -->
       <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 space-y-3">
         <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400"><i class="fa-solid fa-bolt mr-1"></i>Уровни навыков (1–5)</h4>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
@@ -418,15 +454,15 @@
             <div class="font-bold text-amber-300 mb-1">Освоение</div>
             <div class="flex items-center justify-between">
               <span class="text-slate-300">Освоение верхний</span>
-              <select id="mhS_top" class="w-20 bg-slate-900 border border-slate-700 rounded p-1 text-white font-mono text-xs"><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select>
+              <select id="mhS_top" onchange="autoSaveActiveHero()" class="w-24 bg-slate-900 border border-slate-700 rounded p-1 text-white font-mono text-xs"><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select>
             </div>
             <div class="flex items-center justify-between">
               <span class="text-slate-300">Освоение средний</span>
-              <select id="mhS_mid" class="w-20 bg-slate-900 border border-slate-700 rounded p-1 text-white font-mono text-xs"><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select>
+              <select id="mhS_mid" onchange="autoSaveActiveHero()" class="w-24 bg-slate-900 border border-slate-700 rounded p-1 text-white font-mono text-xs"><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select>
             </div>
             <div class="flex items-center justify-between">
               <span class="text-slate-300">Освоение нижний</span>
-              <select id="mhS_bot" class="w-20 bg-slate-900 border border-slate-700 rounded p-1 text-white font-mono text-xs"><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select>
+              <select id="mhS_bot" onchange="autoSaveActiveHero()" class="w-24 bg-slate-900 border border-slate-700 rounded p-1 text-white font-mono text-xs"><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select>
             </div>
           </div>
 
@@ -435,15 +471,22 @@
             <div class="font-bold text-sky-300 mb-1">Экспедиция</div>
             <div class="flex items-center justify-between">
               <span class="text-slate-300">Экспедиция верхний</span>
-              <select id="mhE_top" class="w-20 bg-slate-900 border border-slate-700 rounded p-1 text-white font-mono text-xs"><option value="5" selected>5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select>
+              <select id="mhE_top" onchange="autoSaveActiveHero()" class="w-24 bg-slate-900 border border-slate-700 rounded p-1 text-white font-mono text-xs"><option value="5" selected>5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select>
             </div>
-            <div id="expMidWrapper" class="flex items-center justify-between">
+            <div class="flex items-center justify-between">
               <span class="text-slate-300">Экспедиция средний</span>
-              <select id="mhE_mid" class="w-20 bg-slate-900 border border-slate-700 rounded p-1 text-white font-mono text-xs"><option value="5" selected>5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select>
+              <select id="mhE_mid" onchange="autoSaveActiveHero()" class="w-24 bg-slate-900 border border-slate-700 rounded p-1 text-white font-mono text-xs">
+                <option value="Нет">Нет</option>
+                <option value="5" selected>5</option>
+                <option value="4">4</option>
+                <option value="3">3</option>
+                <option value="2">2</option>
+                <option value="1">1</option>
+              </select>
             </div>
             <div class="flex items-center justify-between">
               <span class="text-slate-300">Экспедиция нижний</span>
-              <select id="mhE_bot" class="w-20 bg-slate-900 border border-slate-700 rounded p-1 text-white font-mono text-xs"><option value="5" selected>5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select>
+              <select id="mhE_bot" onchange="autoSaveActiveHero()" class="w-24 bg-slate-900 border border-slate-700 rounded p-1 text-white font-mono text-xs"><option value="5" selected>5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select>
             </div>
           </div>
         </div>
@@ -454,19 +497,19 @@
         <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400"><i class="fa-solid fa-crosshairs mr-1"></i>Уникальная Пушка</h4>
         <div class="flex flex-wrap items-center justify-between gap-3">
           <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-amber-300">
-            <input id="mhHasCannon" type="checkbox" onchange="toggleCannonInput(this.checked)" class="accent-amber-500 rounded w-4 h-4 cursor-pointer" />
+            <input id="mhHasCannon" type="checkbox" onchange="toggleCannonInput(this.checked); autoSaveActiveHero();" class="accent-amber-500 rounded w-4 h-4 cursor-pointer" />
             <span>💥 Наличие уникальной Пушки у героя</span>
           </label>
           <div id="cannonLevelWrapper" class="hidden flex items-center gap-2">
             <span class="text-xs text-slate-400">Уровень пушки:</span>
-            <input id="mhCannonLevel" type="text" placeholder="Напр. 3 или T1" class="w-24 bg-slate-950 border border-amber-500/50 rounded-lg px-2.5 py-1 text-xs font-mono text-amber-300" />
+            <input id="mhCannonLevel" type="text" oninput="autoSaveActiveHero()" placeholder="Напр. 3 или T1" class="w-24 bg-slate-950 border border-amber-500/50 rounded-lg px-2.5 py-1 text-xs font-mono text-amber-300" />
           </div>
         </div>
       </div>
 
-      <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
-        <button type="button" onclick="closeHeroModal()" class="px-4 py-2 rounded-xl bg-slate-900 text-xs text-slate-300">Отмена</button>
-        <button type="button" onclick="saveHeroModalData()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white shadow-lg">Сохранить героя</button>
+      <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+        <span class="text-[11px] text-emerald-400 font-mono"><i class="fa-solid fa-bolt mr-1"></i>Изменения сохраняются автоматически</span>
+        <button type="button" onclick="closeHeroModal()" class="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-white">Закрыть</button>
       </div>
     </div>
   </div>
@@ -484,10 +527,6 @@
     </div>
   </div>
 
-  <div id="toastBanner" class="fixed bottom-5 right-5 z-50 bg-slate-900 border border-sky-500/50 text-sky-200 text-xs font-semibold px-4 py-2.5 rounded-xl shadow-2xl opacity-0 transition-opacity pointer-events-none">
-    Успешно!
-  </div>
-
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbwsX-LADURoQu_MsQ2XJVsSPsHAgMebI4_QDXmpPpi3OcpW3ScwPep9ukQBFJfDMrjQ7g/exec';
     let currentSession = null;
@@ -495,9 +534,8 @@
     let topEquipmentData = { infantry: null, lancers: null, marksmen: null };
     let maxGenFilter = 17;
     let collapsedGens = {};
-
-    // Герои, у которых только 2 навыка экспедиции (отсутствует средний навык экспедиции — Синие/Редкие герои)
-    const HEROES_WITHOUT_MID_EXPEDITION = ['смит', 'юджин', 'чарли', 'клорис'];
+    let autoSaveTimer = null;
+    let isHydrating = false;
 
     const ALL_HEROES = [
       { key: 'смит', name: 'Смит', gen: 1 },
@@ -512,7 +550,7 @@
       { key: 'джина', name: 'Джина', gen: 1 },
       { key: 'бахити', name: 'Бахити', gen: 1 },
       { key: 'джассер', name: 'Джассер', gen: 1 },
-      { key: 'со юн', name: 'Со Юн', gen: 1 },
+      { key: 'со_юн', name: 'Со Юн', gen: 1 },
       { key: 'наталия', name: 'Наталия', gen: 1 },
       { key: 'молли', name: 'Молли', gen: 1 },
       { key: 'джеронимо', name: 'Джеронимо', gen: 1 },
@@ -521,10 +559,10 @@
       { key: 'филли', name: 'Филли', gen: 2 },
       { key: 'алонсо', name: 'Алонсо', gen: 2 },
       { key: 'логан', name: 'Логан', gen: 3 },
-      { key: 'мия', name: 'Мия', gen: 3 },
+      { key: 'миа', name: 'Мия', gen: 3 },
       { key: 'грег', name: 'Грег', gen: 3 },
       { key: 'яхмос', name: 'Яхмос', gen: 4 },
-      { key: 'райна', name: 'Райна', gen: 4 },
+      { key: 'рейна', name: 'Райна', gen: 4 },
       { key: 'линн', name: 'Линн', gen: 4 },
       { key: 'гектор', name: 'Гектор', gen: 5 },
       { key: 'нора', name: 'Нора', gen: 5 },
@@ -566,6 +604,85 @@
       { key: 'берта', name: 'Берта', gen: 17 },
       { key: 'элеанор', name: 'Элеанор', gen: 17 }
     ];
+
+    function setAutoSaveIndicator(state, text) {
+      const box = document.getElementById('autoSaveStatusBox');
+      const icon = document.getElementById('autoSaveIcon');
+      const txt = document.getElementById('autoSaveText');
+      if (!box || !icon || !txt) return;
+
+      txt.textContent = text;
+      if (state === 'saving') {
+        box.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-950/80 border border-amber-500/40 text-[11px] font-mono text-amber-300';
+        icon.className = 'fa-solid fa-spinner fa-spin';
+      } else if (state === 'error') {
+        box.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl bg-rose-950/80 border border-rose-500/40 text-[11px] font-mono text-rose-300';
+        icon.className = 'fa-solid fa-triangle-exclamation';
+      } else {
+        box.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/90 border border-emerald-500/30 text-[11px] font-mono text-emerald-400';
+        icon.className = 'fa-solid fa-cloud-check';
+      }
+    }
+
+    // Мгновенное фоновое автосохранение в Google Таблицу с обновлением sessionStorage
+    function triggerAutoSave(immediate = false) {
+      if (isHydrating) return;
+      setAutoSaveIndicator('saving', 'Сохранение изменений...');
+      if (autoSaveTimer) clearTimeout(autoSaveTimer);
+
+      autoSaveTimer = setTimeout(() => {
+        executeBackgroundSave(!immediate);
+      }, immediate ? 50 : 750);
+    }
+
+    async function executeBackgroundSave(isSilent = true) {
+      const code = getStoredPasscode();
+      if (!code) return;
+
+      const furnaceNum = document.getElementById('fieldFurnace').value.trim();
+      const furnaceIsCrystal = document.getElementById('fieldFurnaceCrystal').checked;
+      const furnaceFinal = furnaceNum ? `${furnaceNum}${furnaceIsCrystal ? ' (Крист)' : ''}` : '';
+
+      const tierNum = document.getElementById('fieldTroopTier').value.trim();
+      const tierIsCrystal = document.getElementById('fieldTroopTierCrystal').checked;
+      const tierFinal = tierNum ? `T${tierNum}${tierIsCrystal ? ' (Крист)' : ''}` : '';
+
+      localHeroesData._topEquipment = topEquipmentData;
+
+      const cardPayload = {
+        nick: document.getElementById('fieldNick').value.trim(),
+        furnaceLevel: furnaceFinal,
+        troopTier: tierFinal,
+        rallyCap: Number(document.getElementById('fieldRallyCap').value) || 0,
+        marchCap: Number(document.getElementById('fieldMarchCap').value) || 0,
+        marchesCount: Number(document.getElementById('fieldMarchesCount').value) || 5,
+        heroesData: localHeroesData,
+        topEquipmentData: topEquipmentData
+      };
+
+      try {
+        const res = await callHarmonyApi({
+          action: 'save_card',
+          passcode: code,
+          silentAutoSave: isSilent,
+          card: cardPayload
+        });
+        if (res.ok) {
+          document.getElementById('cardUpdatedAt').textContent = res.updatedAt || 'Только что';
+          setAutoSaveIndicator('saved', `Сохранено в облаке (${res.updatedAt || 'сейчас'})`);
+
+          // Обязательно обновляем локальный кэш, чтобы при F5 ничего не сбрасывалось
+          if (currentSession) {
+            currentSession.myCard = res.card || { ...currentSession.myCard, ...cardPayload, updatedAt: res.updatedAt };
+            sessionStorage.setItem('harmony_session_cache', JSON.stringify(currentSession));
+          }
+        } else {
+          setAutoSaveIndicator('error', 'Ошибка сохранения: ' + (res.error || 'сбой'));
+        }
+      } catch (err) {
+        setAutoSaveIndicator('error', 'Нет связи с таблицей');
+      }
+    }
 
     function initGenFilterButtons() {
       const container = document.getElementById('genFilterButtons');
@@ -612,7 +729,7 @@
       renderHeroesByGenerations();
     }
 
-    // Управление модальным окном настройки ТОП-снаряжения
+    // Модальное окно ТОП-снаряжения с автосохранением
     let currentTopEqCategory = null;
     function openTopEquipmentModal(cat) {
       currentTopEqCategory = cat;
@@ -637,11 +754,7 @@
       document.getElementById('topEquipmentModal').classList.remove('hidden');
     }
 
-    function closeTopEquipmentModal() {
-      document.getElementById('topEquipmentModal').classList.add('hidden');
-    }
-
-    function saveTopEquipmentData() {
+    function autoSaveTopEquipment() {
       if (!currentTopEqCategory) return;
       topEquipmentData[currentTopEqCategory] = {
         gLvl: document.getElementById('teGogglesLvl').value.trim(),
@@ -653,9 +766,13 @@
         btLvl: document.getElementById('teBootsLvl').value.trim(),
         btTier: document.getElementById('teBootsTier').value.trim()
       };
-      closeTopEquipmentModal();
       updateTopEquipmentSummaries();
-      showToast('ТОП-снаряжение сохранено локально');
+      triggerAutoSave();
+    }
+
+    function closeTopEquipmentModal() {
+      autoSaveTopEquipment();
+      document.getElementById('topEquipmentModal').classList.add('hidden');
     }
 
     function updateTopEquipmentSummaries() {
@@ -731,12 +848,11 @@
         Number(parts[3]), Number(parts[2]) - 1, Number(parts[1]),
         Number(parts[4]), Number(parts[5]), Number(parts[6])
       );
-      const diffMs = Date.now() - updatedDate.getTime();
-      const threeDaysMs = 3 * 24 * 60 * 60 * 1000;
-      return diffMs > threeDaysMs;
+      return (Date.now() - updatedDate.getTime()) > (3 * 24 * 60 * 60 * 1000);
     }
 
     function applySessionToUI(data) {
+      isHydrating = true;
       currentSession = data;
       document.getElementById('authScreen').classList.add('hidden');
       document.getElementById('portalApp').classList.remove('hidden');
@@ -746,17 +862,30 @@
       localHeroesData = card.heroesData || {};
       topEquipmentData = card.topEquipmentData || localHeroesData._topEquipment || { infantry: null, lancers: null, marksmen: null };
 
+      const roleName = u.role || 'Боец';
       document.getElementById('headerUserNick').textContent = u.playerId ? `${u.nick} (ID: ${u.playerId})` : u.nick;
-      const rankBadge = document.getElementById('userRankBadge');
-      rankBadge.textContent = u.isOfficer ? 'ОФИЦЕР R4–R5' : 'БОЕЦ R1–R3';
+      const roleBadge = document.getElementById('userRoleBadge');
+      roleBadge.textContent = `${roleName} • ${u.alliance || 'Основа'}`;
+
+      if (roleName === 'Владелец') {
+        roleBadge.className = 'text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40';
+      } else if (roleName === 'Офицер') {
+        roleBadge.className = 'text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40';
+      }
+
       if (u.isOfficer) {
         document.getElementById('navOfficerRoster').classList.remove('hidden');
         document.getElementById('navOfficerRaids').classList.remove('hidden');
       }
 
+      if (card.officerMessage) {
+        document.getElementById('officerMessageText').textContent = card.officerMessage;
+        document.getElementById('officerMessageBanner').classList.remove('hidden');
+      }
+
       document.getElementById('fieldNick').value = card.nick || u.nick || '';
-      document.getElementById('fieldPlayerId').value = card.playerId || u.playerId || '';
-      document.getElementById('fieldAlliance').value = card.alliance || localHeroesData._alliance || 'Основа';
+      document.getElementById('fieldPlayerId').value = card.playerId || u.playerId || 'Не назначен';
+      document.getElementById('fieldAllianceDisplay').value = card.alliance || u.alliance || 'Основа';
       
       const furnaceRaw = String(card.furnaceLevel || '');
       document.getElementById('fieldFurnace').value = furnaceRaw.replace(/\D/g, '');
@@ -778,6 +907,7 @@
       updateTopEquipmentSummaries();
       initGenFilterButtons();
       renderHeroesByGenerations();
+      isHydrating = false;
     }
 
     function renderHeroesByGenerations() {
@@ -855,14 +985,6 @@
         this.src = `Heroes/${h.name.replace(/-/g, ' ')}.jpeg`;
       };
 
-      const hasNoMidExp = HEROES_WITHOUT_MID_EXPEDITION.includes(key);
-      const expMidWrapper = document.getElementById('expMidWrapper');
-      if (hasNoMidExp) {
-        expMidWrapper.classList.add('hidden');
-      } else {
-        expMidWrapper.classList.remove('hidden');
-      }
-
       const d = (localHeroesData && localHeroesData[key]) || {
         level: 70, starsFull: 5, starsBars: 0, 
         sTop: 5, sMid: 5, sBot: 5, 
@@ -872,14 +994,16 @@
 
       document.getElementById('mhLevel').value = d.level || 70;
       document.getElementById('mhStarsFull').value = d.starsFull !== undefined ? d.starsFull : 5;
-      document.getElementById('mhStarsBars').value = d.starsBars || 0;
+      const barsVal = Number(d.starsBars) || 0;
+      document.getElementById('mhStarsBars').value = (barsVal >= 0 && barsVal <= 5) ? barsVal : 5;
       
       document.getElementById('mhS_top').value = d.sTop || d.s1 || 5;
       document.getElementById('mhS_mid').value = d.sMid || d.s2 || 5;
       document.getElementById('mhS_bot').value = d.sBot || d.s3 || 5;
       
       document.getElementById('mhE_top').value = d.eTop || d.e1 || 5;
-      document.getElementById('mhE_mid').value = d.eMid || 5;
+      const eMidVal = (d.eMid === 'Нет' || d.eMid === 0 || d.eMid === '0') ? 'Нет' : (d.eMid || 5);
+      document.getElementById('mhE_mid').value = eMidVal;
       document.getElementById('mhE_bot').value = d.eBot || d.e2 || 5;
 
       document.getElementById('mhHasCannon').checked = !!d.cannon;
@@ -889,20 +1013,9 @@
       document.getElementById('heroModal').classList.remove('hidden');
     }
 
-    function toggleCannonInput(isChecked) {
-      const wrap = document.getElementById('cannonLevelWrapper');
-      if (isChecked) wrap.classList.remove('hidden');
-      else wrap.classList.add('hidden');
-    }
-
-    function closeHeroModal() {
-      document.getElementById('heroModal').classList.add('hidden');
-    }
-
-    function saveHeroModalData() {
+    function autoSaveActiveHero() {
       if (!activeHeroKey) return;
-
-      const hasNoMidExp = HEROES_WITHOUT_MID_EXPEDITION.includes(activeHeroKey);
+      const eMidRaw = document.getElementById('mhE_mid').value;
 
       localHeroesData[activeHeroKey] = {
         configured: true,
@@ -913,15 +1026,26 @@
         sMid: Number(document.getElementById('mhS_mid').value) || 5,
         sBot: Number(document.getElementById('mhS_bot').value) || 5,
         eTop: Number(document.getElementById('mhE_top').value) || 5,
-        eMid: hasNoMidExp ? 0 : (Number(document.getElementById('mhE_mid').value) || 5),
+        eMid: eMidRaw === 'Нет' ? 'Нет' : (Number(eMidRaw) || 5),
         eBot: Number(document.getElementById('mhE_bot').value) || 5,
         cannon: document.getElementById('mhHasCannon').checked,
         cannonLvl: document.getElementById('mhCannonLevel').value.trim()
       };
 
-      closeHeroModal();
       renderHeroesByGenerations();
-      showToast('Параметры героя сохранены локально');
+      triggerAutoSave();
+    }
+
+    function toggleCannonInput(isChecked) {
+      const wrap = document.getElementById('cannonLevelWrapper');
+      if (isChecked) wrap.classList.remove('hidden');
+      else wrap.classList.add('hidden');
+    }
+
+    function closeHeroModal() {
+      autoSaveActiveHero();
+      document.getElementById('heroModal').classList.add('hidden');
+      activeHeroKey = null;
     }
 
     function openHeroCardPreview() {
@@ -936,64 +1060,6 @@
       document.getElementById('previewModal').classList.remove('hidden');
     }
 
-    async function handleSaveCard(e) {
-      e.preventDefault();
-      const code = getStoredPasscode();
-      if (!code) return;
-
-      const btn = document.getElementById('saveCardBtn');
-      const toast = document.getElementById('saveToast');
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Сохранение...</span>';
-
-      const furnaceNum = document.getElementById('fieldFurnace').value.trim();
-      const furnaceIsCrystal = document.getElementById('fieldFurnaceCrystal').checked;
-      const furnaceFinal = furnaceNum ? `${furnaceNum}${furnaceIsCrystal ? ' (Крист)' : ''}` : '';
-
-      const tierNum = document.getElementById('fieldTroopTier').value.trim();
-      const tierIsCrystal = document.getElementById('fieldTroopTierCrystal').checked;
-      const tierFinal = tierNum ? `T${tierNum}${tierIsCrystal ? ' (Крист)' : ''}` : '';
-
-      localHeroesData._topEquipment = topEquipmentData;
-      localHeroesData._alliance = document.getElementById('fieldAlliance').value;
-
-      const cardPayload = {
-        nick: document.getElementById('fieldNick').value.trim(),
-        playerId: document.getElementById('fieldPlayerId').value.trim(),
-        alliance: document.getElementById('fieldAlliance').value,
-        furnaceLevel: furnaceFinal,
-        troopTier: tierFinal,
-        rallyCap: Number(document.getElementById('fieldRallyCap').value) || 0,
-        marchCap: Number(document.getElementById('fieldMarchCap').value) || 0,
-        marchesCount: Number(document.getElementById('fieldMarchesCount').value) || 5,
-        heroesData: localHeroesData,
-        topEquipmentData: topEquipmentData
-      };
-
-      try {
-        const res = await callHarmonyApi({ action: 'save_card', passcode: code, card: cardPayload });
-        if (res.ok) {
-          document.getElementById('cardUpdatedAt').textContent = res.updatedAt || 'Только что';
-          toast.classList.remove('opacity-0');
-          setTimeout(() => toast.classList.add('opacity-0'), 3500);
-        } else {
-          alert('Ошибка сохранения: ' + res.error);
-        }
-      } catch (err) {
-        alert('Ошибка связи: ' + err.message);
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i><span>Сохранить всю карточку</span>';
-      }
-    }
-
-    function showToast(msg) {
-      const el = document.getElementById('toastBanner');
-      el.textContent = msg;
-      el.classList.remove('opacity-0');
-      setTimeout(() => el.classList.add('opacity-0'), 2500);
-    }
-
     function logoutPortal() {
       sessionStorage.removeItem('harmony_passcode');
       localStorage.removeItem('harmony_passcode');
@@ -1001,20 +1067,35 @@
       window.location.href = 'index.html';
     }
 
+    // При загрузке страницы ВСЕГДА подтягиваем свежие данные из таблицы Google,
+    // чтобы исключить сброс изменений после перезагрузки страницы (F5)
     window.addEventListener('DOMContentLoaded', () => {
+      const code = getStoredPasscode();
+      if (!code) {
+        document.getElementById('authScreen').classList.remove('hidden');
+        return;
+      }
+
       const cached = sessionStorage.getItem('harmony_session_cache');
       if (cached) {
-        try { applySessionToUI(JSON.parse(cached)); return; } catch (e) {}
+        try {
+          applySessionToUI(JSON.parse(cached));
+        } catch (e) {}
       }
-      const code = getStoredPasscode();
-      if (code) {
-        callHarmonyApi({ action: 'login', passcode: code }).then(res => {
-          if (res.ok) applySessionToUI(res);
-          else document.getElementById('authScreen').classList.remove('hidden');
-        });
-      } else {
-        document.getElementById('authScreen').classList.remove('hidden');
-      }
+
+      setAutoSaveIndicator('saving', 'Загрузка актуальной карточки...');
+      callHarmonyApi({ action: 'sync', passcode: code }).then(res => {
+        if (res.ok) {
+          sessionStorage.setItem('harmony_session_cache', JSON.stringify(res));
+          applySessionToUI(res);
+          setAutoSaveIndicator('saved', 'Синхронизировано с базой');
+        } else {
+          document.getElementById('authScreen').classList.remove('hidden');
+          document.getElementById('portalApp').classList.add('hidden');
+        }
+      }).catch(() => {
+        setAutoSaveIndicator('error', 'Автономный режим (нет связи)');
+      });
     });
   </script>
 </body>

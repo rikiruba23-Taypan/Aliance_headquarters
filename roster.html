@@ -49,13 +49,13 @@
         <div>
           <div class="flex items-center gap-2">
             <span class="font-extrabold text-sm tracking-tight text-white">ГАРМОНИЯ</span>
-            <span id="userRankBadge" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">ОФИЦЕР R4–R5</span>
+            <span id="userRoleBadge" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">Офицер</span>
           </div>
           <div class="text-[11px] text-slate-400" id="headerUserNick">Проверка доступа...</div>
         </div>
       </div>
 
-      <!-- Единое полноценное меню навигации (все 5 вкладок) -->
+      <!-- Единое меню навигации (все 5 вкладок) -->
       <nav class="flex flex-wrap items-center gap-1.5 text-xs">
         <a href="index.html" class="nav-pill px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-medium flex items-center gap-1.5 transition">
           <i class="fa-solid fa-id-card text-sky-400"></i>
@@ -115,7 +115,7 @@
       </div>
     </section>
 
-    <!-- БЛОК ОФИЦЕРСКОГО УПРАВЛЕНИЯ: ДОБАВЛЕНИЕ, ДЕАКТИВАЦИЯ И СООБЩЕНИЕ ИГРОКУ -->
+    <!-- БЛОК УПРАВЛЕНИЯ: ДОБАВЛЕНИЕ, ДЕАКТИВАЦИЯ И СООБЩЕНИЕ ИГРОКУ -->
     <section class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
       <!-- 1. Добавление нового игрока -->
@@ -126,19 +126,17 @@
         <form onsubmit="handleAddMember(event)" class="space-y-2.5 text-xs">
           <div class="grid grid-cols-2 gap-2">
             <input id="newMemberNick" type="text" required placeholder="Ник игрока *" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:border-sky-500 focus:outline-none" />
-            <input id="newMemberId" type="text" placeholder="ID игрока" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono text-amber-300 focus:border-sky-500 focus:outline-none" />
+            <input id="newMemberId" type="text" placeholder="Неизменный ID" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono text-amber-300 focus:border-sky-500 focus:outline-none" />
           </div>
           <div class="grid grid-cols-2 gap-2">
             <select id="newMemberAlliance" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white">
               <option value="Основа">Альянс: Основа</option>
               <option value="Академия">Альянс: Академия</option>
             </select>
-            <select id="newMemberRank" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono text-white">
-              <option value="R1">Ранг: R1</option>
-              <option value="R2">Ранг: R2</option>
-              <option value="R3" selected>Ранг: R3</option>
-              <option value="R4">Ранг: R4 (Офицер)</option>
-              <option value="R5">Ранг: R5 (Глава)</option>
+            <select id="newMemberRole" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono text-white">
+              <option value="Боец" selected>Роль: Боец</option>
+              <option value="Офицер">Роль: Офицер</option>
+              <option value="Владелец" id="optAddOwner">Роль: Владелец</option>
             </select>
           </div>
           <button id="addMemberBtn" type="submit" class="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-bold text-white shadow transition flex items-center justify-center gap-1.5">
@@ -170,7 +168,7 @@
         </div>
       </div>
 
-      <!-- 3. Отправка сообщения игроку от имени офицеров -->
+      <!-- 3. Отправка сообщения игроку от имени руководства -->
       <div class="glass-card rounded-2xl p-4 border border-slate-800 space-y-3">
         <h3 class="text-xs font-extrabold uppercase tracking-wider text-sky-400 flex items-center gap-2">
           <i class="fa-solid fa-envelope-open-text"></i> Сообщение игроку от Штаба
@@ -186,14 +184,14 @@
             </button>
           </div>
           <p class="text-[11px] text-slate-400 leading-tight">
-            Сообщение запишется в карточку бойца и отобразится в таблице альянса.
+            Сообщение появится в личной карточке бойца при входе на портал.
           </p>
         </div>
       </div>
 
     </section>
 
-    <!-- ОСНОВНАЯ ТАБЛИЦА АЛЬЯНСА (БЕЗ КОЛОНКИ ЛИЧНЫХ ПАРОЛЕЙ) -->
+    <!-- ОСНОВНАЯ ТАБЛИЦА АЛЬЯНСА -->
     <section class="glass-card rounded-3xl p-5 sm:p-6 shadow-xl border border-slate-800 space-y-4">
       <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
         <div>
@@ -203,9 +201,9 @@
           <p class="text-xs text-slate-400">Нажмите на кнопку «Арсенал» в строке бойца для просмотра его 65 героев и ТОП-снаряжения.</p>
         </div>
 
-        <!-- Фильтр подразделений: Основа / Академия / Все -->
+        <!-- Фильтр подразделений (для Владельца доступны Все / Основа / Академия, для Офицера — свой альянс) -->
         <div class="flex flex-wrap items-center gap-2">
-          <div class="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs">
+          <div id="allianceFilterGroup" class="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs">
             <button type="button" id="filterAllBtn" onclick="setAllianceFilter('ALL')" class="filter-pill px-3 py-1 rounded-lg font-semibold text-slate-300 transition">Все</button>
             <button type="button" id="filterMainBtn" onclick="setAllianceFilter('Основа')" class="filter-pill active px-3 py-1 rounded-lg font-semibold text-slate-300 transition">Основа</button>
             <button type="button" id="filterAcadBtn" onclick="setAllianceFilter('Академия')" class="filter-pill px-3 py-1 rounded-lg font-semibold text-slate-300 transition">Академия</button>
@@ -231,7 +229,7 @@
             <tr class="border-b border-slate-800 text-slate-400 font-mono text-[11px] uppercase bg-slate-900/60">
               <th class="py-3 px-3">Боец / ID</th>
               <th class="py-3 px-2.5">Альянс</th>
-              <th class="py-3 px-2.5">Ранг</th>
+              <th class="py-3 px-2.5">Роль</th>
               <th class="py-3 px-2.5">Статус</th>
               <th class="py-3 px-2.5">Печь / Тир</th>
               <th class="py-3 px-2.5 text-right">Сбор (Лидер)</th>
@@ -239,7 +237,7 @@
               <th class="py-3 px-2.5">ТОП-снаряжение / Герои</th>
               <th class="py-3 px-2.5">Сообщение</th>
               <th class="py-3 px-2.5">Обновлено</th>
-              <th class="py-3 px-3 text-right">Действия офицера</th>
+              <th class="py-3 px-3 text-right">Действия</th>
             </tr>
           </thead>
           <tbody id="rosterTableBody" class="divide-y divide-slate-800/70">
@@ -260,11 +258,9 @@
             <span>Журнал безопасности и лог событий</span>
           </h3>
 
-          <!-- Переключатель: Кнопка "Активность" сразу после заголовка -->
           <div class="flex items-center gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800">
             <button type="button" id="btnShowActivity" onclick="switchSecurityTab('activity')"
               class="log-tab-btn px-3 py-1 rounded-lg border border-amber-500/40 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 text-xs font-semibold transition flex items-center gap-1.5">
-              <i class="fa-solid fa-chart-Simple"></i>
               <span>📊 Активность</span>
             </button>
             <button type="button" id="btnShowLogs" onclick="switchSecurityTab('logs')"
@@ -292,7 +288,7 @@
             <tr>
               <th class="py-2.5 px-3">Время (МСК)</th>
               <th class="py-2.5 px-3">Игрок</th>
-              <th class="py-2.5 px-3">Альянс / Ранг</th>
+              <th class="py-2.5 px-3">Альянс / Роль</th>
               <th class="py-2.5 px-3">Событие</th>
               <th class="py-2.5 px-3">Детали</th>
             </tr>
@@ -330,13 +326,13 @@
               <tr>
                 <th class="py-2.5 px-3">#</th>
                 <th class="py-2.5 px-3">Участник / ID</th>
-                <th class="py-2.5 px-2.5">Альянс / Ранг</th>
+                <th class="py-2.5 px-2.5">Альянс / Роль</th>
                 <th class="py-2.5 px-2.5 text-center">Всего действий</th>
-                <th class="py-2.5 px-2.5 text-center" title="Сколько раз заходил на портал">Входов (✅)</th>
-                <th class="py-2.5 px-2.5 text-center" title="Сколько раз сохранял/обновлял карточку и героев">Обновлений (✏️)</th>
-                <th class="py-2.5 px-2.5 text-center" title="Переходы по страницам калькуляторов, гайдов и штаба">Страниц (👁️)</th>
-                <th class="py-2.5 px-2.5 text-center" title="Офицерские действия: добавление игроков, сообщения, статусы">Офицер (⚙️)</th>
-                <th class="py-2.5 px-3">Что делал в последний раз</th>
+                <th class="py-2.5 px-2.5 text-center">Входов (✅)</th>
+                <th class="py-2.5 px-2.5 text-center">Обновлений (✏️)</th>
+                <th class="py-2.5 px-2.5 text-center">Страниц (👁️)</th>
+                <th class="py-2.5 px-2.5 text-center">Штаб (⚙️)</th>
+                <th class="py-2.5 px-3">Последнее действие</th>
                 <th class="py-2.5 px-3 text-right">Последний визит (МСК)</th>
               </tr>
             </thead>
@@ -363,13 +359,11 @@
         </button>
       </div>
 
-      <!-- Сводка ТОП-снаряжения игрока по 3 типам войск -->
       <div class="space-y-2">
         <h4 class="text-xs font-bold uppercase tracking-wider text-sky-400">Перекидное ТОП-снаряжение игрока</h4>
         <div id="arsenalTopEqGrid" class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs"></div>
       </div>
 
-      <!-- Таблица настроенных героев игрока -->
       <div class="space-y-2">
         <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400">Настроенные герои в арсенале</h4>
         <div id="arsenalHeroesList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 text-xs"></div>
@@ -377,7 +371,7 @@
     </div>
   </div>
 
-  <!-- ==================== МОДАЛЬНОЕ ОКНО: РЕДАКТИРОВАНИЕ ИГРОКА ОФИЦЕРОМ ==================== -->
+  <!-- ==================== МОДАЛЬНОЕ ОКНО: РЕДАКТИРОВАНИЕ ИГРОКА ==================== -->
   <div id="editMemberModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
     <div class="glass-card max-w-lg w-full rounded-3xl p-6 space-y-4 border border-slate-700">
       <div class="flex items-center justify-between pb-2 border-b border-slate-800">
@@ -395,7 +389,7 @@
             <input id="editNick" type="text" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white" />
           </div>
           <div>
-            <label class="block text-slate-400 mb-1">ID игрока</label>
+            <label class="block text-slate-400 mb-1">Неизменный ID игрока</label>
             <input id="editPlayerId" type="text" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono text-amber-300" />
           </div>
         </div>
@@ -409,13 +403,11 @@
             </select>
           </div>
           <div>
-            <label class="block text-slate-400 mb-1">Ранг (R1–R5)</label>
-            <select id="editRank" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2 font-mono text-white">
-              <option value="R1">R1</option>
-              <option value="R2">R2</option>
-              <option value="R3">R3</option>
-              <option value="R4">R4</option>
-              <option value="R5">R5</option>
+            <label class="block text-slate-400 mb-1">Роль</label>
+            <select id="editRole" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2 font-mono text-white">
+              <option value="Боец">Боец</option>
+              <option value="Офицер">Офицер</option>
+              <option value="Владелец" id="optEditOwner">Владелец</option>
             </select>
           </div>
           <div>
@@ -455,7 +447,7 @@
         </div>
 
         <div>
-          <label class="block text-slate-400 mb-1">Сообщение игроку от офицеров</label>
+          <label class="block text-slate-400 mb-1">Сообщение игроку от штаба</label>
           <input id="editOfficerMessage" type="text" placeholder="Уведомление или задача для бойца..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white" />
         </div>
 
@@ -500,10 +492,10 @@
       'смит': 'Смит (G1)', 'юджин': 'Юджин (G1)', 'чарли': 'Чарли (G1)', 'клорис': 'Клорис (G1)',
       'сергей': 'Сергей (G1)', 'джесси': 'Джесси (G1)', 'патрик': 'Патрик (G1)', 'лумак_бокан': 'Лумак Бокан (G1)',
       'лин_сюэ': 'Лин Сюэ (G1)', 'джина': 'Джина (G1)', 'бахити': 'Бахити (G1)', 'джассер': 'Джассер (G1)',
-      'со_юн': 'Со-Юн (G1)', 'наталия': 'Наталия (G1)', 'молли': 'Молли (G1)', 'джеронимо': 'Джеронимо (G1)',
+      'со_юн': 'Со Юн (G1)', 'наталия': 'Наталия (G1)', 'молли': 'Молли (G1)', 'джеронимо': 'Джеронимо (G1)',
       'зинман': 'Зинман (G1)', 'флинт': 'Флинт (G2)', 'филли': 'Филли (G2)', 'алонсо': 'Алонсо (G2)',
-      'логан': 'Логан (G3)', 'миа': 'Миа (G3)', 'грег': 'Грег (G3)', 'яхмос': 'Яхмос (G4)',
-      'рейна': 'Рейна (G4)', 'линн': 'Линн (G4)', 'гектор': 'Гектор (G5)', 'нора': 'Нора (G5)',
+      'логан': 'Логан (G3)', 'миа': 'Мия (G3)', 'грег': 'Грег (G3)', 'яхмос': 'Яхмос (G4)',
+      'рейна': 'Райна (G4)', 'линн': 'Линн (G4)', 'гектор': 'Гектор (G5)', 'нора': 'Нора (G5)',
       'гвен': 'Гвен (G5)', 'ву_минг': 'Ву Минг (G6)', 'рене': 'Рене (G6)', 'уэйн': 'Уэйн (G6)',
       'эдит': 'Эдит (G7)', 'гордон': 'Гордон (G7)', 'брэдли': 'Брэдли (G7)', 'гатот': 'Гатот (G8)',
       'соня': 'Соня (G8)', 'гендрик': 'Гендрик (G8)', 'магнус': 'Магнус (G9)', 'фред': 'Фред (G9)',
@@ -550,7 +542,6 @@
       renderActivityLeaderboard();
     }
 
-    // Переключение между Хронологией логов и Рейтингом активности
     function switchSecurityTab(tabName) {
       currentSecurityTab = tabName;
       const isActivity = (tabName === 'activity');
@@ -566,9 +557,7 @@
         ? 'Рейтинг участников по действиям'
         : `Записей в выборке: ${allLogsList.length}`;
 
-      if (isActivity) {
-        renderActivityLeaderboard();
-      }
+      if (isActivity) renderActivityLeaderboard();
     }
 
     function populateOfficerDropdowns() {
@@ -582,7 +571,7 @@
       const optionsHtml = '<option value="">— Выберите игрока (' + (activeAllianceFilter === 'ALL' ? 'Все' : activeAllianceFilter) + ') —</option>' +
         filtered.map(p => {
           const keyVal = p.playerId ? `ID:${p.playerId}` : `NICK:${p.nick}`;
-          return `<option value="${keyVal}">${p.nick} [${p.alliance || 'Основа'} • ${p.rank || 'R3'} • ${p.status || 'Активен'}]</option>`;
+          return `<option value="${keyVal}">${p.nick} [${p.alliance || 'Основа'} • ${p.role || 'Боец'} • ${p.status || 'Активен'}]</option>`;
         }).join('');
 
       deactSel.innerHTML = optionsHtml;
@@ -591,7 +580,7 @@
 
     function applyRosterSession(data, autoSetAlliance = false) {
       if (!data || !data.user || !data.user.isOfficer) {
-        alert('Доступ к Таблице Альянса открыт только офицерам R4–R5!');
+        alert('Доступ к Таблице Альянса открыт только Владельцу и Офицерам!');
         window.location.href = 'index.html';
         return;
       }
@@ -600,12 +589,25 @@
       allPlayersList = data.allPlayers || [];
       allLogsList = data.logs || [];
 
+      const roleLabel = currentOfficer.role || 'Офицер';
       document.getElementById('headerUserNick').textContent =
-        `${currentOfficer.nick} (${currentOfficer.alliance || 'Основа'} • ${currentOfficer.rank})`;
-      document.getElementById('userRankBadge').textContent = `ОФИЦЕР ${currentOfficer.rank}`;
+        `${currentOfficer.nick} (${currentOfficer.alliance || 'Основа'} • ${roleLabel})`;
+      const badge = document.getElementById('userRoleBadge');
+      badge.textContent = roleLabel;
+      if (currentOfficer.isOwner) {
+        badge.className = 'text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40';
+      } else {
+        badge.className = 'text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40';
+        // Офицер управляет только своим подразделением
+        document.getElementById('filterAllBtn').classList.add('hidden');
+        document.getElementById('optAddOwner').classList.add('hidden');
+        document.getElementById('optEditOwner').classList.add('hidden');
+        document.getElementById('newMemberAlliance').value = currentOfficer.alliance || 'Основа';
+        document.getElementById('newMemberAlliance').disabled = true;
+      }
 
       if (autoSetAlliance && currentOfficer.alliance) {
-        setAllianceFilter(currentOfficer.alliance);
+        setAllianceFilter(currentOfficer.isOwner ? 'ALL' : currentOfficer.alliance);
       } else {
         populateOfficerDropdowns();
         renderRosterTable();
@@ -656,6 +658,13 @@
         const isActive = (p.status || 'Активен') === 'Активен';
         const safeNick = (p.nick || '').replace(/'/g, "\\'");
         const safeId = (p.playerId || '').replace(/'/g, "\\'");
+        const roleName = p.role || 'Боец';
+
+        const roleBadgeCls = roleName === 'Владелец'
+          ? 'text-amber-300 font-extrabold'
+          : roleName === 'Офицер'
+          ? 'text-purple-300 font-bold'
+          : 'text-slate-300';
 
         return `
           <tr class="hover:bg-slate-900/50 transition ${!isActive ? 'opacity-55 bg-rose-950/10' : ''}">
@@ -670,7 +679,7 @@
                   : 'bg-purple-500/15 text-purple-300 border border-purple-500/30'
               }">${p.alliance || 'Основа'}</span>
             </td>
-            <td class="py-3 px-2.5 font-mono font-bold text-slate-200">${p.rank || 'R3'}</td>
+            <td class="py-3 px-2.5 font-mono ${roleBadgeCls}">${roleName}</td>
             <td class="py-3 px-2.5">
               <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${
                 isActive ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
@@ -722,7 +731,7 @@
                   <i class="fa-solid ${isActive ? 'fa-user-slash' : 'fa-user-check'}"></i>
                 </button>
                 <button type="button" onclick="regenPlayerPass('${safeId}', '${safeNick}')"
-                  class="p-1.5 rounded-lg bg-slate-900 hover:bg-purple-900/60 border border-slate-700 text-purple-300" title="Сгенерировать новый личный пароль">
+                  class="p-1.5 rounded-lg bg-slate-900 hover:bg-purple-900/60 border border-slate-700 text-purple-300" title="Сгенерировать новый личный код">
                   <i class="fa-solid fa-key"></i>
                 </button>
               </div>
@@ -738,7 +747,7 @@
         tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-slate-500">Записей пока нет</td></tr>`;
         return;
       }
-      tbody.innerHTML = logs.slice(0, 100).map(l => `
+      tbody.innerHTML = logs.slice(0, 150).map(l => `
         <tr class="hover:bg-slate-900/40">
           <td class="py-1.5 px-3 text-slate-400 whitespace-nowrap">${l.time}</td>
           <td class="py-1.5 px-3 font-bold text-white">${l.nick}</td>
@@ -749,7 +758,6 @@
       `).join('');
     }
 
-    // ПОДСЧЁТ И ОТРИСОВКА РЕЙТИНГА АКТИВНОСТИ КАЖДОГО УЧАСТНИКА
     function renderActivityLeaderboard() {
       const tbody = document.getElementById('activityTableBody');
       if (!tbody) return;
@@ -757,15 +765,13 @@
       const q = (document.getElementById('activitySearchInput')?.value || '').trim().toLowerCase();
       const statsMap = new Map();
 
-      // 1. Сначала регистрируем всех игроков из базы альянса (чтобы видеть даже тех, у кого 0 входов)
       allPlayersList.forEach(p => {
         const key = p.playerId ? `ID:${p.playerId}` : `NICK:${(p.nick || '').toLowerCase()}`;
         statsMap.set(key, {
           nick: p.nick || '—',
           playerId: p.playerId || '',
           alliance: p.alliance || 'Основа',
-          rank: p.rank || 'R3',
-          status: p.status || 'Активен',
+          role: p.role || 'Боец',
           logins: 0,
           updates: 0,
           views: 0,
@@ -776,8 +782,7 @@
         });
       });
 
-      // Helper поиска записи игрока по строке из лога вида "Виталий [ID:10001]"
-      function findStatEntry(actorLabel, rankCol) {
+      function findStatEntry(actorLabel, roleCol) {
         const raw = String(actorLabel || '').trim();
         if (!raw || raw === 'НЕИЗВЕСТНЫЙ') return null;
 
@@ -785,25 +790,19 @@
         const extractedId = idMatch ? idMatch[1].trim() : '';
         const cleanNick = raw.replace(/\s*\[ID:[^\]]+\]/i, '').trim();
 
-        if (extractedId && statsMap.has(`ID:${extractedId}`)) {
-          return statsMap.get(`ID:${extractedId}`);
-        }
+        if (extractedId && statsMap.has(`ID:${extractedId}`)) return statsMap.get(`ID:${extractedId}`);
         for (const entry of statsMap.values()) {
-          if (entry.nick.toLowerCase() === cleanNick.toLowerCase()) {
-            return entry;
-          }
+          if (entry.nick.toLowerCase() === cleanNick.toLowerCase()) return entry;
         }
 
-        // Если игрок был удалён из списка, но остался в исторических логах
         const fallbackKey = extractedId ? `ID:${extractedId}` : `NICK:${cleanNick.toLowerCase()}`;
         if (!statsMap.has(fallbackKey)) {
-          const rankParts = String(rankCol || '').split('•');
+          const rankParts = String(roleCol || '').split('•');
           statsMap.set(fallbackKey, {
             nick: cleanNick,
             playerId: extractedId,
             alliance: (rankParts[0] || 'Основа').trim(),
-            rank: (rankParts[1] || 'R3').trim(),
-            status: 'Архив',
+            role: (rankParts[1] || 'Боец').trim(),
             logins: 0,
             updates: 0,
             views: 0,
@@ -819,7 +818,6 @@
       let sumLogins = 0;
       let sumUpdates = 0;
 
-      // 2. Проходим по всем записям журнала безопасности (от новых к старым)
       allLogsList.forEach(log => {
         const entry = findStatEntry(log.nick, log.rank);
         if (!entry) return;
@@ -841,10 +839,7 @@
         } else if (ev.includes('Переход') || ev.includes('👁️')) {
           entry.views++;
           entry.totalActions++;
-        } else if (
-          ev.includes('➕') || ev.includes('🔒') || ev.includes('✉️') ||
-          ev.includes('🗑️') || ev.includes('🔑')
-        ) {
+        } else if (ev.includes('➕') || ev.includes('🔒') || ev.includes('✉️') || ev.includes('🗑️') || ev.includes('🔑')) {
           entry.officerOps++;
           entry.totalActions++;
         } else {
@@ -852,7 +847,6 @@
         }
       });
 
-      // 3. Фильтруем по выбранному подразделению (Основа / Академия / Все) и поисковой строке
       let rows = Array.from(statsMap.values()).filter(item => {
         if (activeAllianceFilter !== 'ALL' && item.alliance !== activeAllianceFilter) return false;
         if (q) {
@@ -863,17 +857,13 @@
         return true;
       });
 
-      // Сортируем по убыванию общего числа действий, затем по числу обновлений карточки
       rows.sort((a, b) => {
         if (b.totalActions !== a.totalActions) return b.totalActions - a.totalActions;
         return b.updates - a.updates;
       });
 
-      const visitedCount = rows.filter(r => r.totalActions > 0).length;
-      const neverCount = rows.filter(r => r.totalActions === 0).length;
-
-      document.getElementById('actStatVisited').textContent = visitedCount;
-      document.getElementById('actStatNever').textContent = neverCount;
+      document.getElementById('actStatVisited').textContent = rows.filter(r => r.totalActions > 0).length;
+      document.getElementById('actStatNever').textContent = rows.filter(r => r.totalActions === 0).length;
       document.getElementById('actStatLogins').textContent = sumLogins;
       document.getElementById('actStatUpdates').textContent = sumUpdates;
 
@@ -895,7 +885,7 @@
               <div class="text-[10px] text-amber-300/80">${r.playerId ? 'ID: ' + r.playerId : 'ID не указан'}</div>
             </td>
             <td class="py-2.5 px-2.5">
-              <span class="text-sky-300">${r.alliance}</span> • <span class="font-bold text-slate-200">${r.rank}</span>
+              <span class="text-sky-300">${r.alliance}</span> • <span class="font-bold text-slate-200">${r.role}</span>
             </td>
             <td class="py-2.5 px-2.5 text-center">
               <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold ${
@@ -930,7 +920,7 @@
 
       document.getElementById('arsenalModalTitle').textContent = `Арсенал бойца: ${p.nick}`;
       document.getElementById('arsenalModalSub').textContent =
-        `Альянс: ${p.alliance || 'Основа'} • Ранг: ${p.rank || 'R3'} • Печь: ${p.furnaceLevel || '—'} • Тир: ${p.troopTier || '—'}`;
+        `Альянс: ${p.alliance || 'Основа'} • Роль: ${p.role || 'Боец'} • Печь: ${p.furnaceLevel || '—'} • Тир: ${p.troopTier || '—'}`;
 
       const topEq = p.topEquipmentData || (p.heroesData && p.heroesData._topEquipment) || {};
       const classes = [
@@ -966,9 +956,9 @@
           const sMid = h.sMid !== undefined ? h.sMid : (h.s2 || 5);
           const sBot = h.sBot !== undefined ? h.sBot : (h.s3 || 5);
           const eTop = h.eTop !== undefined ? h.eTop : (h.e1 || 5);
-          const eMid = h.eMid !== undefined ? h.eMid : 0;
+          const eMidRaw = h.eMid !== undefined ? h.eMid : 5;
+          const eMidLabel = (eMidRaw === 'Нет' || eMidRaw === 0 || eMidRaw === '0') ? 'Нет' : eMidRaw;
           const eBot = h.eBot !== undefined ? h.eBot : (h.e2 || 5);
-          const expStr = eMid === 0 ? `${eTop}/—/${eBot}` : `${eTop}/${eMid}/${eBot}`;
 
           return `
             <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 space-y-1 font-mono">
@@ -977,7 +967,7 @@
                 <span class="text-amber-300 text-[11px]">Ур.${h.level || 70} • ${h.starsFull ?? 5}★ (${h.starsBars || 0} лыч.)</span>
               </div>
               <div class="text-[11px] text-slate-300">Освоение (В/С/Н): <b class="text-amber-300">${sTop}/${sMid}/${sBot}</b></div>
-              <div class="text-[11px] text-slate-300">Экспедиция (В/С/Н): <b class="text-sky-300">${expStr}</b></div>
+              <div class="text-[11px] text-slate-300">Экспедиция (В/С/Н): <b class="text-sky-300">${eTop}/${eMidLabel}/${eBot}</b></div>
               <div class="text-[11px] text-slate-400">Пушка: <b class="${h.cannon ? 'text-emerald-300' : 'text-slate-500'}">${h.cannon ? 'Да (Ур.' + (h.cannonLvl || '1') + ')' : 'Нет'}</b></div>
             </div>
           `;
@@ -993,7 +983,7 @@
       const mNick = document.getElementById('newMemberNick').value.trim();
       const mId = document.getElementById('newMemberId').value.trim();
       const mAlliance = document.getElementById('newMemberAlliance').value;
-      const mRank = document.getElementById('newMemberRank').value;
+      const mRole = document.getElementById('newMemberRole').value;
       if (!mNick) return;
 
       const btn = document.getElementById('addMemberBtn');
@@ -1006,7 +996,7 @@
           memberNick: mNick,
           memberId: mId,
           memberAlliance: mAlliance,
-          memberRank: mRank
+          memberRole: mRole
         });
         if (res.ok) {
           document.getElementById('newMemberNick').value = '';
@@ -1108,7 +1098,8 @@
       document.getElementById('editNick').value = p.nick || '';
       document.getElementById('editPlayerId').value = p.playerId || '';
       document.getElementById('editAlliance').value = p.alliance || 'Основа';
-      document.getElementById('editRank').value = ['R1','R2','R3','R4','R5'].includes(p.rank) ? p.rank : 'R3';
+      document.getElementById('editAlliance').disabled = !currentOfficer.isOwner;
+      document.getElementById('editRole').value = ['Владелец', 'Офицер', 'Боец'].includes(p.role) ? p.role : 'Боец';
       document.getElementById('editStatus').value = p.status || 'Активен';
       document.getElementById('editFurnace').value = p.furnaceLevel || '';
       document.getElementById('editTier').value = p.troopTier || '';
@@ -1131,7 +1122,7 @@
         nick: document.getElementById('editNick').value.trim(),
         playerId: document.getElementById('editPlayerId').value.trim(),
         alliance: document.getElementById('editAlliance').value,
-        rank: document.getElementById('editRank').value,
+        role: document.getElementById('editRole').value,
         status: document.getElementById('editStatus').value,
         furnaceLevel: document.getElementById('editFurnace').value.trim(),
         troopTier: document.getElementById('editTier').value.trim(),
@@ -1235,8 +1226,6 @@
           const parsed = JSON.parse(cached);
           if (parsed && parsed.allPlayers) {
             applyRosterSession(parsed, true);
-            syncAllData(false);
-            return;
           }
         } catch (e) {}
       }

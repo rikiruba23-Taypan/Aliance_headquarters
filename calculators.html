@@ -37,7 +37,6 @@
 </head>
 <body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-sky-500 selection:text-white">
 
-  <!-- ==================== ШАПКА И ЕДИНОЕ МЕНЮ ==================== -->
   <header class="sticky top-0 z-30 bg-slate-925/95 backdrop-blur-md border-b border-slate-800 px-4 py-2.5">
     <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-2.5">
@@ -47,13 +46,12 @@
         <div>
           <div class="flex items-center gap-2">
             <span class="font-extrabold text-sm tracking-tight text-white">ГАРМОНИЯ</span>
-            <span id="userRankBadge" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30">R1-R3</span>
+            <span id="userRoleBadge" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30">Боец</span>
           </div>
           <div class="text-[11px] text-slate-400" id="headerUserNick">Боец</div>
         </div>
       </div>
 
-      <!-- Единое полноценное меню навигации (все 5 кнопок) -->
       <nav class="flex flex-wrap items-center gap-1.5 text-xs">
         <a href="index.html" class="nav-pill px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-medium flex items-center gap-1.5 transition">
           <i class="fa-solid fa-id-card text-sky-400"></i>
@@ -86,7 +84,6 @@
     </div>
   </header>
 
-  <!-- ==================== ОСНОВНОЙ КОНТЕНТ ==================== -->
   <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-6 space-y-6">
 
     <!-- 1. КАЛЬКУЛЯТОР ПРОПОРЦИЙ ОТРЯДА И СБОРА -->
@@ -164,13 +161,12 @@
     <!-- 2. КАЛЬКУЛЯТОР УСКОРЕНИЙ И КАЛЬКУЛЯТОР ОСКОЛКОВ ГЕРОЯ -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-      <!-- Калькулятор ускорений -->
       <section class="glass-card rounded-3xl p-5 sm:p-6 shadow-xl border border-slate-800 space-y-4">
         <div class="pb-3 border-b border-slate-800">
           <h2 class="text-base font-extrabold text-white flex items-center gap-2">
             <i class="fa-solid fa-stopwatch text-sky-400"></i> Подсчёт запаса ускорений
           </h2>
-          <p class="text-xs text-slate-400 mt-0.5">Укажите количество ваших ускорений для расчёта общего времени в днях и часах (под СВС и Сильнейшего Вождя).</p>
+          <p class="text-xs text-slate-400 mt-0.5">Укажите количество ваших ускорений для расчёта общего времени в днях и часах.</p>
         </div>
 
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
@@ -212,7 +208,6 @@
         </div>
       </section>
 
-      <!-- Калькулятор осколков героев -->
       <section class="glass-card rounded-3xl p-5 sm:p-6 shadow-xl border border-slate-800 space-y-4">
         <div class="pb-3 border-b border-slate-800">
           <h2 class="text-base font-extrabold text-white flex items-center gap-2">
@@ -275,8 +270,15 @@
       sessionCard = data.myCard || {};
 
       document.getElementById('headerUserNick').textContent = u.playerId ? `${u.nick} (ID: ${u.playerId})` : u.nick;
-      const rankBadge = document.getElementById('userRankBadge');
-      rankBadge.textContent = u.isOfficer ? `ОФИЦЕР ${u.rank || 'R4–R5'}` : `БОЕЦ ${u.rank || 'R1–R3'}`;
+      const roleLabel = u.role || 'Боец';
+      const badge = document.getElementById('userRoleBadge');
+      badge.textContent = `${roleLabel} • ${u.alliance || 'Основа'}`;
+      if (roleLabel === 'Владелец') {
+        badge.className = 'text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40';
+      } else if (roleLabel === 'Офицер') {
+        badge.className = 'text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40';
+      }
+
       if (u.isOfficer) {
         document.getElementById('navOfficerRoster').classList.remove('hidden');
         document.getElementById('navOfficerRaids').classList.remove('hidden');
@@ -369,7 +371,7 @@
 
       const cached = sessionStorage.getItem('harmony_session_cache');
       if (cached) {
-        try { applyHeaderFromSession(JSON.parse(cached)); return; } catch (e) {}
+        try { applyHeaderFromSession(JSON.parse(cached)); } catch (e) {}
       }
       const code = getStoredPasscode();
       if (!code) {

@@ -39,7 +39,6 @@
 </head>
 <body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-sky-500 selection:text-white">
 
-  <!-- ==================== ШАПКА И ЕДИНОЕ МЕНЮ ==================== -->
   <header class="sticky top-0 z-30 bg-slate-925/95 backdrop-blur-md border-b border-slate-800 px-4 py-2.5">
     <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-2.5">
@@ -49,13 +48,12 @@
         <div>
           <div class="flex items-center gap-2">
             <span class="font-extrabold text-sm tracking-tight text-white">ГАРМОНИЯ</span>
-            <span id="userRankBadge" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30">R1-R3</span>
+            <span id="userRoleBadge" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30">Боец</span>
           </div>
           <div class="text-[11px] text-slate-400" id="headerUserNick">Боец</div>
         </div>
       </div>
 
-      <!-- Единое полноценное меню навигации (все 5 кнопок) -->
       <nav class="flex flex-wrap items-center gap-1.5 text-xs">
         <a href="index.html" class="nav-pill px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-medium flex items-center gap-1.5 transition">
           <i class="fa-solid fa-id-card text-sky-400"></i>
@@ -88,7 +86,6 @@
     </div>
   </header>
 
-  <!-- ==================== ОСНОВНОЙ КОНТЕНТ ==================== -->
   <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-6 space-y-6">
 
     <!-- БОЕВЫЕ ПАМЯТКИ АЛЬЯНСА -->
@@ -155,7 +152,6 @@
 
   </main>
 
-  <!-- МОДАЛЬНОЕ ОКНО ПРОСМОТРА КАРТОЧКИ ГЕРОЯ -->
   <div id="previewModal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
     <div class="glass-card max-w-xl w-full rounded-3xl p-5 space-y-4 border border-slate-700 text-center">
       <div class="flex items-center justify-between pb-2 border-b border-slate-800">
@@ -180,11 +176,11 @@
       { key: 'джесси', name: 'Джесси', gen: 1 },
       { key: 'патрик', name: 'Патрик', gen: 1 },
       { key: 'лумак_бокан', name: 'Лумак Бокан', gen: 1 },
-      { key: 'лин сюэ', name: 'Лин Сюэ', gen: 1 },
+      { key: 'лин_сюэ', name: 'Лин Сюэ', gen: 1 },
       { key: 'джина', name: 'Джина', gen: 1 },
       { key: 'бахити', name: 'Бахити', gen: 1 },
       { key: 'джассер', name: 'Джассер', gen: 1 },
-      { key: 'со юн', name: 'Со Юн', gen: 1 },
+      { key: 'со_юн', name: 'Со Юн', gen: 1 },
       { key: 'наталия', name: 'Наталия', gen: 1 },
       { key: 'молли', name: 'Молли', gen: 1 },
       { key: 'джеронимо', name: 'Джеронимо', gen: 1 },
@@ -193,15 +189,15 @@
       { key: 'филли', name: 'Филли', gen: 2 },
       { key: 'алонсо', name: 'Алонсо', gen: 2 },
       { key: 'логан', name: 'Логан', gen: 3 },
-      { key: 'мия', name: 'Мия', gen: 3 },
+      { key: 'миа', name: 'Мия', gen: 3 },
       { key: 'грег', name: 'Грег', gen: 3 },
       { key: 'яхмос', name: 'Яхмос', gen: 4 },
-      { key: 'райна', name: 'Райна', gen: 4 },
+      { key: 'рейна', name: 'Райна', gen: 4 },
       { key: 'линн', name: 'Линн', gen: 4 },
       { key: 'гектор', name: 'Гектор', gen: 5 },
       { key: 'нора', name: 'Нора', gen: 5 },
       { key: 'гвен', name: 'Гвен', gen: 5 },
-      { key: 'ву минг', name: 'Ву Минг', gen: 6 },
+      { key: 'ву_минг', name: 'Ву Минг', gen: 6 },
       { key: 'рене', name: 'Рене', gen: 6 },
       { key: 'уэйн', name: 'Уэйн', gen: 6 },
       { key: 'эдит', name: 'Эдит', gen: 7 },
@@ -247,8 +243,15 @@
       if (!data || !data.user) return;
       const u = data.user;
       document.getElementById('headerUserNick').textContent = u.playerId ? `${u.nick} (ID: ${u.playerId})` : u.nick;
-      const rankBadge = document.getElementById('userRankBadge');
-      rankBadge.textContent = u.isOfficer ? `ОФИЦЕР ${u.rank || 'R4–R5'}` : `БОЕЦ ${u.rank || 'R1–R3'}`;
+      const roleLabel = u.role || 'Боец';
+      const badge = document.getElementById('userRoleBadge');
+      badge.textContent = `${roleLabel} • ${u.alliance || 'Основа'}`;
+      if (roleLabel === 'Владелец') {
+        badge.className = 'text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40';
+      } else if (roleLabel === 'Офицер') {
+        badge.className = 'text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40';
+      }
+
       if (u.isOfficer) {
         document.getElementById('navOfficerRoster').classList.remove('hidden');
         document.getElementById('navOfficerRaids').classList.remove('hidden');
@@ -314,7 +317,7 @@
 
       const cached = sessionStorage.getItem('harmony_session_cache');
       if (cached) {
-        try { applyHeaderFromSession(JSON.parse(cached)); return; } catch (e) {}
+        try { applyHeaderFromSession(JSON.parse(cached)); } catch (e) {}
       }
       const code = getStoredPasscode();
       if (!code) {
