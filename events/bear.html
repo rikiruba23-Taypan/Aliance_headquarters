@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Охота на Медведя — Штаб Рейдов «Гармония»</title>
+  <title>Ловушка на Медведя — Симулятор и Калькулятор «Гармония»</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,8 +22,9 @@
   </script>
   <style>
     body { font-family: 'Inter', sans-serif; background-color: #060a12; color: #f1f5f9; }
-    .glass-card { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(14px); border: 1px solid rgba(51, 65, 85, 0.65); }
-    .filter-pill.active { background: #0284c7; color: #ffffff; border-color: #38bdf8; }
+    .glass-card { background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(14px); border: 1px solid rgba(51, 65, 85, 0.65); }
+    .pill-btn.active { background: #0284c7; color: #ffffff; border-color: #38bdf8; }
+    .trap-btn.active { background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); color: #060a12; font-weight: 800; border-color: #fbbf24; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-sky-500 selection:text-white">
@@ -36,79 +37,141 @@
         </a>
         <div>
           <div class="flex items-center gap-2">
-            <span class="font-extrabold text-sm text-white">🐻 ОХОТА НА МЕДВЕДЯ</span>
+            <span class="font-extrabold text-sm text-white">🐻 ЛОВУШКА НА МЕДВЕДЯ</span>
             <span id="userRoleBadge" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">Офицер</span>
           </div>
           <div class="text-[11px] text-slate-400" id="headerUserNick">Загрузка...</div>
         </div>
       </div>
 
-      <div class="flex flex-wrap items-center gap-2">
+      <div class="flex flex-wrap items-center gap-2.5">
+        <!-- Выбор Альянса -->
         <div class="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs">
-          <button type="button" id="bFilterAll" onclick="setBearAlliance('ALL')" class="filter-pill px-2.5 py-1 rounded-lg font-semibold text-slate-300 transition">Все</button>
-          <button type="button" id="bFilterMain" onclick="setBearAlliance('Основа')" class="filter-pill active px-2.5 py-1 rounded-lg font-semibold text-slate-300 transition">Основа</button>
-          <button type="button" id="bFilterAcad" onclick="setBearAlliance('Академия')" class="filter-pill px-2.5 py-1 rounded-lg font-semibold text-slate-300 transition">Академия</button>
+          <button type="button" id="bFilterMain" onclick="switchContext('Основа', currentTrap)" class="pill-btn active px-3 py-1 rounded-lg font-semibold text-slate-300 transition">Основа</button>
+          <button type="button" id="bFilterAcad" onclick="switchContext('Академия', currentTrap)" class="pill-btn px-3 py-1 rounded-lg font-semibold text-slate-300 transition">Академия</button>
         </div>
-        <button type="button" onclick="resetBearState()" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-rose-950/60 border border-slate-700 text-xs text-slate-300 hover:text-rose-200 transition">
-          <i class="fa-solid fa-rotate-left mr-1"></i>Очистить
-        </button>
+
+        <!-- Выбор Ловушки -->
+        <div class="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs">
+          <button type="button" id="trap1Btn" onclick="switchContext(currentAlliance, 'trap1')" class="trap-btn active px-3 py-1 rounded-lg font-semibold text-slate-300 transition">☀️ Ловушка 1 (Утро)</button>
+          <button type="button" id="trap2Btn" onclick="switchContext(currentAlliance, 'trap2')" class="trap-btn px-3 py-1 rounded-lg font-semibold text-slate-300 transition">🌙 Ловушка 2 (Вечер)</button>
+        </div>
+
+        <!-- Статус облачного автосохранения -->
+        <div id="cloudSaveBadge" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-[11px] font-mono text-emerald-400">
+          <i id="cloudSaveIcon" class="fa-solid fa-cloud-check"></i>
+          <span id="cloudSaveText">Синхронизировано</span>
+        </div>
       </div>
     </div>
   </header>
 
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6 space-y-6">
 
-    <!-- 1. ПАНЕЛЬ НАСТРОЕК ОХОТЫ -->
+    <!-- 1. ПАНЕЛЬ ПАРАМЕТРОВ И УМНАЯ РЕКОМЕНДАЦИЯ (С ЦВЕТОВОЙ ИНДИКАЦИЕЙ) -->
     <section class="glass-card rounded-3xl p-5 border border-amber-500/30 space-y-4">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
         <div>
-          <label class="block text-amber-300 font-bold mb-1">🐾 Ловушка и время (МСК)</label>
-          <input id="bearTrapInfo" type="text" oninput="saveBearState()" placeholder="Напр: Ловушка #1 • Старт 20:00 МСК"
+          <label class="block text-amber-300 font-bold mb-1">🕒 Время старта (МСК)</label>
+          <input id="bearTimeInput" type="text" oninput="onConfigChange()" placeholder="Напр: 20:00 МСК"
             class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:border-amber-400 focus:outline-none" />
         </div>
         <div>
-          <label class="block text-sky-300 font-bold mb-1">⚖️ Пропорция войск (Пех/Коп/Стр)</label>
-          <input id="bearRatio" type="text" oninput="saveBearState()" value="10% / 20% / 70%"
+          <label class="block text-sky-300 font-bold mb-1">⚖️ Пропорция (Пех/Коп/Стр)</label>
+          <input id="bearRatioInput" type="text" oninput="onConfigChange()" value="10% / 20% / 70%"
             class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-white focus:border-sky-400 focus:outline-none" />
         </div>
         <div>
-          <label class="block text-emerald-300 font-bold mb-1">🤖 Автоподбор (число сборов)</label>
-          <div class="flex gap-2">
-            <select id="bearAutoCount" class="bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2 font-mono text-white">
-              <option value="2">2 сбора</option>
-              <option value="3" selected>3 сбора</option>
-              <option value="4">4 сбора</option>
-              <option value="5">5 сборов</option>
-              <option value="6">6 сборов</option>
-            </select>
-            <button type="button" onclick="autoFillBearGroups()" class="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-bold text-white transition flex items-center justify-center gap-1.5">
-              <i class="fa-solid fa-wand-magic-sparkles"></i><span>Автосбор</span>
-            </button>
-          </div>
+          <label class="block text-emerald-300 font-bold mb-1">👑 Число капитанов (рейдеров)</label>
+          <input id="bearCaptainsInput" type="number" min="1" max="50" value="6" oninput="onConfigChange()"
+            class="w-full bg-slate-900 border border-emerald-500/40 rounded-xl px-3 py-2 font-mono font-bold text-emerald-300 focus:outline-none" />
         </div>
-        <div class="flex flex-col justify-end">
-          <button type="button" onclick="copyBearOrder()" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 font-extrabold text-slate-950 shadow-lg transition flex items-center justify-center gap-2">
-            <i class="fa-solid fa-copy"></i><span>Скопировать приказ в чат</span>
+        <div>
+          <label class="block text-purple-300 font-bold mb-1">🌊 Количество волн</label>
+          <input id="bearWavesInput" type="number" min="1" max="10" value="3" oninput="onConfigChange()"
+            class="w-full bg-slate-900 border border-purple-500/40 rounded-xl px-3 py-2 font-mono font-bold text-purple-300 focus:outline-none" />
+        </div>
+        <div>
+          <label class="block text-rose-300 font-bold mb-1">⏱️ Интервал волн (сек)</label>
+          <input id="bearIntervalInput" type="number" min="20" max="180" step="5" value="50" oninput="onConfigChange()"
+            class="w-full bg-slate-900 border border-rose-500/40 rounded-xl px-3 py-2 font-mono font-bold text-rose-300 focus:outline-none" />
+        </div>
+      </div>
+
+      <!-- Блок умной рекомендации -->
+      <div id="recommendationBox" class="rounded-2xl p-4 border border-emerald-500/40 bg-emerald-950/30 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="space-y-1">
+          <div id="recTitle" class="font-extrabold text-emerald-300 flex items-center gap-2">
+            <span>🟢 Анализ состава...</span>
+          </div>
+          <div id="recDetails" class="text-slate-300 font-mono text-[11px]">Отметьте участников ниже, чтобы рассчитать оптимальное число рейдеров и волн.</div>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button type="button" onclick="applyRecommendedSettings()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-bold text-white shadow transition flex items-center gap-1.5">
+            <i class="fa-solid fa-wand-magic-sparkles"></i><span>Применить рекомендацию</span>
+          </button>
+          <button type="button" onclick="copyBearOrder()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 font-extrabold text-slate-950 shadow transition flex items-center gap-1.5">
+            <i class="fa-solid fa-copy"></i><span>Скопировать приказ</span>
           </button>
         </div>
       </div>
+    </section>
 
-      <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800/80 text-[11px] text-slate-400">
-        <span>💡 <b class="text-amber-300">Памятка:</b> В чужие сборы ставим 1-м слотом только <b>Джесси, Джассера, Со Юн, Райну или Джеронимо</b>. Без Джины и синих героев!</span>
-        <button type="button" onclick="addBearGroup()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-sky-600 text-white font-bold transition flex items-center gap-1.5">
-          <i class="fa-solid fa-plus"></i><span>Добавить пустой сбор</span>
-        </button>
+    <!-- 2. УЧАСТНИКИ И ИХ ЛИНИИ (БЛИЗОСТЬ К ЛОВУШКЕ) -->
+    <section class="glass-card rounded-3xl p-5 border border-slate-800 space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+        <div>
+          <h2 class="text-base font-extrabold text-white flex items-center gap-2">
+            <i class="fa-solid fa-users-line text-sky-400"></i> Участники и расположение у ловушки
+          </h2>
+          <p class="text-xs text-slate-400">Отметьте, кто идёт на медведя, и укажите линию (Линия 1 идёт первой, дальние — позже). Настройки сохраняются автоматически.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 text-xs">
+          <span id="attendingCounter" class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 font-mono text-sky-300 font-bold">Идут: 0 чел.</span>
+          <button type="button" onclick="toggleAllAttendance(true)" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold">Выбрать всех</button>
+          <button type="button" onclick="toggleAllAttendance(false)" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-rose-950/60 border border-slate-700 text-slate-300">Снять всех</button>
+          <input id="playerSearchInput" type="text" oninput="renderParticipantsTable()" placeholder="Поиск бойца..."
+            class="bg-slate-900 border border-slate-700 focus:border-sky-500 rounded-xl px-3 py-1.5 text-white focus:outline-none w-40" />
+        </div>
+      </div>
+
+      <div class="overflow-x-auto max-h-80 border border-slate-800 rounded-2xl bg-slate-950/60">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead class="sticky top-0 bg-slate-900 text-slate-400 font-mono text-[11px] uppercase border-b border-slate-800">
+            <tr>
+              <th class="py-2.5 px-3 w-10 text-center">Идёт</th>
+              <th class="py-2.5 px-3">Боец / Печь</th>
+              <th class="py-2.5 px-2.5">Линия у ловушки</th>
+              <th class="py-2.5 px-2.5 text-center">Ход (сек)</th>
+              <th class="py-2.5 px-2.5 text-right">Сбор (Лидер)</th>
+              <th class="py-2.5 px-2.5 text-right">Марш / Кол-во</th>
+              <th class="py-2.5 px-2.5 text-center">Лучший 1-й герой</th>
+              <th class="py-2.5 px-3 text-center">Роль в рейде</th>
+            </tr>
+          </thead>
+          <tbody id="participantsTableBody" class="divide-y divide-slate-800/60">
+            <tr><td colspan="8" class="py-6 text-center text-slate-500">Загрузка состава альянса...</td></tr>
+          </tbody>
+        </table>
       </div>
     </section>
 
-    <!-- 2. СЕТКА СБОРОВ -->
-    <section id="bearGroupsContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-5"></section>
+    <!-- 3. СИМУЛЯЦИЯ ВОЛН НА 30 МИНУТ -->
+    <section class="space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-2 px-1">
+        <h2 class="text-base font-extrabold text-white flex items-center gap-2">
+          <i class="fa-solid fa-wave-square text-amber-400"></i> Симуляция волн на 30 минут (отсечка не успевающих до 00:00)
+        </h2>
+        <div id="simSummaryBadge" class="text-xs font-mono text-emerald-300 font-bold">Всего атак за 30 мин: 0</div>
+      </div>
+      <div id="wavesSimulationContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+    </section>
 
-    <!-- 3. ПРЕДПРОСМОТР ПРИКАЗА -->
+    <!-- 4. ГОТОВЫЙ ПРИКАЗ В ЧАТ -->
     <section class="glass-card rounded-3xl p-5 border border-slate-800 space-y-3">
       <div class="flex items-center justify-between">
         <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
-          <i class="fa-solid fa-bullhorn text-amber-400"></i> Текст приказа для чата Альянса / Telegram
+          <i class="fa-solid fa-bullhorn text-amber-400"></i> Готовый приказ для чата Альянса / Telegram
         </h3>
         <button type="button" onclick="copyBearOrder()" class="px-3.5 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-xs font-bold text-white transition flex items-center gap-1.5">
           <i class="fa-solid fa-copy"></i><span>Копировать</span>
@@ -125,7 +188,7 @@
 
   <script src="raid-core.js"></script>
   <script>
-    const BEAR_STORAGE_KEY = 'harmony_bear_v1';
+    const LINE_DEFAULTS = { 1: 12, 2: 18, 3: 25, 4: 34, 5: 45 };
     const BEAR_JOINERS = [
       { key: 'джесси', name: 'Джесси' },
       { key: 'джассер', name: 'Джассер' },
@@ -134,57 +197,169 @@
       { key: 'джеронимо', name: 'Джеронимо' }
     ];
 
-    let bearState = {
-      trapInfo: 'Ловушка #1 • Старт 20:00 МСК',
+    let currentAlliance = 'Основа';
+    let currentTrap = 'trap1';
+    let saveTimer = null;
+    let lastRecommendation = { captains: 6, waves: 3, interval: 50 };
+
+    let bearConfig = {
+      timeText: '10:00 МСК',
       ratio: '10% / 20% / 70%',
-      groups: [
-        { leaderKey: '', fillers: [] },
-        { leaderKey: '', fillers: [] },
-        { leaderKey: '', fillers: [] }
-      ]
+      captainsCount: 6,
+      wavesCount: 3,
+      intervalSec: 50,
+      players: {} // pKey: { attending: bool, line: 1..5, travelSec: number, forceCaptain: 'auto'|'yes'|'no' }
     };
 
-    function loadBearState() {
+    function getConfigKey() {
+      return `bear_${currentAlliance}_${currentTrap}`;
+    }
+
+    function setCloudStatus(state, text) {
+      const box = document.getElementById('cloudSaveBadge');
+      const icon = document.getElementById('cloudSaveIcon');
+      const txt = document.getElementById('cloudSaveText');
+      txt.textContent = text;
+      if (state === 'saving') {
+        box.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-950/80 border border-amber-500/40 text-[11px] font-mono text-amber-300';
+        icon.className = 'fa-solid fa-spinner fa-spin';
+      } else if (state === 'error') {
+        box.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-950/80 border border-rose-500/40 text-[11px] font-mono text-rose-300';
+        icon.className = 'fa-solid fa-triangle-exclamation';
+      } else {
+        box.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-emerald-500/30 text-[11px] font-mono text-emerald-400';
+        icon.className = 'fa-solid fa-cloud-check';
+      }
+    }
+
+    async function switchContext(alliance, trap) {
+      if (RaidCore.user && !RaidCore.user.isOwner && alliance !== RaidCore.user.alliance) return;
+      currentAlliance = alliance;
+      currentTrap = trap;
+      RaidCore.activeAlliance = alliance;
+
+      document.getElementById('bFilterMain').classList.toggle('active', alliance === 'Основа');
+      document.getElementById('bFilterAcad').classList.toggle('active', alliance === 'Академия');
+      document.getElementById('trap1Btn').classList.toggle('active', trap === 'trap1');
+      document.getElementById('trap2Btn').classList.toggle('active', trap === 'trap2');
+
+      await loadCloudConfig();
+    }
+
+    async function loadCloudConfig() {
+      setCloudStatus('saving', 'Загрузка настроек...');
+      const key = getConfigKey();
+      const defaultTime = currentTrap === 'trap1' ? '10:00 МСК (Утро)' : '20:00 МСК (Вечер)';
+
+      // Сначала пробуем локальный кэш для мгновенного отображения
+      const localRaw = localStorage.getItem('harmony_' + key);
+      if (localRaw) {
+        try { applyConfigToInputs(JSON.parse(localRaw)); } catch (e) {}
+      } else {
+        applyConfigToInputs({ timeText: defaultTime, ratio: '10% / 20% / 70%', captainsCount: 6, wavesCount: 3, intervalSec: 50, players: {} });
+      }
+      renderAll();
+
+      // Затем подтягиваем актуальные общие настройки офицеров из Google Таблицы
       try {
-        const saved = localStorage.getItem(BEAR_STORAGE_KEY);
-        if (saved) bearState = JSON.parse(saved);
-      } catch (e) {}
-      document.getElementById('bearTrapInfo').value = bearState.trapInfo || '';
-      document.getElementById('bearRatio').value = bearState.ratio || '10% / 20% / 70%';
+        const res = await fetch(RAID_API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'get_event_config', passcode: RaidCore.getPasscode(), configKey: key })
+        }).then(r => r.json());
+
+        if (res.ok && res.config) {
+          localStorage.setItem('harmony_' + key, JSON.stringify(res.config));
+          applyConfigToInputs(res.config);
+          renderAll();
+          setCloudStatus('saved', res.updatedAt ? `Облако (${res.updatedAt.slice(0, 16)})` : 'Синхронизировано');
+        } else {
+          setCloudStatus('saved', 'Готово (новый профиль)');
+        }
+      } catch (e) {
+        setCloudStatus('error', 'Локальный режим');
+      }
     }
 
-    function saveBearState() {
-      bearState.trapInfo = document.getElementById('bearTrapInfo').value.trim();
-      bearState.ratio = document.getElementById('bearRatio').value.trim();
-      localStorage.setItem(BEAR_STORAGE_KEY, JSON.stringify(bearState));
-      renderBearOrder();
+    function applyConfigToInputs(cfg) {
+      bearConfig = {
+        timeText: cfg.timeText || (currentTrap === 'trap1' ? '10:00 МСК' : '20:00 МСК'),
+        ratio: cfg.ratio || '10% / 20% / 70%',
+        captainsCount: Number(cfg.captainsCount) || 6,
+        wavesCount: Number(cfg.wavesCount) || 3,
+        intervalSec: Number(cfg.intervalSec) || 50,
+        players: cfg.players || {}
+      };
+      document.getElementById('bearTimeInput').value = bearConfig.timeText;
+      document.getElementById('bearRatioInput').value = bearConfig.ratio;
+      document.getElementById('bearCaptainsInput').value = bearConfig.captainsCount;
+      document.getElementById('bearWavesInput').value = bearConfig.wavesCount;
+      document.getElementById('bearIntervalInput').value = bearConfig.intervalSec;
     }
 
-    function resetBearState() {
-      if (!confirm('Очистить все сборы на Медведя?')) return;
-      bearState.groups = [
-        { leaderKey: '', fillers: [] },
-        { leaderKey: '', fillers: [] },
-        { leaderKey: '', fillers: [] }
-      ];
-      renderBearGroups();
-      saveBearState();
+    function onConfigChange() {
+      bearConfig.timeText = document.getElementById('bearTimeInput').value.trim();
+      bearConfig.ratio = document.getElementById('bearRatioInput').value.trim();
+      bearConfig.captainsCount = Math.max(1, Number(document.getElementById('bearCaptainsInput').value) || 1);
+      bearConfig.wavesCount = Math.max(1, Number(document.getElementById('bearWavesInput').value) || 1);
+      bearConfig.intervalSec = Math.max(15, Number(document.getElementById('bearIntervalInput').value) || 50);
+
+      renderAll();
+      scheduleCloudSave();
     }
 
-    function setBearAlliance(val) {
-      RaidCore.activeAlliance = val;
-      document.getElementById('bFilterAll').classList.toggle('active', val === 'ALL');
-      document.getElementById('bFilterMain').classList.toggle('active', val === 'Основа');
-      document.getElementById('bFilterAcad').classList.toggle('active', val === 'Академия');
+    function scheduleCloudSave() {
+      const key = getConfigKey();
+      localStorage.setItem('harmony_' + key, JSON.stringify(bearConfig));
+      setCloudStatus('saving', 'Сохранение...');
+      if (saveTimer) clearTimeout(saveTimer);
+      saveTimer = setTimeout(async () => {
+        try {
+          const res = await fetch(RAID_API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+              action: 'save_event_config',
+              passcode: RaidCore.getPasscode(),
+              configKey: key,
+              config: bearConfig
+            })
+          }).then(r => r.json());
+          if (res.ok) setCloudStatus('saved', `Сохранено (${res.updatedAt.slice(11, 16)})`);
+          else setCloudStatus('error', 'Ошибка сохранения');
+        } catch (e) {
+          setCloudStatus('error', 'Нет связи');
+        }
+      }, 900);
     }
 
-    function findPlayerByKey(pKey) {
-      if (!pKey) return null;
-      return RaidCore.allPlayers.find(p => RaidCore.getPlayerKey(p) === pKey) || null;
+    function getPlayerCfg(pKey) {
+      if (!bearConfig.players[pKey]) {
+        bearConfig.players[pKey] = { attending: false, line: 2, travelSec: 18, forceCaptain: 'auto' };
+      }
+      return bearConfig.players[pKey];
+    }
+
+    function updatePlayerField(pKey, field, val) {
+      const pc = getPlayerCfg(pKey);
+      pc[field] = val;
+      if (field === 'line') {
+        pc.travelSec = LINE_DEFAULTS[val] || 25;
+      }
+      renderAll();
+      scheduleCloudSave();
+    }
+
+    function toggleAllAttendance(state) {
+      RaidCore.getFilteredPlayers().forEach(p => {
+        const pc = getPlayerCfg(RaidCore.getPlayerKey(p));
+        pc.attending = state;
+      });
+      renderAll();
+      scheduleCloudSave();
     }
 
     function getBestBearHero(p) {
-      if (!p) return { name: 'Джесси / Со Юн', eTop: '—', empty: true };
       let best = null;
       BEAR_JOINERS.forEach(item => {
         const rec = RaidCore.getHeroRecord(p, item.key);
@@ -193,204 +368,246 @@
           if (!best || eTop > best.eTop) best = { name: item.name, eTop };
         }
       });
-      return best || { name: 'Джесси / Со Юн', eTop: '—', empty: true };
+      return best ? `${best.name} (${best.eTop})` : '—';
     }
 
-    function getBearAssignmentsMap() {
-      const map = {};
-      bearState.groups.forEach((g, idx) => {
-        if (g.leaderKey) {
-          if (!map[g.leaderKey]) map[g.leaderKey] = [];
-          map[g.leaderKey].push(`Лидер #${idx + 1}`);
-        }
-        (g.fillers || []).forEach(fKey => {
-          if (!map[fKey]) map[fKey] = [];
-          map[fKey].push(`Сбор #${idx + 1}`);
-        });
-      });
-      return map;
+    function getAttendingPlayers() {
+      return RaidCore.getFilteredPlayers()
+        .map(p => {
+          const pKey = RaidCore.getPlayerKey(p);
+          const pc = getPlayerCfg(pKey);
+          return { ...p, pKey, pc };
+        })
+        .filter(x => x.pc.attending);
     }
 
-    function addBearGroup() {
-      bearState.groups.push({ leaderKey: '', fillers: [] });
-      renderBearGroups();
-      saveBearState();
-    }
+    function renderParticipantsTable() {
+      const tbody = document.getElementById('participantsTableBody');
+      const search = (document.getElementById('playerSearchInput').value || '').trim().toLowerCase();
+      const players = RaidCore.getFilteredPlayers().filter(p => !search || (p.nick || '').toLowerCase().includes(search));
 
-    function removeBearGroup(gIdx) {
-      if (bearState.groups.length <= 1) return;
-      bearState.groups.splice(gIdx, 1);
-      renderBearGroups();
-      saveBearState();
-    }
+      const attendingCount = getAttendingPlayers().length;
+      document.getElementById('attendingCounter').textContent = `Идут: ${attendingCount} / ${RaidCore.getFilteredPlayers().length}`;
 
-    function pickBearLeader(gIdx) {
-      RaidCore.openPicker({
-        title: `Выбор Лидера для Сбора #${gIdx + 1}`,
-        defaultSort: 'rallyCap',
-        assignmentsMap: getBearAssignmentsMap(),
-        onSelect: (player) => {
-          bearState.groups[gIdx].leaderKey = RaidCore.getPlayerKey(player);
-          renderBearGroups();
-          saveBearState();
-        }
-      });
-    }
+      if (players.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="py-6 text-center text-slate-500">Нет активных бойцов в подразделении «${currentAlliance}»</td></tr>`;
+        return;
+      }
 
-    function pickBearFiller(gIdx) {
-      RaidCore.openPicker({
-        title: `Добавить филлера в Сбор #${gIdx + 1}`,
-        defaultSort: 'marchCap',
-        assignmentsMap: getBearAssignmentsMap(),
-        onSelect: (player) => {
-          const pKey = RaidCore.getPlayerKey(player);
-          if (!bearState.groups[gIdx].fillers.includes(pKey)) {
-            bearState.groups[gIdx].fillers.push(pKey);
-          }
-          renderBearGroups();
-          saveBearState();
-        }
-      });
-    }
-
-    function removeBearFiller(gIdx, fIdx) {
-      bearState.groups[gIdx].fillers.splice(fIdx, 1);
-      renderBearGroups();
-      saveBearState();
-    }
-
-    function autoFillBearGroups() {
-      const count = Number(document.getElementById('bearAutoCount').value) || 3;
-      const pool = RaidCore.getFilteredPlayers();
-      if (pool.length === 0) return alert('В выбранном подразделении нет активных игроков!');
-
-      const sortedLeaders = [...pool].sort((a, b) => (Number(b.rallyCap) || 0) - (Number(a.rallyCap) || 0));
-      const leaders = sortedLeaders.slice(0, count);
-      const leaderKeys = new Set(leaders.map(p => RaidCore.getPlayerKey(p)));
-
-      const fillers = pool
-        .filter(p => !leaderKeys.has(RaidCore.getPlayerKey(p)))
-        .sort((a, b) => (Number(b.marchCap) || 0) - (Number(a.marchCap) || 0));
-
-      bearState.groups = leaders.map(l => ({ leaderKey: RaidCore.getPlayerKey(l), fillers: [] }));
-      fillers.forEach((f, idx) => {
-        if (bearState.groups.length === 0) return;
-        const target = idx % bearState.groups.length;
-        if (bearState.groups[target].fillers.length < 14) {
-          bearState.groups[target].fillers.push(RaidCore.getPlayerKey(f));
-        }
+      // Сортируем: сначала идущие, затем по линии (ближе к ловушке), затем по вместимости сбора
+      players.sort((a, b) => {
+        const ca = getPlayerCfg(RaidCore.getPlayerKey(a));
+        const cb = getPlayerCfg(RaidCore.getPlayerKey(b));
+        if (ca.attending !== cb.attending) return ca.attending ? -1 : 1;
+        if (ca.line !== cb.line) return ca.line - cb.line;
+        return (Number(b.rallyCap) || 0) - (Number(a.rallyCap) || 0);
       });
 
-      renderBearGroups();
-      saveBearState();
-      showToast(`Сформировано сборов: ${bearState.groups.length}`);
-    }
-
-    function renderBearGroups() {
-      const container = document.getElementById('bearGroupsContainer');
-      container.innerHTML = bearState.groups.map((g, gIdx) => {
-        const ldr = findPlayerByKey(g.leaderKey);
-        const rallyCap = ldr ? (Number(ldr.rallyCap) || 0) : 0;
-        const fillerObjs = (g.fillers || []).map(k => findPlayerByKey(k)).filter(Boolean);
-        const totalMarch = fillerObjs.reduce((acc, f) => acc + (Number(f.marchCap) || 0), 0);
-        const fillPct = rallyCap > 0 ? Math.min(100, Math.round((totalMarch / rallyCap) * 100)) : 0;
-
-        const fillersHtml = fillerObjs.length === 0
-          ? `<div class="text-xs text-slate-500 py-4 text-center">Нажмите «+ Добавить филлера» или используйте «Автосбор»</div>`
-          : fillerObjs.map((f, fIdx) => {
-              const bh = getBestBearHero(f);
-              return `
-                <div class="flex items-center justify-between bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-xs">
-                  <div class="flex items-center gap-2 min-w-0">
-                    <span class="text-slate-500 font-mono w-4">${fIdx + 1}.</span>
-                    <div class="min-w-0">
-                      <div class="font-bold text-white truncate">${f.nick}</div>
-                      <div class="text-[10px] font-mono text-sky-300">1-й слот: <b>${bh.name}</b> ${bh.empty ? '' : `(Экв.В:${bh.eTop})`}</div>
-                    </div>
-                  </div>
-                  <div class="flex items-center gap-2 shrink-0">
-                    <span class="font-mono text-[11px] text-slate-300">${(Number(f.marchCap) || 0).toLocaleString('ru-RU')}</span>
-                    <button type="button" onclick="removeBearFiller(${gIdx}, ${fIdx})" class="text-slate-500 hover:text-rose-400 p-1"><i class="fa-solid fa-xmark"></i></button>
-                  </div>
-                </div>
-              `;
-            }).join('');
-
+      tbody.innerHTML = players.map(p => {
+        const pKey = RaidCore.getPlayerKey(p);
+        const pc = getPlayerCfg(pKey);
+        const safeKey = pKey.replace(/'/g, "\\'");
         return `
-          <div class="glass-card rounded-3xl p-5 border border-slate-800 space-y-4">
-            <div class="flex items-start justify-between gap-2 pb-3 border-b border-slate-800">
-              <div>
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                  СБОР #${gIdx + 1}
-                </span>
-                <h3 class="text-base font-extrabold text-white mt-1.5 flex items-center gap-2">
-                  <i class="fa-solid fa-crown text-amber-400"></i>
-                  <span>${ldr ? ldr.nick : 'Лидер не выбран'}</span>
-                </h3>
-                <div class="text-[11px] font-mono text-slate-400 mt-0.5">
-                  ${ldr ? `Печь: ${ldr.furnaceLevel || '—'} • Тир: ${ldr.troopTier \vert{}\vert{} '—'} • Сбор: ${rallyCap.toLocaleString('ru-RU')}` : 'Выберите капитана сбора'}
-                </div>
-              </div>
-              <div class="flex items-center gap-1.5">
-                <button type="button" onclick="pickBearLeader(${gIdx})" class="px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-xs font-bold text-white transition">
-                  ${ldr ? 'Сменить' : 'Выбрать'}
-                </button>
-                ${bearState.groups.length > 1 ? `<button type="button" onclick="removeBearGroup(${gIdx})" class="p-1.5 rounded-xl bg-slate-900 hover:bg-rose-950 text-slate-400 hover:text-rose-400"><i class="fa-solid fa-trash text-xs"></i></button>` : ''}
-              </div>
-            </div>
-
-            <!-- Шкала заполненности сбора -->
-            <div class="space-y-1">
-              <div class="flex justify-between text-[11px] font-mono">
-                <span class="text-slate-400">Заполнено филлерами (${fillerObjs.length} чел.):</span>
-                <span class="${fillPct >= 100 ? 'text-emerald-400 font-bold' : 'text-amber-300'}">${totalMarch.toLocaleString('ru-RU')} / ${rallyCap.toLocaleString('ru-RU')} (${fillPct}%)</span>
-              </div>
-              <div class="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
-                <div class="h-full ${fillPct >= 100 ? 'bg-emerald-500' : 'bg-amber-500'} transition-all" style="width: ${fillPct}%"></div>
-              </div>
-            </div>
-
-            <div class="space-y-1.5 max-h-64 overflow-y-auto pr-1">
-              ${fillersHtml}
-            </div>
-
-            <button type="button" onclick="pickBearFiller(${gIdx})" class="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-dashed border-slate-700 hover:border-sky-500 text-xs font-bold text-sky-300 transition">
-              <i class="fa-solid fa-user-plus mr-1.5"></i>Добавить филлера в Сбор #${gIdx + 1}
-            </button>
-          </div>
+          <tr class="hover:bg-slate-900/50 transition ${pc.attending ? 'bg-sky-950/15' : 'opacity-65'}">
+            <td class="py-2 px-3 text-center">
+              <input type="checkbox" ${pc.attending ? 'checked' : ''} onchange="updatePlayerField('${safeKey}', 'attending', this.checked)"
+                class="accent-sky-500 w-4 h-4 rounded cursor-pointer" />
+            </td>
+            <td class="py-2 px-3">
+              <div class="font-bold text-white">${p.nick}</div>
+              <div class="text-[10px] font-mono text-slate-400">Печь: ${p.furnaceLevel || '—'} • ${p.troopTier || '—'}</div>
+            </td>
+            <td class="py-2 px-2.5">
+              <select onchange="updatePlayerField('${safeKey}', 'line', Number(this.value))" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs font-mono text-amber-300">
+                <option value="1" ${pc.line === 1 ? 'selected' : ''}>Линия 1 (Ближняя)</option>
+                <option value="2" ${pc.line === 2 ? 'selected' : ''}>Линия 2</option>
+                <option value="3" ${pc.line === 3 ? 'selected' : ''}>Линия 3</option>
+                <option value="4" ${pc.line === 4 ? 'selected' : ''}>Линия 4</option>
+                <option value="5" ${pc.line === 5 ? 'selected' : ''}>Линия 5+ (Дальняя)</option>
+              </select>
+            </td>
+            <td class="py-2 px-2.5 text-center">
+              <input type="number" min="5" max="120" value="${pc.travelSec || 18}" onchange="updatePlayerField('${safeKey}', 'travelSec', Number(this.value))"
+                class="w-16 bg-slate-900 border border-slate-700 rounded-lg px-1.5 py-1 text-center font-mono text-white" />
+            </td>
+            <td class="py-2 px-2.5 text-right font-mono font-bold text-amber-300">${(Number(p.rallyCap) || 0).toLocaleString('ru-RU')}</td>
+            <td class="py-2 px-2.5 text-right font-mono text-slate-200">${(Number(p.marchCap) || 0).toLocaleString('ru-RU')} <span class="text-[10px] text-slate-400">(${p.marchesCount || 5}м)</span></td>
+            <td class="py-2 px-2.5 text-center font-mono text-sky-300">${getBestBearHero(p)}</td>
+            <td class="py-2 px-3 text-center">
+              <select onchange="updatePlayerField('${safeKey}', 'forceCaptain', this.value)" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-slate-200">
+                <option value="auto" ${pc.forceCaptain === 'auto' ? 'selected' : ''}>Авто</option>
+                <option value="yes" ${pc.forceCaptain === 'yes' ? 'selected' : ''}>👑 Всегда Капитан</option>
+                <option value="no" ${pc.forceCaptain === 'no' ? 'selected' : ''}>🛡️ Только Филлер</option>
+              </select>
+            </td>
+          </tr>
         `;
       }).join('');
     }
 
-    function renderBearOrder() {
-      const lines = [
-        `🐻 АЛЬЯНС «ГАРМОНИЯ» — ОХОТА НА МЕДВЕДЯ`,
-        bearState.trapInfo ? `📍 ${bearState.trapInfo}` : '',
-        `⚖️ Пропорция войск: ${bearState.ratio || '10% / 20% / 70%'}`,
-        `⚠️ В чужие сборы 1-м героем: Джесси / Джассер / Со Юн / Райна / Джеронимо`,
-        `----------------------------------------`
-      ].filter(Boolean);
+    function formatClock(secRemaining) {
+      const m = Math.floor(secRemaining / 60);
+      const s = secRemaining % 60;
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
 
-      bearState.groups.forEach((g, idx) => {
-        const ldr = findPlayerByKey(g.leaderKey);
-        const fillers = (g.fillers || []).map(k => findPlayerByKey(k)).filter(Boolean);
-        lines.push(`\n🔥 СБОР #${idx + 1} — ЛИДЕР: ${ldr ? ldr.nick : 'Свободно'} ${ldr ? `[Сбор: ${(Number(ldr.rallyCap)||0).toLocaleString('ru-RU')}]` : ''}`);
-        if (fillers.length === 0) {
-          lines.push(`   • Свободный заход`);
-        } else {
-          fillers.forEach((f, fIdx) => {
-            const bh = getBestBearHero(f);
-            lines.push(`   ${fIdx + 1}. ${f.nick} — 1-й слот: ${bh.name} (${(Number(f.marchCap)||0).toLocaleString('ru-RU')})`);
-          });
-        }
+    function applyRecommendedSettings() {
+      bearConfig.captainsCount = lastRecommendation.captains;
+      bearConfig.wavesCount = lastRecommendation.waves;
+      bearConfig.intervalSec = lastRecommendation.interval;
+      document.getElementById('bearCaptainsInput').value = bearConfig.captainsCount;
+      document.getElementById('bearWavesInput').value = bearConfig.wavesCount;
+      document.getElementById('bearIntervalInput').value = bearConfig.intervalSec;
+      renderAll();
+      scheduleCloudSave();
+      showToast('Рекомендованные настройки применены!');
+    }
+
+    function renderSimulationAndRecommendation() {
+      const attending = getAttendingPlayers();
+      const recBox = document.getElementById('recommendationBox');
+      const recTitle = document.getElementById('recTitle');
+      const recDetails = document.getElementById('recDetails');
+      const container = document.getElementById('wavesSimulationContainer');
+
+      if (attending.length === 0) {
+        recBox.className = 'rounded-2xl p-4 border border-slate-700 bg-slate-900/60 flex flex-wrap items-center justify-between gap-3 text-xs';
+        recTitle.innerHTML = `<span class="text-slate-300">⚪ Нет выбранных участников</span>`;
+        recDetails.textContent = 'Отметьте галочками игроков, которые пойдут на медведя.';
+        container.innerHTML = `<div class="glass-card rounded-3xl p-8 text-center text-slate-500 col-span-2">Выберите участников в таблице выше для запуска 30-минутной симуляции.</div>`;
+        document.getElementById('bearOrderPreview').textContent = 'Нет данных для приказа.';
+        document.getElementById('simSummaryBadge').textContent = 'Всего атак за 30 мин: 0';
+        return;
+      }
+
+      // 1. Расчёт рекомендации по составу
+      const P = attending.length;
+      const totalMarches = attending.reduce((s, p) => s + (Number(p.marchesCount) || 5), 0);
+      const recCaptains = Math.max(2, Math.min(P, Math.round(P * 0.45)));
+      const recWaves = P < 12 ? 2 : (P < 24 ? 3 : (P < 36 ? 4 : 5));
+      const recInterval = recWaves <= 2 ? 90 : (recWaves === 3 ? 60 : 45);
+      lastRecommendation = { captains: recCaptains, waves: recWaves, interval: recInterval };
+
+      // 2. Выбор капитанов: сначала forceCaptain='yes', затем авто по близости (Линия 1 -> 5) и вместимости сбора
+      const forced = attending.filter(p => p.pc.forceCaptain === 'yes');
+      const autoPool = attending
+        .filter(p => p.pc.forceCaptain === 'auto')
+        .sort((a, b) => {
+          if (a.pc.line !== b.pc.line) return a.pc.line - b.pc.line;
+          return (Number(b.rallyCap) || 0) - (Number(a.rallyCap) || 0);
+        });
+
+      const captains = [...forced, ...autoPool].slice(0, Math.min(bearConfig.captainsCount, attending.length));
+      // Сортируем итоговых капитанов строго от ближней линии к дальней
+      captains.sort((a, b) => {
+        if (a.pc.line !== b.pc.line) return a.pc.line - b.pc.line;
+        if (a.pc.travelSec !== b.pc.travelSec) return a.pc.travelSec - b.pc.travelSec;
+        return (Number(b.rallyCap) || 0) - (Number(a.rallyCap) || 0);
       });
 
-      document.getElementById('bearOrderPreview').textContent = lines.join('\n');
+      // 3. Оценка баланса (цветовая индикация)
+      const capPerWave = Math.ceil(captains.length / bearConfig.wavesCount);
+      const joinersPerRally = (totalMarches - captains.length) / Math.max(1, captains.length);
+      if (bearConfig.intervalSec < 30 || joinersPerRally < 3.5) {
+        recBox.className = 'rounded-2xl p-4 border border-rose-500/50 bg-rose-950/35 flex flex-wrap items-center justify-between gap-3 text-xs';
+        recTitle.innerHTML = `<span class="text-rose-300">🔴 Перегрузка сборов (риск пустых ралли)</span>`;
+      } else if (bearConfig.intervalSec > 110 || captains.length < Math.max(2, Math.floor(P * 0.25))) {
+        recBox.className = 'rounded-2xl p-4 border border-amber-500/50 bg-amber-950/35 flex flex-wrap items-center justify-between gap-3 text-xs';
+        recTitle.innerHTML = `<span class="text-amber-300">🟡 Можно усилить (есть свободные марши)</span>`;
+      } else {
+        recBox.className = 'rounded-2xl p-4 border border-emerald-500/50 bg-emerald-950/35 flex flex-wrap items-center justify-between gap-3 text-xs';
+        recTitle.innerHTML = `<span class="text-emerald-300">🟢 Оптимальный баланс волн и маршей</span>`;
+      }
+      recDetails.textContent = `Участников: ${P} (маршей: ${totalMarches}) | Рекомендуем: ${recCaptains} кап., ${recWaves} волн с интервалом ${recInterval}с.`;
+
+      // 4. Распределение капитанов по волнам (ближние в Волну 1, дальние в последние волны)
+      const waves = Array.from({ length: bearConfig.wavesCount }, (_, i) => ({
+        waveNum: i + 1,
+        startOffset: i * bearConfig.intervalSec,
+        captains: []
+      }));
+
+      captains.forEach((cap, idx) => {
+        const wIdx = Math.min(waves.length - 1, Math.floor((idx * waves.length) / Math.max(1, captains.length)));
+        waves[wIdx].captains.push(cap);
+      });
+
+      // 5. Симуляция 30 минут (1800 секунд) с отсечкой не успевающих до 00:00
+      let totalHits = 0;
+      const EVENT_DURATION = 1800;
+
+      const wavesHtml = waves.filter(w => w.captains.length > 0).map(w => {
+        const startClock = formatClock(EVENT_DURATION - w.startOffset);
+        const rowsHtml = w.captains.map(cap => {
+          const travel = Number(cap.pc.travelSec) || 18;
+          const cycle = 300 + travel * 2;
+          const launches = [];
+          let t = w.startOffset;
+          while (t + 300 + travel <= EVENT_DURATION) {
+            launches.push(formatClock(EVENT_DURATION - t));
+            t += cycle;
+            totalHits++;
+          }
+          return `
+            <tr class="hover:bg-slate-900/40">
+              <td class="py-2 px-2 font-bold text-white">${cap.nick}</td>
+              <td class="py-2 px-2 text-center text-amber-300">Л${cap.pc.line} (${travel}с)</td>
+              <td class="py-2 px-2 text-center font-bold text-emerald-400">${launches.length}</td>
+              <td class="py-2 px-2 text-[11px] text-sky-300">${launches.join(' → ') || 'Не успевает'}</td>
+            </tr>
+          `;
+        }).join('');
+
+        return `
+          <div class="glass-card rounded-3xl p-4 border border-slate-800 space-y-3">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+              <div class="font-extrabold text-sm text-amber-300">🌊 ВОЛНА #${w.waveNum} — Старт на таймере <span class="text-white font-mono">${startClock}</span></div>
+              <span class="text-[11px] font-mono text-slate-400">${w.captains.length} кап.</span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs font-mono">
+                <thead class="text-[10px] text-slate-400 border-b border-slate-800">
+                  <tr><th class="py-1 px-2">Капитан</th><th class="py-1 px-2 text-center">Линия</th><th class="py-1 px-2 text-center">Атак</th><th class="py-1 px-2">Тайминги запуска (30:00 → 00:00)</th></tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/60">${rowsHtml}</tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = wavesHtml;
+      document.getElementById('simSummaryBadge').textContent = `Всего атак за 30 мин: ${totalHits} (${captains.length} кап.)`;
+
+      // 6. Формирование текста приказа
+      const trapLabel = currentTrap === 'trap1' ? 'Ловушка 1 (Утро)' : 'Ловушка 2 (Вечер)';
+      const orderLines = [
+        `🐻 АЛЬЯНС «ГАРМОНИЯ» (${currentAlliance}) — ${trapLabel}`,
+        `🕒 Старт: ${bearConfig.timeText} | Участников: ${P} | Пропорция: ${bearConfig.ratio}`,
+        `⚠️ В чужие сборы 1-й слот: Джесси / Джассер / Со Юн / Райна / Джеронимо`,
+        `⚠️ Повторный сбор капитаны запускают СРАЗУ после возврата своего марша!`,
+        `----------------------------------------`
+      ];
+
+      waves.filter(w => w.captains.length > 0).forEach(w => {
+        const startClock = formatClock(EVENT_DURATION - w.startOffset);
+        orderLines.push(`\n🌊 ВОЛНА #${w.waveNum} (Старт на таймере ${startClock}):`);
+        w.captains.forEach(c => {
+          orderLines.push(`   • ${c.nick} [Линия ${c.pc.line}, ход ${c.pc.travelSec}с]`);
+        });
+      });
+
+      document.getElementById('bearOrderPreview').textContent = orderLines.join('\n');
+    }
+
+    function renderAll() {
+      renderParticipantsTable();
+      renderSimulationAndRecommendation();
     }
 
     function copyBearOrder() {
       navigator.clipboard.writeText(document.getElementById('bearOrderPreview').textContent);
-      showToast('Приказ на Охоту на Медведя скопирован!');
+      showToast('Приказ с волнами на Медведя скопирован!');
     }
 
     function showToast(msg) {
@@ -401,12 +618,12 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      loadBearState();
       RaidCore.init('events/bear.html', (core) => {
-        if (!core.user.isOwner) document.getElementById('bFilterAll').classList.add('hidden');
-        setBearAlliance(core.activeAlliance);
-        renderBearGroups();
-        renderBearOrder();
+        if (!core.user.isOwner) {
+          currentAlliance = core.user.alliance || 'Основа';
+          document.getElementById(currentAlliance === 'Основа' ? 'bFilterAcad' : 'bFilterMain').classList.add('hidden');
+        }
+        switchContext(currentAlliance, currentTrap);
       });
     });
   </script>
