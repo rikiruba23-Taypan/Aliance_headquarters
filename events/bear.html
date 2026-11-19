@@ -142,7 +142,6 @@
               <th class="py-2.5 px-3 w-10 text-center">Идёт</th>
               <th class="py-2.5 px-3">Боец / Печь</th>
               <th class="py-2.5 px-2.5">Линия у ловушки</th>
-              <th class="py-2.5 px-2.5 text-center">Ход (сек)</th>
               <th class="py-2.5 px-2.5 text-right">Сбор (Лидер)</th>
               <th class="py-2.5 px-2.5 text-right">Марш / Кол-во</th>
               <th class="py-2.5 px-2.5 text-center">Лучший 1-й герой</th>
@@ -150,7 +149,7 @@
             </tr>
           </thead>
           <tbody id="participantsTableBody" class="divide-y divide-slate-800/60">
-            <tr><td colspan="8" class="py-6 text-center text-slate-500">Загрузка состава альянса...</td></tr>
+            <tr><td colspan="7" class="py-6 text-center text-slate-500">Загрузка состава альянса...</td></tr>
           </tbody>
         </table>
       </div>
@@ -188,7 +187,7 @@
 
   <script src="raid-core.js"></script>
   <script>
-    const LINE_DEFAULTS = { 1: 12, 2: 18, 3: 25, 4: 34, 5: 45 };
+    const LINE_DEFAULTS = { 1: 7, 2: 14, 3: 21, 4: 28, 5: 35 };
     const BEAR_JOINERS = [
       { key: 'джесси', name: 'Джесси' },
       { key: 'джассер', name: 'Джассер' },
@@ -390,7 +389,7 @@
       document.getElementById('attendingCounter').textContent = `Идут: ${attendingCount} / ${RaidCore.getFilteredPlayers().length}`;
 
       if (players.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="py-6 text-center text-slate-500">Нет активных бойцов в подразделении «${currentAlliance}»</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-500">Нет активных бойцов в подразделении «${currentAlliance}»</td></tr>`;
         return;
       }
 
@@ -419,16 +418,12 @@
             </td>
             <td class="py-2 px-2.5">
               <select onchange="updatePlayerField('${safeKey}', 'line', Number(this.value))" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs font-mono text-amber-300">
-                <option value="1" ${pc.line === 1 ? 'selected' : ''}>Линия 1 (Ближняя)</option>
-                <option value="2" ${pc.line === 2 ? 'selected' : ''}>Линия 2</option>
-                <option value="3" ${pc.line === 3 ? 'selected' : ''}>Линия 3</option>
-                <option value="4" ${pc.line === 4 ? 'selected' : ''}>Линия 4</option>
-                <option value="5" ${pc.line === 5 ? 'selected' : ''}>Линия 5+ (Дальняя)</option>
+                <option value="1" ${pc.line === 1 ? 'selected' : ''}>Линия 1 (~7с)</option>
+                <option value="2" ${pc.line === 2 ? 'selected' : ''}>Линия 2 (~14с)</option>
+                <option value="3" ${pc.line === 3 ? 'selected' : ''}>Линия 3 (~21с)</option>
+                <option value="4" ${pc.line === 4 ? 'selected' : ''}>Линия 4 (~28с)</option>
+                <option value="5" ${pc.line === 5 ? 'selected' : ''}>Линия 5+ (~35с)</option>
               </select>
-            </td>
-            <td class="py-2 px-2.5 text-center">
-              <input type="number" min="5" max="120" value="${pc.travelSec || 18}" onchange="updatePlayerField('${safeKey}', 'travelSec', Number(this.value))"
-                class="w-16 bg-slate-900 border border-slate-700 rounded-lg px-1.5 py-1 text-center font-mono text-white" />
             </td>
             <td class="py-2 px-2.5 text-right font-mono font-bold text-amber-300">${(Number(p.rallyCap) || 0).toLocaleString('ru-RU')}</td>
             <td class="py-2 px-2.5 text-right font-mono text-slate-200">${(Number(p.marchCap) || 0).toLocaleString('ru-RU')} <span class="text-[10px] text-slate-400">(${p.marchesCount || 5}м)</span></td>
@@ -538,8 +533,16 @@
 
       const wavesHtml = waves.filter(w => w.captains.length > 0).map(w => {
         const startClock = formatClock(EVENT_DURATION - w.startOffset);
-        const rowsHtml = w.captains.map(cap => {
-          const travel = Number(cap.pc.travelSec) || 18;
+        // Внутри каждой волны сортируем по силе (Сбор -> Печь/Тир)
+        const sortedWaveCaptains = [...w.captains].sort((a, b) => {
+          const rDiff = (Number(b.rallyCap) || 0) - (Number(a.rallyCap) || 0);
+          if (rDiff !== 0) return rDiff;
+          return RaidCore.calcFurnaceScore(b) - RaidCore.calcFurnaceScore(a);
+        });
+        w.captains = sortedWaveCaptains;
+
+        const rowsHtml = sortedWaveCaptains.map(cap => {
+          const travel = LINE_DEFAULTS[cap.pc.line] || 21;
           const cycle = 300 + travel * 2;
           const launches = [];
           let t = w.startOffset;
@@ -551,7 +554,7 @@
           return `
             <tr class="hover:bg-slate-900/40">
               <td class="py-2 px-2 font-bold text-white">${cap.nick}</td>
-              <td class="py-2 px-2 text-center text-amber-300">Л${cap.pc.line} (${travel}с)</td>
+              <td class="py-2 px-2 text-center text-amber-300">Л${cap.pc.line} (~${travel}с)</td>
               <td class="py-2 px-2 text-center font-bold text-emerald-400">${launches.length}</td>
               <td class="py-2 px-2 text-[11px] text-sky-300">${launches.join(' → ') || 'Не успевает'}</td>
             </tr>
@@ -562,7 +565,7 @@
           <div class="glass-card rounded-3xl p-4 border border-slate-800 space-y-3">
             <div class="flex items-center justify-between pb-2 border-b border-slate-800">
               <div class="font-extrabold text-sm text-amber-300">🌊 ВОЛНА #${w.waveNum} — Старт на таймере <span class="text-white font-mono">${startClock}</span></div>
-              <span class="text-[11px] font-mono text-slate-400">${w.captains.length} кап.</span>
+              <span class="text-[11px] font-mono text-slate-400">${sortedWaveCaptains.length} кап.</span>
             </div>
             <div class="overflow-x-auto">
               <table class="w-full text-left text-xs font-mono">
@@ -579,22 +582,15 @@
       container.innerHTML = wavesHtml;
       document.getElementById('simSummaryBadge').textContent = `Всего атак за 30 мин: ${totalHits} (${captains.length} кап.)`;
 
-      // 6. Формирование текста приказа
-      const trapLabel = currentTrap === 'trap1' ? 'Ловушка 1 (Утро)' : 'Ловушка 2 (Вечер)';
+      // 6. Формирование лаконичного текста приказа (приоритет сильных игроков внутри волны)
       const orderLines = [
-        `🐻 АЛЬЯНС «ГАРМОНИЯ» (${currentAlliance}) — ${trapLabel}`,
-        `🕒 Старт: ${bearConfig.timeText} | Участников: ${P} | Пропорция: ${bearConfig.ratio}`,
-        `⚠️ В чужие сборы 1-й слот: Джесси / Джассер / Со Юн / Райна / Джеронимо`,
-        `⚠️ Повторный сбор капитаны запускают СРАЗУ после возврата своего марша!`,
-        `----------------------------------------`
+        `⚠️ В чужие сборы 1-й слот: Джесси / Джассер / Со Юн`
       ];
 
       waves.filter(w => w.captains.length > 0).forEach(w => {
         const startClock = formatClock(EVENT_DURATION - w.startOffset);
-        orderLines.push(`\n🌊 ВОЛНА #${w.waveNum} (Старт на таймере ${startClock}):`);
-        w.captains.forEach(c => {
-          orderLines.push(`   • ${c.nick} [Линия ${c.pc.line}, ход ${c.pc.travelSec}с]`);
-        });
+        const nicksList = w.captains.map(c => c.nick).join(', ');
+        orderLines.push(`${nicksList} - ${startClock}`);
       });
 
       document.getElementById('bearOrderPreview').textContent = orderLines.join('\n');
