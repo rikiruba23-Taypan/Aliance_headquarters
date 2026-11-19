@@ -362,6 +362,26 @@
             </div>
           </div>
 
+          <!-- КРУПНАЯ КНОПКА «ГУБЕРНАТОР» (СНАРЯЖЕНИЕ И ТАЛИСМАНЫ) -->
+          <div class="pt-1">
+            <button type="button" onclick="openGovernorModal()"
+              class="w-full py-4 px-5 rounded-2xl bg-gradient-to-r from-amber-600/25 via-purple-600/25 to-sky-600/25 hover:from-amber-500/35 hover:via-purple-500/35 hover:to-sky-500/35 border border-amber-400/50 shadow-lg transition flex flex-wrap items-center justify-between gap-3 text-left group">
+              <div class="flex items-center gap-3.5">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shadow-md text-slate-950 text-xl shrink-0 group-hover:scale-105 transition">
+                  <i class="fa-solid fa-crown"></i>
+                </div>
+                <div>
+                  <div class="text-base sm:text-lg font-extrabold text-white tracking-tight">ГУБЕРНАТОР</div>
+                  <div class="text-xs text-slate-300">Снаряжение (6 слотов) и Талисманы (18 слотов)</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <span id="governorSummaryBadge" class="text-xs font-mono px-3 py-1.5 rounded-xl bg-slate-950/80 border border-slate-700 text-amber-300">Не настроено</span>
+                <span class="px-3.5 py-2 rounded-xl bg-amber-500 group-hover:bg-amber-400 text-slate-950 text-xs font-extrabold transition">Открыть</span>
+              </div>
+            </button>
+          </div>
+
           <!-- БЛОК ГАЛЕРЕИ ГЕРОЕВ -->
           <div class="space-y-4 pt-2">
             <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
@@ -444,6 +464,35 @@
       <div class="flex items-center justify-between pt-2 border-t border-slate-800">
         <span class="text-[11px] text-emerald-400 font-mono"><i class="fa-solid fa-bolt mr-1"></i>Сохраняется автоматически</span>
         <button type="button" onclick="closeTopEquipmentModal()" class="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-white">Готово</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛЬНОЕ ОКНО «ГУБЕРНАТОР» (СНАРЯЖЕНИЕ + ТАЛИСМАНЫ) -->
+  <div id="governorModal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+    <div class="glass-card max-w-5xl w-full rounded-3xl p-5 sm:p-6 space-y-5 border border-amber-500/40 max-h-[92vh] overflow-y-auto shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center text-slate-950 text-lg">
+            <i class="fa-solid fa-crown"></i>
+          </div>
+          <div>
+            <h3 class="text-base sm:text-lg font-extrabold text-white">Снаряжение и Талисманы Губернатора</h3>
+            <p class="text-[11px] text-slate-400">Слева: Шапка, Куртка, Кольцо • Справа: Часы, Шорты, Ключ</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeGovernorModal()" class="text-slate-400 hover:text-white text-lg p-1"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- Сетка 2 колонки: 3 слева, 3 справа -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div id="governorLeftCol" class="space-y-4"></div>
+        <div id="governorRightCol" class="space-y-4"></div>
+      </div>
+
+      <div class="flex items-center justify-between pt-3 border-t border-slate-800">
+        <span class="text-[11px] text-emerald-400 font-mono"><i class="fa-solid fa-bolt mr-1"></i>Все изменения сохраняются автоматически</span>
+        <button type="button" onclick="closeGovernorModal()" class="px-6 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-xs font-extrabold text-slate-950 transition">Готово</button>
       </div>
     </div>
   </div>
@@ -581,6 +630,7 @@
     let currentSession = null;
     let localHeroesData = {};
     let topEquipmentData = { infantry: null, lancers: null, marksmen: null };
+    let governorData = {};
     let maxGenFilter = 17;
     let collapsedGens = {};
     let autoSaveTimer = null;
@@ -696,6 +746,7 @@
       const tierFinal = tierNum ? `T${tierNum}${tierIsCrystal ? ' (Крист)' : ''}` : '';
 
       localHeroesData._topEquipment = topEquipmentData;
+      localHeroesData._governor = governorData;
 
       const cardPayload = {
         nick: document.getElementById('fieldNick').value.trim(),
@@ -833,6 +884,167 @@
           el.textContent = `Очки:${d.gLvl||'-'}(${d.gTier||'-'}) | Перч:${d.glLvl||'-'}(${d.glTier||'-'}) | Пояс:${d.bLvl||'-'} | Сап:${d.btLvl||'-'}`;
         }
       });
+    }
+
+    const GOVERNOR_GEAR_TIERS = [
+      { val: '', label: '— Не открыто —', color: 'slate' },
+      { val: 'Необычные (зелёные)', label: 'Необычные (зелёные)', color: 'green' },
+      { val: 'Необычные (зелёные) 1 звезда', label: 'Необычные (зелёные) ★', color: 'green' },
+      { val: 'Редкие (синие)', label: 'Редкие (синие)', color: 'blue' },
+      { val: 'Редкие (синие) 1 звезда', label: 'Редкие (синие) ★', color: 'blue' },
+      { val: 'Редкие (синие) 2 звезды', label: 'Редкие (синие) ★★', color: 'blue' },
+      { val: 'Редкие (синие) 3 звезды', label: 'Редкие (синие) ★★★', color: 'blue' },
+      { val: 'Великие (фиолетовые)', label: 'Великие (фиолетовые)', color: 'purple' },
+      { val: 'Великие (фиолетовые) 1 звезда', label: 'Великие (фиолетовые) ★', color: 'purple' },
+      { val: 'Великие (фиолетовые) 2 звезды', label: 'Великие (фиолетовые) ★★', color: 'purple' },
+      { val: 'Великие (фиолетовые) 3 звезды', label: 'Великие (фиолетовые) ★★★', color: 'purple' },
+      { val: 'Великие (фиолетовые) С1', label: 'Великие (фиолетовые) С1', color: 'purple' },
+      { val: 'Великие (фиолетовые) С1 1 звезда', label: 'Великие (фиолетовые) С1 ★', color: 'purple' },
+      { val: 'Великие (фиолетовые) С1 2 звезды', label: 'Великие (фиолетовые) С1 ★★', color: 'purple' },
+      { val: 'Великие (фиолетовые) С1 3 звезды', label: 'Великие (фиолетовые) С1 ★★★', color: 'purple' },
+      { val: 'Мифические (золотые)', label: 'Мифические (золотые)', color: 'gold' },
+      { val: 'Мифические (золотые) 1 звезда', label: 'Мифические (золотые) ★', color: 'gold' },
+      { val: 'Мифические (золотые) 2 звезды', label: 'Мифические (золотые) ★★', color: 'gold' },
+      { val: 'Мифические (золотые) 3 звезды', label: 'Мифические (золотые) ★★★', color: 'gold' },
+      { val: 'Мифические (золотые) С1', label: 'Мифические (золотые) С1', color: 'gold' },
+      { val: 'Мифические (золотые) С1 1 звезда', label: 'Мифические (золотые) С1 ★', color: 'gold' },
+      { val: 'Мифические (золотые) С1 2 звезды', label: 'Мифические (золотые) С1 ★★', color: 'gold' },
+      { val: 'Мифические (золотые) С1 3 звезды', label: 'Мифические (золотые) С1 ★★★', color: 'gold' },
+      { val: 'Мифические (золотые) С2', label: 'Мифические (золотые) С2', color: 'gold' },
+      { val: 'Мифические (золотые) С2 1 звезда', label: 'Мифические (золотые) С2 ★', color: 'gold' },
+      { val: 'Мифические (золотые) С2 2 звезды', label: 'Мифические (золотые) С2 ★★', color: 'gold' },
+      { val: 'Мифические (золотые) С2 3 звезды', label: 'Мифические (золотые) С2 ★★★', color: 'gold' }
+    ];
+
+    const GOVERNOR_SLOTS = [
+      { key: 'hat',    name: 'Шапка',  icon: '🎩', side: 'left' },
+      { key: 'jacket', name: 'Куртка', icon: '🧥', side: 'left' },
+      { key: 'ring',   name: 'Кольцо', icon: '💍', side: 'left' },
+      { key: 'watch',  name: 'Часы',   icon: '⌚', side: 'right' },
+      { key: 'shorts', name: 'Шорты',  icon: '🩳', side: 'right' },
+      { key: 'key',    name: 'Ключ',   icon: '🔧', side: 'right' }
+    ];
+
+    function getGearColorClasses(val) {
+      const item = GOVERNOR_GEAR_TIERS.find(t => t.val === val);
+      const c = item ? item.color : 'slate';
+      if (c === 'green')  return { card: 'border-emerald-500/50 bg-emerald-950/20', sel: 'border-emerald-500/60 text-emerald-300' };
+      if (c === 'blue')   return { card: 'border-sky-500/50 bg-sky-950/20', sel: 'border-sky-500/60 text-sky-300' };
+      if (c === 'purple') return { card: 'border-purple-500/50 bg-purple-950/20', sel: 'border-purple-500/60 text-purple-300' };
+      if (c === 'gold')   return { card: 'border-amber-400/60 bg-amber-950/25', sel: 'border-amber-400/70 text-amber-300' };
+      return { card: 'border-slate-800 bg-slate-900/70', sel: 'border-slate-700 text-slate-300' };
+    }
+
+    function getCharmColorClass(lvl) {
+      const n = Number(lvl) || 0;
+      if (n >= 1 && n <= 2) return 'border-emerald-500/70 bg-emerald-950/60 text-emerald-300 font-bold';
+      if (n >= 3 && n <= 4) return 'border-sky-500/70 bg-sky-950/60 text-sky-300 font-bold';
+      if (n >= 5 && n <= 7) return 'border-purple-500/70 bg-purple-950/60 text-purple-300 font-bold';
+      if (n >= 8)           return 'border-amber-400/80 bg-amber-950/60 text-amber-300 font-bold';
+      return 'border-slate-700 bg-slate-950 text-slate-400';
+    }
+
+    function openGovernorModal() {
+      renderGovernorModal();
+      document.getElementById('governorModal').classList.remove('hidden');
+    }
+
+    function closeGovernorModal() {
+      document.getElementById('governorModal').classList.add('hidden');
+    }
+
+    function renderGovernorSlotCard(slot) {
+      const d = governorData[slot.key] || { tier: '', cTop: 0, cLeft: 0, cRight: 0 };
+      const gCls = getGearColorClasses(d.tier);
+
+      const tierOptions = GOVERNOR_GEAR_TIERS.map(t =>
+        `<option value="${t.val}" ${d.tier === t.val ? 'selected' : ''}>${t.label}</option>`
+      ).join('');
+
+      const buildCharmSelect = (pos, label, val) => {
+        let opts = '';
+        for (let i = 0; i <= 11; i++) {
+          opts += `<option value="${i}" ${Number(val) === i ? 'selected' : ''}>${i === 0 ? 'Ур. 0' : 'Ур. ' + i}</option>`;
+        }
+        return `
+          <div class="flex flex-col items-center gap-1">
+            <span class="text-[9px] text-slate-400 uppercase font-mono">${label}</span>
+            <select onchange="updateGovernorCharm('${slot.key}', '${pos}', Number(this.value))"
+              class="w-24 rounded-xl border px-2 py-1.5 text-xs font-mono text-center focus:outline-none transition ${getCharmColorClass(val)}">
+              ${opts}
+            </select>
+          </div>
+        `;
+      };
+
+      return `
+        <div class="rounded-2xl p-4 border transition space-y-3 ${gCls.card}">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-sm font-extrabold text-white flex items-center gap-2">
+              <span class="text-base">${slot.icon}</span> ${slot.name}
+            </span>
+          </div>
+
+          <select onchange="updateGovernorGear('${slot.key}', this.value)"
+            class="w-full bg-slate-950 border rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none ${gCls.sel}">
+            ${tierOptions}
+          </select>
+
+          <!-- 3 Талисмана треугольником (верхний по центру, нижний слева, нижний справа) -->
+          <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3 space-y-2.5">
+            <div class="flex justify-center">
+              ${buildCharmSelect('cTop', 'Талисман верх', d.cTop)}
+            </div>
+            <div class="flex items-center justify-around gap-2">
+              ${buildCharmSelect('cLeft', 'Нижний левый', d.cLeft)}
+              ${buildCharmSelect('cRight', 'Нижний правый', d.cRight)}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderGovernorModal() {
+      const leftSlots = GOVERNOR_SLOTS.filter(s => s.side === 'left');
+      const rightSlots = GOVERNOR_SLOTS.filter(s => s.side === 'right');
+      document.getElementById('governorLeftCol').innerHTML = leftSlots.map(renderGovernorSlotCard).join('');
+      document.getElementById('governorRightCol').innerHTML = rightSlots.map(renderGovernorSlotCard).join('');
+    }
+
+    function updateGovernorGear(slotKey, tierVal) {
+      if (!governorData[slotKey]) governorData[slotKey] = { tier: '', cTop: 0, cLeft: 0, cRight: 0 };
+      governorData[slotKey].tier = tierVal;
+      renderGovernorModal();
+      updateGovernorSummary();
+      triggerAutoSave();
+    }
+
+    function updateGovernorCharm(slotKey, pos, lvlVal) {
+      if (!governorData[slotKey]) governorData[slotKey] = { tier: '', cTop: 0, cLeft: 0, cRight: 0 };
+      governorData[slotKey][pos] = lvlVal;
+      renderGovernorModal();
+      updateGovernorSummary();
+      triggerAutoSave();
+    }
+
+    function updateGovernorSummary() {
+      const badge = document.getElementById('governorSummaryBadge');
+      if (!badge) return;
+      let filledGear = 0;
+      let filledCharms = 0;
+      GOVERNOR_SLOTS.forEach(s => {
+        const d = governorData[s.key];
+        if (!d) return;
+        if (d.tier) filledGear++;
+        if (Number(d.cTop) > 0) filledCharms++;
+        if (Number(d.cLeft) > 0) filledCharms++;
+        if (Number(d.cRight) > 0) filledCharms++;
+      });
+      if (filledGear === 0 && filledCharms === 0) {
+        badge.textContent = 'Не настроено';
+      } else {
+        badge.textContent = `Снаряжение: ${filledGear}/6 • Талисманы: ${filledCharms}/18`;
+      }
     }
 
     function getStoredPasscode() {
@@ -980,6 +1192,7 @@
       const card = data.myCard || {};
       localHeroesData = card.heroesData || {};
       topEquipmentData = card.topEquipmentData || localHeroesData._topEquipment || { infantry: null, lancers: null, marksmen: null };
+      governorData = localHeroesData._governor || {};
 
       const roleName = u.role || 'Боец';
       document.getElementById('headerUserNick').textContent = u.playerId ? `${u.nick} (ID: ${u.playerId})` : u.nick;
@@ -1024,6 +1237,7 @@
       }
 
       updateTopEquipmentSummaries();
+      updateGovernorSummary();
       initGenFilterButtons();
       renderHeroesByGenerations();
       checkAndShowInboxMessages(data);
