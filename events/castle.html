@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Битва за Замок — Штаб Рейдов «Гармония»</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+          colors: { slate: { 850: '#141c2b', 925: '#0b111e', 950: '#060a12' } }
+        }
+      }
+    };
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #060a12; color: #f1f5f9; }
+    .glass-card { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(14px); border: 1px solid rgba(51, 65, 85, 0.65); }
+    .filter-pill.active { background: #0284c7; color: #ffffff; border-color: #38bdf8; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-sky-500 selection:text-white">
+
+  <header class="sticky top-0 z-30 bg-slate-925/95 backdrop-blur-md border-b border-slate-800 px-4 py-2.5">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <a href="../raids.html" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold text-sky-300 flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-arrow-left"></i><span>В Штаб Рейдов</span>
+        </a>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold text-sm text-white">🏰 БИТВА ЗА ЗАМОК</span>
+            <span id="userRoleBadge" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">Офицер</span>
+          </div>
+          <div class="text-[11px] text-slate-400" id="headerUserNick">Загрузка...</div>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <div id="castleAllianceGroup" class="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs">
+          <button type="button" id="cFilterAll" onclick="setCastleAlliance('ALL')" class="filter-pill px-2.5 py-1 rounded-lg font-semibold text-slate-300 transition">Все</button>
+          <button type="button" id="cFilterMain" onclick="setCastleAlliance('Основа')" class="filter-pill active px-2.5 py-1 rounded-lg font-semibold text-slate-300 transition">Основа</button>
+          <button type="button" id="cFilterAcad" onclick="setCastleAlliance('Академия')" class="filter-pill px-2.5 py-1 rounded-lg font-semibold text-slate-300 transition">Академия</button>
+        </div>
+        <button type="button" onclick="resetCastleState()" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-rose-950/60 border border-slate-700 text-xs text-slate-300 hover:text-rose-200 transition">
+          <i class="fa-solid fa-rotate-left mr-1"></i>Сбросить
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6 space-y-6">
+
+    <!-- 1. ДИПЛОМАТИЯ И ПАРАМЕТРЫ СБОРА -->
+    <section class="glass-card rounded-3xl p-5 border border-slate-800 space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
+        <div>
+          <label class="block text-emerald-300 font-bold mb-1">🤝 Наши союзники (НЕ НАПАДАЕМ)</label>
+          <input id="castleAllies" type="text" oninput="saveAndRecalc()" placeholder="Напр: ZOV, MGX, LEO"
+            class="w-full bg-slate-900 border border-emerald-500/40 rounded-xl px-3 py-2 text-white focus:outline-none" />
+        </div>
+        <div>
+          <label class="block text-rose-300 font-bold mb-1">🎯 Наши противники (Цели)</label>
+          <input id="castleEnemies" type="text" oninput="saveAndRecalc()" placeholder="Напр: EMP, OST"
+            class="w-full bg-slate-900 border border-rose-500/40 rounded-xl px-3 py-2 text-white focus:outline-none" />
+        </div>
+        <div>
+          <label class="block text-sky-300 font-bold mb-1">⏱️ Время сбора (Ралли)</label>
+          <select id="castleDuration" onchange="saveAndRecalc()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-white">
+            <option value="300" selected>5 минут (05:00)</option>
+            <option value="600">10 минут (10:00)</option>
+            <option value="60">1 минута (01:00)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-amber-300 font-bold mb-1">⚡ Интервал ударов</label>
+          <select id="castleStep" onchange="saveAndRecalc()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-amber-300">
+            <option value="0" selected>0 сек (Синхронно в 1 сек)</option>
+            <option value="1">+1 сек (Каскад через 1с)</option>
+            <option value="2">+2 сек (Каскад через 2с)</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. ЛИДЕРЫ СБОРОВ И ВРЕМЯ ХОДА (КРЕСТОВАЯ СХЕМА) -->
+    <section class="space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-2 px-1">
+        <h2 class="text-base font-extrabold text-white flex items-center gap-2">
+          <i class="fa-solid fa-crown text-amber-400"></i> Лидеры сборов и время хода (в секундах)
+        </h2>
+        <button type="button" onclick="addRaiderSlot()" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white transition flex items-center gap-1.5">
+          <i class="fa-solid fa-plus"></i><span>Добавить рейдера</span>
+        </button>
+      </div>
+
+      <div id="raidersContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </section>
+
+    <!-- 3. АВТОРАСЧЁТ ТАЙМИНГОВ ПО 5 ОБЛАСТЯМ -->
+    <section class="space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-2 px-1">
+        <h2 class="text-base font-extrabold text-white flex items-center gap-2">
+          <i class="fa-solid fa-stopwatch text-sky-400"></i> Расчёт запуска по 5 областям (Центр, Север, Юг, Запад, Восток)
+        </h2>
+        <button type="button" onclick="copyAllCastleOrders()" class="px-4 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-xs font-extrabold text-white shadow transition flex items-center gap-1.5">
+          <i class="fa-solid fa-copy"></i><span>Скопировать общий приказ + дипломатию</span>
+        </button>
+      </div>
+
+      <div id="areasResultsContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+    </section>
+
+  </main>
+
+  <div id="toastBanner" class="fixed bottom-5 right-5 z-50 bg-slate-900 border border-sky-500/50 text-sky-200 text-xs font-semibold px-4 py-2.5 rounded-xl shadow-2xl opacity-0 transition-opacity pointer-events-none">
+    Скопировано!
+  </div>
+
+  <script src="raid-core.js"></script>
+  <script>
+    const STORAGE_KEY = 'harmony_castle_v1';
+    const AREAS = [
+      { key: 'center', label: 'ЦЕНТР (Замок)', icon: '🏰', color: 'border-amber-500/40 text-amber-300' },
+      { key: 'north',  label: 'СЕВЕР (Турель)', icon: '⬆️', color: 'border-sky-500/40 text-sky-300' },
+      { key: 'south',  label: 'ЮГ (Турель)',    icon: '⬇️', color: 'border-emerald-500/40 text-emerald-300' },
+      { key: 'west',   label: 'ЗАПАД (Турель)', icon: '⬅️', color: 'border-purple-500/40 text-purple-300' },
+      { key: 'east',   label: 'ВОСТОК (Турель)',icon: '➡️', color: 'border-rose-500/40 text-rose-300' }
+    ];
+
+    let castleState = {
+      allies: '',
+      enemies: '',
+      duration: 300,
+      step: 0,
+      raiders: [
+        { playerKey: '', nick: '', info: '', times: { north: '', center: '', south: '', west: '', east: '' } },
+        { playerKey: '', nick: '', info: '', times: { north: '', center: '', south: '', west: '', east: '' } },
+        { playerKey: '', nick: '', info: '', times: { north: '', center: '', south: '', west: '', east: '' } },
+        { playerKey: '', nick: '', info: '', times: { north: '', center: '', south: '', west: '', east: '' } }
+      ]
+    };
+
+    function loadCastleState() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) castleState = JSON.parse(saved);
+      } catch (e) {}
+      document.getElementById('castleAllies').value = castleState.allies || '';
+      document.getElementById('castleEnemies').value = castleState.enemies || '';
+      document.getElementById('castleDuration').value = castleState.duration || 300;
+      document.getElementById('castleStep').value = castleState.step || 0;
+    }
+
+    function saveAndRecalc() {
+      castleState.allies = document.getElementById('castleAllies').value.trim();
+      castleState.enemies = document.getElementById('castleEnemies').value.trim();
+      castleState.duration = Number(document.getElementById('castleDuration').value) || 300;
+      castleState.step = Number(document.getElementById('castleStep').value) || 0;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(castleState));
+      renderAreaResults();
+    }
+
+    function resetCastleState() {
+      if (!confirm('Очистить всех выбранных рейдеров и времена хода?')) return;
+      localStorage.removeItem(STORAGE_KEY);
+      castleState.raiders = [
+        { playerKey: '', nick: '', info: '', times: { north: '', center: '', south: '', west: '', east: '' } },
+        { playerKey: '', nick: '', info: '', times: { north: '', center: '', south: '', west: '', east: '' } },
+        { playerKey: '', nick: '', info: '', times: { north: '', center: '', south: '', west: '', east: '' } },
+        { playerKey: '', nick: '', info: '', times: { north: '', center: '', south: '', west: '', east: '' } }
+      ];
+      renderRaiders();
+      saveAndRecalc();
+    }
+
+    function setCastleAlliance(val) {
+      RaidCore.activeAlliance = val;
+      document.getElementById('cFilterAll').classList.toggle('active', val === 'ALL');
+      document.getElementById('cFilterMain').classList.toggle('active', val === 'Основа');
+      document.getElementById('cFilterAcad').classList.toggle('active', val === 'Академия');
+    }
+
+    function addRaiderSlot() {
+      castleState.raiders.push({ playerKey: '', nick: '', info: '', times: { north: '', center: '', south: '', west: '', east: '' } });
+      renderRaiders();
+      saveAndRecalc();
+    }
+
+    function removeRaiderSlot(idx) {
+      if (castleState.raiders.length <= 1) return;
+      castleState.raiders.splice(idx, 1);
+      renderRaiders();
+      saveAndRecalc();
+    }
+
+    function getAssignmentsMap() {
+      const map = {};
+      castleState.raiders.forEach((r, i) => {
+        if (r.playerKey) {
+          if (!map[r.playerKey]) map[r.playerKey] = [];
+          map[r.playerKey].push(`Рейдер #${i + 1}`);
+        }
+      });
+      return map;
+    }
+
+    function pickRaider(idx) {
+      RaidCore.openPicker({
+        title: `Выбор Лидера для слота «Рейдер #${idx + 1}»`,
+        defaultSort: 'rallyCap',
+        assignmentsMap: getAssignmentsMap(),
+        onSelect: (player) => {
+          castleState.raiders[idx].playerKey = RaidCore.getPlayerKey(player);
+          castleState.raiders[idx].nick = player.nick;
+          castleState.raiders[idx].info = `Печь: ${player.furnaceLevel || '—'} • Сбор: ${(Number(player.rallyCap) || 0).toLocaleString('ru-RU')}`;
+          renderRaiders();
+          saveAndRecalc();
+        }
+      });
+    }
+
+    function updateRaiderTime(idx, areaKey, val) {
+      castleState.raiders[idx].times[areaKey] = val;
+      saveAndRecalc();
+    }
+
+    function renderRaiders() {
+      const container = document.getElementById('raidersContainer');
+      container.innerHTML = castleState.raiders.map((r, idx) => `
+        <div class="glass-card rounded-3xl p-4 border border-slate-800 space-y-3">
+          <div class="flex items-center justify-between gap-2 pb-2 border-b border-slate-800">
+            <div class="min-w-0">
+              <div class="text-[10px] font-mono text-amber-400 font-bold uppercase">Рейдер #${idx + 1}</div>
+              <div class="text-sm font-extrabold text-white truncate">${r.nick || 'Не выбран'}</div>
+              <div class="text-[10px] font-mono text-slate-400 truncate">${r.info || 'Нажмите «Выбрать»'}</div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button type="button" onclick="pickRaider(${idx})" class="px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-xs font-bold text-white transition">
+                ${r.nick ? 'Сменить' : 'Выбрать'}
+              </button>
+              ${castleState.raiders.length > 1 ? `<button type="button" onclick="removeRaiderSlot(${idx})" class="p-1.5 rounded-xl bg-slate-900 hover:bg-rose-950 text-slate-400 hover:text-rose-400"><i class="fa-solid fa-trash text-xs"></i></button>` : ''}
+            </div>
+          </div>
+
+          <!-- Крестообразная схема ввода времени хода (в секундах) -->
+          <div class="grid grid-cols-3 gap-2 text-center text-[10px] font-mono">
+            <div></div>
+            <div class="bg-slate-950 p-1.5 rounded-xl border border-slate-800">
+              <div class="text-sky-300 mb-1">⬆️ Север</div>
+              <input type="number" min="0" placeholder="сек" value="${r.times.north || ''}" oninput="updateRaiderTime(${idx}, 'north', this.value)"
+                class="w-full bg-slate-900 border border-slate-700 rounded-lg px-1.5 py-1 text-center text-xs text-white" />
+            </div>
+            <div></div>
+
+            <div class="bg-slate-950 p-1.5 rounded-xl border border-slate-800">
+              <div class="text-purple-300 mb-1">⬅️ Запад</div>
+              <input type="number" min="0" placeholder="сек" value="${r.times.west || ''}" oninput="updateRaiderTime(${idx}, 'west', this.value)"
+                class="w-full bg-slate-900 border border-slate-700 rounded-lg px-1.5 py-1 text-center text-xs text-white" />
+            </div>
+            <div class="bg-slate-950 p-1.5 rounded-xl border border-amber-500/40">
+              <div class="text-amber-300 font-bold mb-1">🏰 Центр</div>
+              <input type="number" min="0" placeholder="сек" value="${r.times.center || ''}" oninput="updateRaiderTime(${idx}, 'center', this.value)"
+                class="w-full bg-slate-900 border border-amber-500/40 rounded-lg px-1.5 py-1 text-center text-xs font-bold text-amber-200" />
+            </div>
+            <div class="bg-slate-950 p-1.5 rounded-xl border border-slate-800">
+              <div class="text-rose-300 mb-1">➡️ Восток</div>
+              <input type="number" min="0" placeholder="сек" value="${r.times.east || ''}" oninput="updateRaiderTime(${idx}, 'east', this.value)"
+                class="w-full bg-slate-900 border border-slate-700 rounded-lg px-1.5 py-1 text-center text-xs text-white" />
+            </div>
+
+            <div></div>
+            <div class="bg-slate-950 p-1.5 rounded-xl border border-slate-800">
+              <div class="text-emerald-300 mb-1">⬇️ Юг</div>
+              <input type="number" min="0" placeholder="сек" value="${r.times.south || ''}" oninput="updateRaiderTime(${idx}, 'south', this.value)"
+                class="w-full bg-slate-900 border border-slate-700 rounded-lg px-1.5 py-1 text-center text-xs text-white" />
+            </div>
+            <div></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function formatTimer(sec) {
+      if (sec < 0) return '00:00 (опозд.)';
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    function buildAreaCalc(areaKey) {
+      const duration = castleState.duration || 300;
+      const step = castleState.step || 0;
+      const entries = castleState.raiders
+        .filter(r => r.nick && Number(r.times[areaKey]) > 0)
+        .map(r => ({ nick: r.nick, time: Number(r.times[areaKey]) }))
+        .sort((a, b) => b.time - a.time);
+
+      if (entries.length === 0) return [];
+      const maxTime = entries[0].time;
+      return entries.map((e, idx) => {
+        const delay = (maxTime - e.time) + (idx * step);
+        return {
+          order: idx + 1,
+          nick: e.nick,
+          travel: e.time,
+          delay,
+          pressAt: idx === 0 ? 'СТАРТ' : formatTimer(duration - delay)
+        };
+      });
+    }
+
+    function formatAreaText(areaObj, rows) {
+      const mins = Math.round((castleState.duration || 300) / 60);
+      let lines = [`${areaObj.icon} ${areaObj.label} (${mins} мин):`];
+      rows.forEach(r => {
+        if (r.order === 1) lines.push(`1-й: ${r.nick} (СТАРТ, ход ${r.travel}с)`);
+        else lines.push(`${r.order}-й: ${r.nick} — жми на ${r.pressAt} (+${r.delay}с, ход ${r.travel}с)`);
+      });
+      return lines.join('\n');
+    }
+
+    function renderAreaResults() {
+      const container = document.getElementById('areasResultsContainer');
+      container.innerHTML = AREAS.map(area => {
+        const rows = buildAreaCalc(area.key);
+        const bodyHtml = rows.length === 0
+          ? `<div class="text-xs text-slate-500 py-4 text-center">Введите время хода (в секундах) для этой области</div>`
+          : `<table class="w-full text-left text-xs font-mono">
+              <thead class="text-[10px] text-slate-400 border-b border-slate-800">
+                <tr><th class="py-1.5">#</th><th class="py-1.5">Лидер</th><th class="py-1.5 text-center">Ход</th><th class="py-1.5 text-center">Отставание</th><th class="py-1.5 text-right">Жми на таймере</th></tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60">
+                ${rows.map(r => `
+                  <tr>
+                    <td class="py-2 font-bold text-slate-400">${r.order}-й</td>
+                    <td class="py-2 font-bold text-white">${r.nick}</td>
+                    <td class="py-2 text-center text-slate-300">${r.travel}с</td>
+                    <td class="py-2 text-center text-amber-300">${r.order === 1 ? '0с' : '+' + r.delay + 'с'}</td>
+                    <td class="py-2 text-right font-extrabold ${r.order === 1 ? 'text-emerald-400' : 'text-sky-300'}">${r.pressAt}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>`;
+
+        return `
+          <div class="glass-card rounded-3xl p-4 border ${area.color} space-y-3">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+              <h3 class="text-sm font-extrabold">${area.icon} ${area.label}</h3>
+              ${rows.length > 0 ? `<button type="button" onclick="copySingleArea('${area.key}')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-sky-600 text-[11px] font-bold text-white transition"><i class="fa-solid fa-copy mr-1"></i>Копировать</button>` : ''}
+            </div>
+            ${bodyHtml}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function copySingleArea(areaKey) {
+      const area = AREAS.find(a => a.key === areaKey);
+      const rows = buildAreaCalc(areaKey);
+      if (!rows.length) return;
+      copyText(formatAreaText(area, rows), `Тайминг (${area.label}) скопирован!`);
+    }
+
+    function copyAllCastleOrders() {
+      let parts = [`🛡️ АЛЬЯНС «ГАРМОНИЯ» — БИТВА ЗА ЗАМОК`];
+      if (castleState.allies) parts.push(`🤝 СОЮЗНИКИ (НЕ НАПАДАЕМ): ${castleState.allies}`);
+      if (castleState.enemies) parts.push(`🎯 ПРОТИВНИКИ: ${castleState.enemies}`);
+      parts.push('----------------------------------------');
+
+      let hasAny = false;
+      AREAS.forEach(a => {
+        const rows = buildAreaCalc(a.key);
+        if (rows.length > 0) {
+          hasAny = true;
+          parts.push(formatAreaText(a, rows));
+          parts.push('');
+        }
+      });
+      if (!hasAny) return alert('Сначала выберите лидеров и введите время хода хотя бы для одной области!');
+      copyText(parts.join('\n'), 'Общий приказ по Замку скопирован!');
+    }
+
+    function copyText(txt, toastMsg) {
+      navigator.clipboard.writeText(txt);
+      const el = document.getElementById('toastBanner');
+      el.textContent = toastMsg;
+      el.classList.remove('opacity-0');
+      setTimeout(() => el.classList.add('opacity-0'), 2500);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadCastleState();
+      renderRaiders();
+      renderAreaResults();
+
+      RaidCore.init('events/castle.html', (core) => {
+        if (!core.user.isOwner) {
+          document.getElementById('cFilterAll').classList.add('hidden');
+        }
+        setCastleAlliance(core.activeAlliance);
+      });
+    });
+  </script>
+</body>
+</html>
