@@ -190,6 +190,28 @@
         </div>
       </div>
 
+      <!-- ВСПЛЫВАЮЩЕЕ ОКНО СООБЩЕНИЙ ОТ ШТАБА (ОБЩЕЕ + ЛИЧНОЕ) -->
+      <div id="inboxMessageModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="glass-card max-w-lg w-full rounded-3xl p-6 space-y-4 border border-sky-500/50 shadow-2xl">
+          <div class="flex items-center gap-3 pb-3 border-b border-slate-800">
+            <div class="w-10 h-10 rounded-2xl bg-sky-500/20 border border-sky-500/40 text-sky-400 flex items-center justify-center text-lg shrink-0">
+              <i class="fa-solid fa-envelope-open-text"></i>
+            </div>
+            <div>
+              <h3 class="text-base font-extrabold text-white">Новое сообщение от Штаба</h3>
+              <p class="text-[11px] text-slate-400">Пожалуйста, ознакомьтесь перед началом работы</p>
+            </div>
+          </div>
+
+          <div id="inboxModalContent" class="space-y-3 text-xs max-h-[60vh] overflow-y-auto"></div>
+
+          <button type="button" onclick="acknowledgeInboxMessages()"
+            class="w-full py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-xs font-extrabold text-white shadow-lg transition">
+            <i class="fa-solid fa-check-double mr-1.5"></i>Ознакомлен / Принято
+          </button>
+        </div>
+      </div>
+
       <!-- УВЕДОМЛЕНИЕ ОТ ОФИЦЕРОВ -->
       <div id="officerMessageBanner" class="hidden rounded-2xl bg-amber-950/75 border border-amber-500/40 px-4 py-3 text-xs text-amber-200 flex items-center gap-3 shadow-lg">
         <i class="fa-solid fa-envelope-open-text text-amber-400 text-base shrink-0"></i>
@@ -870,6 +892,79 @@
       return (Date.now() - updatedDate.getTime()) > (3 * 24 * 60 * 60 * 1000);
     }
 
+    let pendingAckKeys = [];
+
+    function checkAndShowInboxMessages(data) {
+      const card = data.myCard || {};
+      const ann = data.announcement || null;
+      const personalMsg = String(card.officerMessage || '').trim();
+
+      const blocks = [];
+      pendingAckKeys = [];
+
+      if (ann && ann.id && ann.text) {
+        const readAnnId = localStorage.getItem('harmony_read_ann_id') || '';
+        if (readAnnId !== ann.id) {
+          pendingAckKeys.push({ type: 'ann', key: ann.id, label: `Общее (${ann.target})` });
+          blocks.push(`
+            <div class="bg-sky-950/50 border border-sky-500/40 rounded-2xl p-4 space-y-1.5">
+              <div class="flex items-center justify-between text-[11px] font-mono text-sky-300">
+                <span class="font-bold">📢 Объявление (${ann.target})</span>
+                <span class="text-slate-400">${ann.time}</span>
+              </div>
+              <div class="text-[11px] text-slate-400">Отправитель: <b class="text-white">${ann.author}</b></div>
+              <div class="text-sm text-white pt-1 leading-relaxed whitespace-pre-wrap">${ann.text}</div>
+            </div>
+          `);
+        }
+      }
+
+      if (personalMsg) {
+        const readPersonal = localStorage.getItem('harmony_read_personal_msg') || '';
+        if (readPersonal !== personalMsg) {
+          pendingAckKeys.push({ type: 'personal', key: personalMsg, label: 'Личное сообщение' });
+          const match = personalMsg.match(/^\[От\s+(.+?)\s+•\s+(.+?)\]:\s*(.*)$/s);
+          const sender = match ? match[1] : 'Офицер штаба';
+          const sentAt = match ? match[2] : 'Недавно';
+          const bodyText = match ? match[3] : personalMsg;
+
+          blocks.push(`
+            <div class="bg-amber-950/50 border border-amber-500/40 rounded-2xl p-4 space-y-1.5">
+              <div class="flex items-center justify-between text-[11px] font-mono text-amber-300">
+                <span class="font-bold">✉️ Личное сообщение</span>
+                <span class="text-slate-400">${sentAt}</span>
+              </div>
+              <div class="text-[11px] text-slate-400">Отправитель: <b class="text-white">${sender}</b></div>
+              <div class="text-sm text-white pt-1 leading-relaxed whitespace-pre-wrap">${bodyText}</div>
+            </div>
+          `);
+        }
+      }
+
+      if (blocks.length > 0) {
+        document.getElementById('inboxModalContent').innerHTML = blocks.join('');
+        document.getElementById('inboxMessageModal').classList.remove('hidden');
+      }
+    }
+
+    function acknowledgeInboxMessages() {
+      pendingAckKeys.forEach(item => {
+        if (item.type === 'ann') localStorage.setItem('harmony_read_ann_id', item.key);
+        if (item.type === 'personal') localStorage.setItem('harmony_read_personal_msg', item.key);
+      });
+      document.getElementById('inboxMessageModal').classList.add('hidden');
+
+      const code = getStoredPasscode();
+      if (code && pendingAckKeys.length > 0) {
+        callHarmonyApi({
+          action: 'ack_message',
+          passcode: code,
+          details: pendingAckKeys.map(x => x.label).join(' + ')
+        }).catch(() => {});
+      }
+      pendingAckKeys = [];
+    }
+
     function applySessionToUI(data) {
       isHydrating = true;
       currentSession = data;
@@ -926,6 +1021,7 @@
       updateTopEquipmentSummaries();
       initGenFilterButtons();
       renderHeroesByGenerations();
+      checkAndShowInboxMessages(data);
       isHydrating = false;
     }
 

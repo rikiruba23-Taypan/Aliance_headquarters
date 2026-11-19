@@ -568,14 +568,33 @@
         activeAllianceFilter === 'ALL' || (p.alliance || 'Основа') === activeAllianceFilter
       );
 
-      const optionsHtml = '<option value="">— Выберите игрока (' + (activeAllianceFilter === 'ALL' ? 'Все' : activeAllianceFilter) + ') —</option>' +
-        filtered.map(p => {
-          const keyVal = p.playerId ? `ID:${p.playerId}` : `NICK:${p.nick}`;
-          return `<option value="${keyVal}">${p.nick} [${p.alliance || 'Основа'} • ${p.role || 'Боец'} • ${p.status || 'Активен'}]</option>`;
-        }).join('');
+      const playerOptionsHtml = filtered.map(p => {
+        const keyVal = p.playerId ? `ID:${p.playerId}` : `NICK:${p.nick}`;
+        return `<option value="${keyVal}">${p.nick} [${p.alliance || 'Основа'} • ${p.role || 'Боец'} • ${p.status || 'Активен'}]</option>`;
+      }).join('');
 
-      deactSel.innerHTML = optionsHtml;
-      msgSel.innerHTML = optionsHtml;
+      deactSel.innerHTML = '<option value="">— Выберите игрока (' + (activeAllianceFilter === 'ALL' ? 'Все' : activeAllianceFilter) + ') —</option>' + playerOptionsHtml;
+
+      let massOptions = '';
+      if (currentOfficer && currentOfficer.isOwner) {
+        massOptions = `
+          <optgroup label="📢 Массовая рассылка">
+            <option value="MASS:Все">📢 ВСЕМ участникам (Основа + Академия)</option>
+            <option value="MASS:Основа">📢 Всем в альянсе «Основа»</option>
+            <option value="MASS:Академия">📢 Всем в альянсе «Академия»</option>
+          </optgroup>
+        `;
+      } else if (currentOfficer) {
+        const myAll = currentOfficer.alliance || 'Основа';
+        massOptions = `
+          <optgroup label="📢 Массовая рассылка">
+            <option value="MASS:${myAll}">📢 Всем в моём альянсе (${myAll})</option>
+          </optgroup>
+        `;
+      }
+
+      msgSel.innerHTML = '<option value="">— Выберите получателя или рассылку —</option>' + massOptions +
+        '<optgroup label="👤 Личное сообщение бойцу">' + playerOptionsHtml + '</optgroup>';
     }
 
     function applyRosterSession(data, autoSetAlliance = false) {
@@ -1046,21 +1065,25 @@
 
     async function handleQuickSendMessage() {
       const selVal = document.getElementById('messageSelectPlayer').value;
-      if (!selVal) return alert('Выберите получателя из списка!');
+      if (!selVal) return alert('Выберите получателя или массовую рассылку!');
       const msg = document.getElementById('quickMessageInput').value.trim();
-      const { targetId, targetNick } = parseDropdownKey(selVal);
 
       const code = getStoredPasscode();
-      const res = await callHarmonyApi({
-        action: 'send_message',
-        passcode: code,
-        targetId,
-        targetNick,
-        message: msg
-      });
+      let payload = { action: 'send_message', passcode: code, message: msg };
+
+      if (selVal.startsWith('MASS:')) {
+        if (!msg) return alert('Введите текст сообщения для общей рассылки!');
+        payload.massTarget = selVal.slice(5);
+      } else {
+        const { targetId, targetNick } = parseDropdownKey(selVal);
+        payload.targetId = targetId;
+        payload.targetNick = targetNick;
+      }
+
+      const res = await callHarmonyApi(payload);
       if (res.ok) {
         document.getElementById('quickMessageInput').value = '';
-        showToast('Сообщение игроку сохранено!');
+        showToast(payload.massTarget ? `Объявление отправлено (${payload.massTarget})!` : 'Личное сообщение сохранено!');
         await syncAllData(false);
       } else {
         alert(res.error || 'Ошибка отправки сообщения');
