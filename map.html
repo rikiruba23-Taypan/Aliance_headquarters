@@ -55,6 +55,31 @@
     }
     .map-entity.selected {
       filter: drop-shadow(0 0 12px rgba(251, 191, 36, 1));
+      z-index: 9999 !important;
+    }
+    .map-entity.dragging {
+      opacity: 0.85;
+      cursor: grabbing !important;
+      pointer-events: none !important;
+      z-index: 9998 !important;
+      filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.75));
+    }
+    .entity-floating-bar {
+      position: absolute;
+      top: -38px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 6px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid rgba(56, 189, 248, 0.7);
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.7);
+      white-space: nowrap;
+      z-index: 10000;
+      pointer-events: auto;
     }
     .topka-level {
       position: absolute;
@@ -143,6 +168,14 @@
           <button type="button" id="mFilterAcad" onclick="switchAlliance('Академия')" class="pill-btn px-2.5 py-1 rounded-lg font-semibold text-slate-300 transition">Академия</button>
         </div>
 
+        <!-- Варианты карты (Улей / Замок / Форт / Своя схема) -->
+        <div class="flex items-center bg-slate-900 p-0.5 rounded-xl border border-amber-500/30">
+          <button type="button" id="mapType_hive" onclick="switchMapType('hive')" class="pill-btn active px-2.5 py-1 rounded-lg font-semibold text-slate-300 transition">🏠 Улей</button>
+          <button type="button" id="mapType_castle" onclick="switchMapType('castle')" class="pill-btn px-2.5 py-1 rounded-lg font-semibold text-slate-300 transition">🏰 Замок</button>
+          <button type="button" id="mapType_fort" onclick="switchMapType('fort')" class="pill-btn px-2.5 py-1 rounded-lg font-semibold text-slate-300 transition">🏯 Форт</button>
+          <button type="button" id="mapType_custom" onclick="switchMapType('custom')" class="pill-btn px-2.5 py-1 rounded-lg font-semibold text-slate-300 transition">🎯 Другое</button>
+        </div>
+
         <!-- Подсветка линий до ловушки -->
         <select id="lineOverlaySelect" onchange="renderEntities()" class="bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-amber-300 font-semibold">
           <option value="none">Линии: выкл</option>
@@ -205,6 +238,18 @@
           </button>
           <button type="button" data-tool="obstacle" onclick="setTool('obstacle')" class="tool-btn px-2.5 py-2 rounded-xl bg-slate-900 border border-slate-800 font-semibold flex items-center gap-1.5 transition">
             <span>⛰️</span><span>Преграда (1×1)</span>
+          </button>
+          <button type="button" data-tool="castle" onclick="setTool('castle')" class="tool-btn px-2.5 py-2 rounded-xl bg-slate-900 border border-rose-500/30 font-semibold flex items-center gap-1.5 transition">
+            <span>👑</span><span>Замок (6×6)</span>
+          </button>
+          <button type="button" data-tool="turret" onclick="setTool('turret')" class="tool-btn px-2.5 py-2 rounded-xl bg-slate-900 border border-rose-500/30 font-semibold flex items-center gap-1.5 transition">
+            <span>🗼</span><span>Турель (2×2)</span>
+          </button>
+          <button type="button" data-tool="fort" onclick="setTool('fort')" class="tool-btn px-2.5 py-2 rounded-xl bg-slate-900 border border-purple-500/30 font-semibold flex items-center gap-1.5 transition">
+            <span>🏯</span><span>Форт (4×4)</span>
+          </button>
+          <button type="button" data-tool="target" onclick="setTool('target')" class="tool-btn px-2.5 py-2 rounded-xl bg-slate-900 border border-sky-500/30 font-semibold flex items-center gap-1.5 transition">
+            <span>🎯</span><span>Объект (3×3)</span>
           </button>
         </div>
 
@@ -298,6 +343,35 @@
     </main>
   </div>
 
+  <!-- МОДАЛЬНОЕ ОКНО ОТПРАВКИ СООБЩЕНИЯ О ПЕРЕМЕЩЕНИИ -->
+  <div id="mapMessageModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-sky-500/50 rounded-3xl max-w-md w-full p-5 space-y-4 shadow-2xl">
+      <div class="flex items-start justify-between gap-2 pb-2 border-b border-slate-800">
+        <div>
+          <h3 id="mapMsgTitle" class="text-sm font-extrabold text-white">✉️ Сообщение игроку</h3>
+          <p id="mapMsgSub" class="text-[11px] text-slate-400 mt-0.5">Появится всплывающим окном при входе на портал</p>
+        </div>
+        <button type="button" onclick="closeMapMessageModal()" class="text-slate-400 hover:text-white text-base p-1">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <textarea id="mapMsgText" rows="4"
+        class="w-full bg-slate-950 border border-slate-700 focus:border-sky-500 rounded-2xl p-3 text-xs text-white leading-relaxed focus:outline-none resize-none"></textarea>
+
+      <div class="flex flex-wrap items-center justify-end gap-2 pt-1">
+        <button type="button" onclick="copyMapMessageText()"
+          class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-copy"></i><span>В буфер</span>
+        </button>
+        <button id="mapMsgSendBtn" type="button" onclick="submitMapMessage()"
+          class="px-4 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-xs font-extrabold text-white shadow transition flex items-center gap-1.5">
+          <i class="fa-solid fa-paper-plane"></i><span>Отправить на портал</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div id="toastBanner" class="fixed top-16 right-4 z-50 bg-slate-900 border border-sky-500/50 text-sky-200 text-xs font-semibold px-4 py-2 rounded-xl shadow-2xl opacity-0 transition-opacity pointer-events-none">
     Готово!
   </div>
@@ -322,7 +396,11 @@
       hq: 3,        // Штаб альянса: 3x3
       statue: 2,    // Статуя: 2x2
       banner: 1,    // Стяг альянса: 1x1
-      obstacle: 1   // Преграда: 1x1
+      obstacle: 1,  // Преграда: 1x1
+      castle: 6,    // Солнечный замок: 6x6
+      turret: 2,    // Турель замка: 2x2
+      fort: 4,      // Форт / Цитадель: 4x4
+      target: 3     // Произвольный объект: 3x3
     };
 
     // Справочник статуй (новые статуи добавляются сюда одной строкой)
@@ -332,9 +410,43 @@
       other:        { label: 'Другая статуя',              short: 'Статуя',    icon: '🗿', sprite: 'statue_other' }
     };
 
+    const MAP_TYPE_LABELS = {
+      hive:   'Улей альянса',
+      castle: 'Битва за Замок',
+      fort:   'Битва за Форт',
+      custom: 'Своя схема'
+    };
+
+    function getDefaultItemsForMapType(type) {
+      if (type === 'castle') {
+        return [
+          { id: 'init_castle', type: 'castle', gx: 22, gy: 22, size: 6 },
+          { id: 'init_turret_n', type: 'turret', gx: 24, gy: 14, size: 2, label: 'Север' },
+          { id: 'init_turret_s', type: 'turret', gx: 24, gy: 34, size: 2, label: 'Юг' },
+          { id: 'init_turret_w', type: 'turret', gx: 14, gy: 24, size: 2, label: 'Запад' },
+          { id: 'init_turret_e', type: 'turret', gx: 34, gy: 24, size: 2, label: 'Восток' }
+        ];
+      }
+      if (type === 'fort') {
+        return [
+          { id: 'init_fort', type: 'fort', gx: 23, gy: 23, size: 4 }
+        ];
+      }
+      if (type === 'custom') {
+        return [
+          { id: 'init_target', type: 'target', gx: 23, gy: 23, size: 3 }
+        ];
+      }
+      return [
+        { id: 'init_bear1', type: 'bear1', gx: 18, gy: 22, size: 3 },
+        { id: 'init_bear2', type: 'bear2', gx: 28, gy: 22, size: 3 }
+      ];
+    }
+
     let currentUser = null;
     let allPlayers = [];
     let currentAlliance = 'Основа';
+    let currentMapType = 'hive'; // 'hive' | 'castle' | 'fort' | 'custom'
     let mapTheme = 'tundra'; // 'tundra' | 'dark'
 
     // Состояние карты (сохраняется в облако)
@@ -347,11 +459,13 @@
     let panStart = { mx: 0, my: 0, cx: 0, cy: 0 };
 
     // Активный инструмент / выбор
-    let activeTool = 'pan'; // 'pan' | 'erase' | 'bear1' | 'bear2' | 'hq' | 'banner' | 'obstacle' | 'city'
+    let activeTool = 'pan'; // 'pan' | 'erase' | 'bear1' | 'bear2' | 'hq' | 'statue' | 'banner' | 'obstacle' | 'city'
     let activeCityPlayerKey = null;
     let movingItemId = null;
     let selectedItemId = null;
     let hoverCell = null; // { gx, gy }
+    let draggingItem = null; // { id, startMx, startMy, origGx, origGy, curGx, curGy, hasMoved }
+    let mapMsgContext = null;
 
     // Изображения для предзагрузки и PNG-экспорта
     const IMG_CACHE = {};
@@ -472,12 +586,36 @@
         const b2 = gridToScreen(GRID_SIZE, i);
         lines += `<line x1="${b1.x}" y1="${b1.y}" x2="${b2.x}" y2="${b2.y}" stroke="${sc}" stroke-width="${sw}" />`;
       }
+
+      // На карте «Замок» добавляем визуальный контур Красной зоны (не блокирует расстановку)
+      if (currentMapType === 'castle') {
+        lines += `<polygon points="${diamondPoints(12, 12, 26)}" fill="rgba(225, 29, 72, 0.08)" stroke="rgba(244, 63, 94, 0.65)" stroke-width="2.5" stroke-dasharray="10,6" />`;
+      }
+
       svg.innerHTML = `<g id="gridLinesLayer">${lines}</g><g id="hoverPreviewLayer"></g>`;
     }
 
     function updateHoverPreview() {
       const layer = document.getElementById('hoverPreviewLayer');
       if (!layer) return;
+
+      // Режим перетаскивания существующего объекта зажатой ЛКМ
+      if (draggingItem && draggingItem.hasMoved) {
+        const dragObj = mapItems.find(x => x.id === draggingItem.id);
+        if (!dragObj) { layer.innerHTML = ''; return; }
+        let html = '';
+        for (let dx = 0; dx < dragObj.size; dx++) {
+          for (let dy = 0; dy < dragObj.size; dy++) {
+            const occ = isCellOccupied(draggingItem.curGx + dx, draggingItem.curGy + dy, dragObj.id);
+            const fill = occ ? 'rgba(239, 68, 68, 0.58)' : 'rgba(34, 197, 94, 0.52)';
+            const stroke = occ ? '#fca5a5' : '#86efac';
+            html += `<polygon points="${diamondPoints(draggingItem.curGx + dx, draggingItem.curGy + dy, 1)}" fill="${fill}" stroke="${stroke}" stroke-width="1.5" />`;
+          }
+        }
+        layer.innerHTML = html;
+        return;
+      }
+
       if (!hoverCell || activeTool === 'pan' || activeTool === 'erase') {
         layer.innerHTML = '';
         return;
@@ -511,6 +649,22 @@
     }
 
     // ==================== ОТРИСОВКА ПОСТРОЕК И ТОПОК ====================
+    function buildFloatingBarHtml(item, safeId) {
+      const msgTitle = item.type === 'city' ? 'Написать игроку о переезде' : 'Отправить объявление альянсу';
+      return `
+        <div class="entity-floating-bar" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()">
+          <button type="button" onclick="openMapMessageModal('${safeId}')" title="${msgTitle}"
+            class="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[11px] font-bold flex items-center gap-1 transition">
+            <i class="fa-solid fa-envelope"></i><span>Сообщение</span>
+          </button>
+          <button type="button" onclick="deleteEntityById('${safeId}')" title="Удалить с карты"
+            class="px-2 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-bold flex items-center gap-1 transition">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+      `;
+    }
+
     function renderEntities() {
       const layer = document.getElementById('entitiesLayer');
       const lineMode = document.getElementById('lineOverlaySelect').value;
@@ -521,8 +675,11 @@
       layer.innerHTML = sorted.map(item => {
         const center = gridToScreen(item.gx + item.size / 2, item.gy + item.size / 2);
         const zIdx = (item.gx + item.gy) * 10 + item.size;
-        const isSel = item.id === selectedItemId;
+        const isDraggingThis = !!(draggingItem && draggingItem.id === item.id && draggingItem.hasMoved);
+        const isSel = item.id === selectedItemId && !isDraggingThis;
         const safeId = item.id.replace(/'/g, "\\'");
+        const stateCls = `${isSel ? 'selected' : ''} ${isDraggingThis ? 'dragging' : ''}`;
+        const floatingBar = isSel ? buildFloatingBarHtml(item, safeId) : '';
 
         if (item.type === 'city') {
           const p = findPlayer(item.playerKey);
@@ -540,9 +697,10 @@
           }
 
           return `
-            <div onclick="onEntityClick(event, '${safeId}')" class="map-entity ${isSel ? 'selected' : ''}"
+            <div onmousedown="onEntityMouseDown(event, '${safeId}')" class="map-entity ${stateCls}"
                  style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};"
-                 title="${nick} (Печь: ${p ? p.furnaceLevel || '—' : '—'})">
+                 title="${nick} (Зажмите ЛКМ для переноса)">
+              ${floatingBar}
               <img src="assets/topka.png" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='assets/topka.jpg';}" class="w-full h-full object-contain pointer-events-none select-none" draggable="false" />
               <div class="topka-level ${fInfo.isCrystal ? 'crystal' : 'normal'}">${fInfo.num}</div>
               <div class="topka-nick">${nick}</div>
@@ -558,9 +716,10 @@
           const top = center.y - h * 0.56;
           const imgName = item.type === 'bear1' ? 'bear1' : 'bear2';
           return `
-            <div onclick="onEntityClick(event, '${safeId}')" class="map-entity ${isSel ? 'selected' : ''}"
+            <div onmousedown="onEntityMouseDown(event, '${safeId}')" class="map-entity ${stateCls}"
                  style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};"
-                 title="${item.type === 'bear1' ? '1-я охотничья ловушка (3×3)' : '2-я охотничья ловушка (3×3)'}">
+                 title="${item.type === 'bear1' ? '1-я охотничья ловушка (Зажмите ЛКМ для переноса)' : '2-я охотничья ловушка (Зажмите ЛКМ для переноса)'}">
+              ${floatingBar}
               <img src="assets/${imgName}.png" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='assets/${imgName}.jpg';}" class="w-full h-full object-contain pointer-events-none select-none" draggable="false" />
             </div>
           `;
@@ -572,8 +731,9 @@
           const left = center.x - w / 2;
           const top = center.y - h * 0.56;
           return `
-            <div onclick="onEntityClick(event, '${safeId}')" class="map-entity ${isSel ? 'selected' : ''} flex items-center justify-center"
-                 style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="Штаб альянса (3×3)">
+            <div onmousedown="onEntityMouseDown(event, '${safeId}')" class="map-entity ${stateCls} flex items-center justify-center"
+                 style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="Штаб альянса (Зажмите ЛКМ для переноса)">
+              ${floatingBar}
               <img src="assets/hq.png" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-full h-full object-contain pointer-events-none select-none" draggable="false" />
               <div style="display:none;" class="px-3 py-2 rounded-2xl bg-indigo-900/90 border-2 border-amber-400 flex-col items-center justify-center text-center shadow-xl">
                 <div class="text-2xl leading-none">🏰</div>
@@ -590,8 +750,9 @@
           const left = center.x - w / 2;
           const top = center.y - h * 0.60;
           return `
-            <div onclick="onEntityClick(event, '${safeId}')" class="map-entity ${isSel ? 'selected' : ''} flex flex-col items-center justify-center"
-                 style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="${st.label} (2×2)">
+            <div onmousedown="onEntityMouseDown(event, '${safeId}')" class="map-entity ${stateCls} flex flex-col items-center justify-center"
+                 style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="${st.label} (Зажмите ЛКМ для переноса)">
+              ${floatingBar}
               <img src="assets/${st.sprite}.png" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-full h-full object-contain pointer-events-none select-none" draggable="false" />
               <div style="display:none;" class="px-2.5 py-2 rounded-2xl bg-amber-950/90 border-2 border-amber-400/90 flex-col items-center justify-center text-center shadow-xl">
                 <div class="text-xl leading-none">${st.icon}</div>
@@ -610,8 +771,9 @@
           const left = center.x - w / 2;
           const top = center.y - h * 0.72;
           return `
-            <div onclick="onEntityClick(event, '${safeId}')" class="map-entity ${isSel ? 'selected' : ''} flex flex-col items-center justify-end"
-                 style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="Стяг альянса (1×1)">
+            <div onmousedown="onEntityMouseDown(event, '${safeId}')" class="map-entity ${stateCls} flex flex-col items-center justify-end"
+                 style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="Стяг альянса (Зажмите ЛКМ для переноса)">
+              ${floatingBar}
               <img src="assets/banner.png" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-full h-full object-contain pointer-events-none select-none" draggable="false" />
               <div style="display:none;" class="w-8 h-8 rounded-full bg-rose-600/90 border-2 border-amber-300 items-center justify-center shadow-lg text-sm">🚩</div>
             </div>
@@ -624,9 +786,85 @@
           const left = center.x - w / 2;
           const top = center.y - h * 0.55;
           return `
-            <div onclick="onEntityClick(event, '${safeId}')" class="map-entity ${isSel ? 'selected' : ''} flex items-center justify-center"
-                 style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="Преграда (1×1)">
+            <div onmousedown="onEntityMouseDown(event, '${safeId}')" class="map-entity ${stateCls} flex items-center justify-center"
+                 style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="Преграда (Зажмите ЛКМ для переноса)">
+              ${floatingBar}
               <div class="w-8 h-8 rounded-xl bg-slate-700/90 border border-slate-400 flex items-center justify-center shadow text-sm">⛰️</div>
+            </div>
+          `;
+        }
+
+        if (item.type === 'castle') {
+          const w = TILE_W * 5.8;
+          const h = TILE_H * 5.8;
+          const left = center.x - w / 2;
+          const top = center.y - h * 0.54;
+          return `
+            <div onmousedown="onEntityMouseDown(event, '${safeId}')" class="map-entity ${stateCls} flex items-center justify-center"
+                 style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="Солнечный замок (6×6)">
+              ${floatingBar}
+              <img src="assets/castle.png" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-full h-full object-contain pointer-events-none select-none" draggable="false" />
+              <div style="display:none;" class="px-6 py-4 rounded-3xl bg-gradient-to-br from-amber-900/95 via-rose-950/95 to-slate-900/95 border-2 border-amber-400 flex-col items-center justify-center text-center shadow-2xl">
+                <div class="text-4xl leading-none">👑</div>
+                <div class="text-xs font-extrabold text-amber-300 mt-1.5 tracking-wide whitespace-nowrap">СОЛНЕЧНЫЙ ЗАМОК</div>
+                <div class="text-[10px] font-mono text-rose-300 mt-0.5">Центр (6×6)</div>
+              </div>
+            </div>
+          `;
+        }
+
+        if (item.type === 'turret') {
+          const w = TILE_W * 2.0;
+          const h = w * 0.95;
+          const left = center.x - w / 2;
+          const top = center.y - h * 0.58;
+          const tLabel = item.label ? `Турель (${item.label})` : 'Турель';
+          return `
+            <div onmousedown="onEntityMouseDown(event, '${safeId}')" class="map-entity ${stateCls} flex items-center justify-center"
+                 style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="${tLabel} (2×2)">
+              ${floatingBar}
+              <img src="assets/turret.png" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-full h-full object-contain pointer-events-none select-none" draggable="false" />
+              <div style="display:none;" class="px-3 py-2 rounded-2xl bg-rose-950/95 border-2 border-rose-400/90 flex-col items-center justify-center text-center shadow-xl">
+                <div class="text-xl leading-none">🗼</div>
+                <div class="text-[9px] font-extrabold text-rose-200 mt-1 whitespace-nowrap">${tLabel}</div>
+              </div>
+            </div>
+          `;
+        }
+
+        if (item.type === 'fort') {
+          const w = TILE_W * 3.9;
+          const h = TILE_H * 3.9;
+          const left = center.x - w / 2;
+          const top = center.y - h * 0.55;
+          return `
+            <div onmousedown="onEntityMouseDown(event, '${safeId}')" class="map-entity ${stateCls} flex items-center justify-center"
+                 style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="Форт / Цитадель (4×4)">
+              ${floatingBar}
+              <img src="assets/fort.png" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-full h-full object-contain pointer-events-none select-none" draggable="false" />
+              <div style="display:none;" class="px-5 py-3.5 rounded-3xl bg-purple-950/95 border-2 border-purple-400 flex-col items-center justify-center text-center shadow-2xl">
+                <div class="text-3xl leading-none">🏯</div>
+                <div class="text-xs font-extrabold text-purple-200 mt-1 whitespace-nowrap">ФОРТ / ЦИТАДЕЛЬ</div>
+                <div class="text-[10px] font-mono text-purple-300 mt-0.5">4×4</div>
+              </div>
+            </div>
+          `;
+        }
+
+        if (item.type === 'target') {
+          const w = TILE_W * 2.9;
+          const h = TILE_H * 2.9;
+          const left = center.x - w / 2;
+          const top = center.y - h * 0.55;
+          return `
+            <div onmousedown="onEntityMouseDown(event, '${safeId}')" class="map-entity ${stateCls} flex items-center justify-center"
+                 style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="Объект / Цель (3×3)">
+              ${floatingBar}
+              <img src="assets/target.png" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-full h-full object-contain pointer-events-none select-none" draggable="false" />
+              <div style="display:none;" class="px-3.5 py-2.5 rounded-2xl bg-sky-950/95 border-2 border-sky-400 flex-col items-center justify-center text-center shadow-xl">
+                <div class="text-2xl leading-none">🎯</div>
+                <div class="text-[10px] font-extrabold text-sky-200 mt-1 whitespace-nowrap">ОБЪЕКТ / ЦЕЛЬ</div>
+              </div>
             </div>
           `;
         }
@@ -697,7 +935,11 @@
         } else if (tool === 'erase') {
           hintTxt.textContent = 'Режим удаления: кликните по любому объекту на карте';
         } else {
-          const names = { bear1: 'Ловушка 1 (3×3)', bear2: 'Ловушка 2 (3×3)', hq: 'Штаб альянса (3×3)', banner: 'Стяг альянса (1×1)', obstacle: 'Преграда (1×1)' };
+          const names = {
+            bear1: 'Ловушка 1 (3×3)', bear2: 'Ловушка 2 (3×3)', hq: 'Штаб альянса (3×3)',
+            banner: 'Стяг альянса (1×1)', obstacle: 'Преграда (1×1)',
+            castle: 'Солнечный замок (6×6)', turret: 'Турель (2×2)', fort: 'Форт / Цитадель (4×4)', target: 'Объект / Цель (3×3)'
+          };
           hintTxt.textContent = `Установка: ${names[tool] || tool} — кликните по карте`;
         }
       }
@@ -717,25 +959,154 @@
       setTool('pan', null, null);
     }
 
-    function onEntityClick(e, itemId) {
-      e.stopPropagation();
+    function onEntityMouseDown(e, itemId) {
+      if (e.button !== 0) return; // Правая/средняя кнопка продолжают двигать карту
       const item = mapItems.find(x => x.id === itemId);
       if (!item) return;
 
       if (activeTool === 'erase') {
-        mapItems = mapItems.filter(x => x.id !== itemId);
-        if (selectedItemId === itemId) deselectEntity();
-        renderEntities();
-        renderPlayersSidebar();
-        scheduleCloudSave();
+        e.stopPropagation();
+        deleteEntityById(itemId);
         return;
       }
 
       if (activeTool !== 'pan') return;
 
+      e.stopPropagation();
+      e.preventDefault();
+
+      draggingItem = {
+        id: itemId,
+        startMx: e.clientX,
+        startMy: e.clientY,
+        origGx: item.gx,
+        origGy: item.gy,
+        curGx: item.gx,
+        curGy: item.gy,
+        hasMoved: false
+      };
       selectedItemId = itemId;
+    }
+
+    function deleteEntityById(itemId) {
+      mapItems = mapItems.filter(x => x.id !== itemId);
+      if (selectedItemId === itemId) deselectEntity();
       renderEntities();
-      showSelectedCard(item);
+      renderPlayersSidebar();
+      scheduleCloudSave();
+      showToast('Объект убран с карты');
+    }
+
+    function openMapMessageModal(itemId) {
+      const item = mapItems.find(x => x.id === itemId);
+      if (!item) return;
+
+      const titleEl = document.getElementById('mapMsgTitle');
+      const subEl = document.getElementById('mapMsgSub');
+      const textEl = document.getElementById('mapMsgText');
+
+      if (item.type === 'city') {
+        const p = findPlayer(item.playerKey);
+        const nick = p ? p.nick : (item.fallbackNick || 'Игрок');
+        const l1 = calcLineToTrap(item, 'bear1');
+        const l2 = calcLineToTrap(item, 'bear2');
+        const hints = [];
+        if (l1) hints.push(`Линия ${l1.line} от Ловушки 1`);
+        if (l2) hints.push(`Линия ${l2.line} от Ловушки 2`);
+
+        mapMsgContext = {
+          mode: 'personal',
+          targetId: p ? (p.playerId || '') : '',
+          targetNick: nick
+        };
+        const mapLabel = MAP_TYPE_LABELS[currentMapType] || 'Улей альянса';
+        titleEl.textContent = `✉️ Сообщение игроку: ${nick}`;
+        subEl.textContent = 'Отправится лично бойцу и всплывёт окном при входе на портал';
+        textEl.value = `Просим переместить ваш город на позицию согласно утверждённому плану «${mapLabel}» (ориентир: клетка X:${item.gx}, Y:${item.gy}${hints.length ? ' — ' + hints.join(', ') : ''}).`;
+      } else {
+        const st = item.type === 'statue' ? (STATUE_TYPES[item.subType] || STATUE_TYPES.other) : null;
+        const labels = {
+          bear1: '1-я охотничья ловушка',
+          bear2: '2-я охотничья ловушка',
+          hq: 'Штаб альянса',
+          banner: 'Стяг альянса',
+          obstacle: 'Преграда',
+          statue: st ? st.label : 'Статуя',
+          castle: 'Солнечный замок',
+          turret: item.label ? `Турель (${item.label})` : 'Турель',
+          fort: 'Форт / Цитадель',
+          target: 'Боевой объект'
+        };
+        const objName = labels[item.type] || item.type;
+        const mapLabel = MAP_TYPE_LABELS[currentMapType] || 'Улей альянса';
+
+        mapMsgContext = {
+          mode: 'mass',
+          massTarget: currentAlliance
+        };
+        titleEl.textContent = `📢 Объявление альянсу «${currentAlliance}»`;
+        subEl.textContent = 'Отправится всем активным участникам выбранного альянса';
+        textEl.value = `Внимание! Согласно утверждённому плану «${mapLabel}» объект «${objName}» размещён на позиции X:${item.gx}, Y:${item.gy}. Просим ориентироваться на обновлённую схему.`;
+      }
+
+      document.getElementById('mapMessageModal').classList.remove('hidden');
+      textEl.focus();
+    }
+
+    function closeMapMessageModal() {
+      document.getElementById('mapMessageModal').classList.add('hidden');
+      mapMsgContext = null;
+    }
+
+    function copyMapMessageText() {
+      const txt = document.getElementById('mapMsgText').value.trim();
+      if (!txt) return;
+      navigator.clipboard.writeText(txt);
+      showToast('Текст сообщения скопирован в буфер!');
+    }
+
+    async function submitMapMessage() {
+      if (!mapMsgContext) return;
+      const msg = document.getElementById('mapMsgText').value.trim();
+      if (!msg) return alert('Введите текст сообщения!');
+
+      const btn = document.getElementById('mapMsgSendBtn');
+      btn.disabled = true;
+
+      try {
+        const payload = {
+          action: 'send_message',
+          passcode: getPasscode(),
+          message: msg,
+          page: 'map.html',
+          userAgent: navigator.userAgent
+        };
+        if (mapMsgContext.mode === 'mass') {
+          payload.massTarget = mapMsgContext.massTarget;
+        } else {
+          payload.targetId = mapMsgContext.targetId;
+          payload.targetNick = mapMsgContext.targetNick;
+        }
+
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        }).then(r => r.json());
+
+        if (res.ok) {
+          closeMapMessageModal();
+          showToast(mapMsgContext && mapMsgContext.mode === 'mass'
+            ? `Объявление отправлено (${currentAlliance})!`
+            : 'Сообщение игроку отправлено!');
+        } else {
+          alert(res.error || 'Ошибка отправки сообщения');
+        }
+      } catch (err) {
+        alert('Ошибка связи с сервером: ' + err.message);
+      } finally {
+        btn.disabled = false;
+      }
     }
 
     function showSelectedCard(item) {
@@ -763,10 +1134,15 @@
         sub.textContent = `Статуя (2×2) • Клетка X:${item.gx} Y:${item.gy}`;
         dist.textContent = 'Нажмите «Переместить» чтобы перенести статую на другие клетки.';
       } else {
-        const labels = { bear1: '🐻 1-я охотничья ловушка', bear2: '🐻 2-я охотничья ловушка', hq: '🏰 Штаб альянса', banner: '🚩 Стяг альянса', obstacle: '⛰️ Преграда' };
+        const labels = {
+          bear1: '🐻 1-я охотничья ловушка', bear2: '🐻 2-я охотничья ловушка', hq: '🏰 Штаб альянса',
+          banner: '🚩 Стяг альянса', obstacle: '⛰️ Преграда',
+          castle: '👑 Солнечный замок', turret: item.label ? `🗼 Турель (${item.label})` : '🗼 Турель',
+          fort: '🏯 Форт / Цитадель', target: '🎯 Объект / Цель'
+        };
         title.textContent = labels[item.type] || item.type;
         sub.textContent = `Размер: ${item.size}×${item.size} • Клетка X:${item.gx} Y:${item.gy}`;
-        dist.textContent = 'Нажмите «Переместить» чтобы перенести объект на другие клетки.';
+        dist.textContent = 'Зажмите ЛКМ для переноса или нажмите «Сообщение» над объектом.';
       }
       card.classList.remove('hidden');
     }
@@ -834,8 +1210,8 @@
         });
       }
 
-      // После установки города, ловушки, штаба, статуи или переноса — возвращаемся в режим выбора
-      if (movingItemId || activeTool === 'city' || activeTool === 'bear1' || activeTool === 'bear2' || activeTool === 'hq' || activeTool === 'statue') {
+      // После установки одиночного объекта или переноса — возвращаемся в режим выбора
+      if (movingItemId || ['city', 'bear1', 'bear2', 'hq', 'statue', 'castle', 'fort'].includes(activeTool)) {
         cancelActiveTool();
       }
 
@@ -928,7 +1304,9 @@
 
     // ==================== ОБЛАЧНОЕ СОХРАНЕНИЕ И ЗАГРУЗКА ====================
     function getMapConfigKey() {
-      return `map_${currentAlliance}`;
+      return currentMapType === 'hive'
+        ? `map_${currentAlliance}`
+        : `map_${currentAlliance}_${currentMapType}`;
     }
 
     function setCloudStatus(state, text) {
@@ -948,6 +1326,19 @@
       }
     }
 
+    async function switchMapType(type) {
+      currentMapType = type;
+      ['hive', 'castle', 'fort', 'custom'].forEach(t => {
+        const btn = document.getElementById('mapType_' + t);
+        if (btn) btn.classList.toggle('active', t === type);
+      });
+      deselectEntity();
+      cancelActiveTool();
+      buildBaseGridSvg();
+      centerCamera();
+      await loadCloudMap();
+    }
+
     async function switchAlliance(alliance) {
       if (currentUser && !currentUser.isOwner && alliance !== currentUser.alliance) return;
       currentAlliance = alliance;
@@ -964,12 +1355,9 @@
 
       const cachedLocal = localStorage.getItem('harmony_' + key);
       if (cachedLocal) {
-        try { mapItems = JSON.parse(cachedLocal) || []; } catch (e) { mapItems = []; }
+        try { mapItems = JSON.parse(cachedLocal) || []; } catch (e) { mapItems = getDefaultItemsForMapType(currentMapType); }
       } else {
-        mapItems = [
-          { id: 'init_bear1', type: 'bear1', gx: 14, gy: 16, size: 3 },
-          { id: 'init_bear2', type: 'bear2', gx: 20, gy: 16, size: 3 }
-        ];
+        mapItems = getDefaultItemsForMapType(currentMapType);
       }
       renderEntities();
       renderPlayersSidebar();
@@ -1021,11 +1409,9 @@
     }
 
     function clearMapConfirm() {
-      if (!confirm('Убрать все топки и постройки с карты?')) return;
-      mapItems = [
-        { id: 'init_bear1', type: 'bear1', gx: 14, gy: 16, size: 3 },
-        { id: 'init_bear2', type: 'bear2', gx: 20, gy: 16, size: 3 }
-      ];
+      const label = MAP_TYPE_LABELS[currentMapType] || 'текущей карты';
+      if (!confirm(`Сбросить все топки и постройки на карте «${label}» к исходному шаблону?`)) return;
+      mapItems = getDefaultItemsForMapType(currentMapType);
       deselectEntity();
       renderEntities();
       renderPlayersSidebar();
@@ -1196,23 +1582,47 @@
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillText('⛰️', c.x, c.y - 5);
+        } else if (['castle', 'turret', 'fort', 'target'].includes(item.type)) {
+          const img = IMG_CACHE[item.type];
+          const sizesMap = {
+            castle: { w: TILE_W * 5.8, h: TILE_H * 5.8, bw: 160, bh: 54, bg: 'rgba(136, 19, 55, 0.92)', br: '#fbbf24', txt: '👑 СОЛНЕЧНЫЙ ЗАМОК' },
+            turret: { w: TILE_W * 2.0, h: TILE_W * 1.9, bw: 92,  bh: 34, bg: 'rgba(136, 19, 55, 0.92)', br: '#fb7185', txt: item.label ? `🗼 ${item.label}` : '🗼 Турель' },
+            fort:   { w: TILE_W * 3.9, h: TILE_H * 3.9, bw: 136, bh: 44, bg: 'rgba(59, 7, 100, 0.92)',  br: '#c084fc', txt: '🏯 ФОРТ' },
+            target: { w: TILE_W * 2.9, h: TILE_H * 2.9, bw: 112, bh: 38, bg: 'rgba(12, 74, 110, 0.92)', br: '#38bdf8', txt: '🎯 ОБЪЕКТ' }
+          };
+          const cfg = sizesMap[item.type];
+          if (img && img.complete && img.naturalWidth) {
+            ctx.drawImage(img, c.x - cfg.w / 2, c.y - cfg.h * 0.55, cfg.w, cfg.h);
+          } else {
+            ctx.fillStyle = cfg.bg;
+            ctx.strokeStyle = cfg.br;
+            ctx.lineWidth = 2;
+            ctx.fillRect(c.x - cfg.bw / 2, c.y - cfg.bh / 2, cfg.bw, cfg.bh);
+            ctx.strokeRect(c.x - cfg.bw / 2, c.y - cfg.bh / 2, cfg.bw, cfg.bh);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '800 11px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(cfg.txt, c.x, c.y);
+          }
         }
       });
 
       ctx.restore();
 
       // Заголовок в углу
+      const mapTitleText = (MAP_TYPE_LABELS[currentMapType] || 'КАРТА БАЗЫ').toUpperCase();
       ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-      ctx.fillRect(16, 16, 330, 38);
+      ctx.fillRect(16, 16, 420, 38);
       ctx.fillStyle = '#ffffff';
       ctx.font = '800 14px Inter, sans-serif';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
-      ctx.fillText(`АЛЬЯНС «ГАРМОНИЯ» (${currentAlliance}) — КАРТА БАЗЫ`, 28, 35);
+      ctx.fillText(`АЛЬЯНС «ГАРМОНИЯ» (${currentAlliance}) — ${mapTitleText}`, 28, 35);
 
       try {
         const link = document.createElement('a');
-        link.download = `karta_${currentAlliance}.png`;
+        link.download = `karta_${currentAlliance}_${currentMapType}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
         showToast('Карта сохранена в PNG!');
@@ -1238,22 +1648,60 @@
       });
 
       vp.addEventListener('mousedown', e => {
+        if (e.target.closest('#selectedInfoCard, #modeHintBanner, .entity-floating-bar, button, select')) return;
+
         if (e.button === 2 || e.button === 1 || (e.button === 0 && activeTool === 'pan')) {
           isPanning = true;
-          panStart = { mx: e.clientX, my: e.clientY, cx: cam.x, cy: cam.y };
+          panStart = { mx: e.clientX, my: e.clientY, cx: cam.x, cy: cam.y, moved: false };
         } else if (e.button === 0 && activeTool !== 'pan' && activeTool !== 'erase') {
           placeAtHover();
         }
       });
 
       window.addEventListener('mousemove', e => {
+        const rect = vp.getBoundingClientRect();
+
+        // 1. Перетаскивание объекта зажатой ЛКМ
+        if (draggingItem) {
+          const dist = Math.hypot(e.clientX - draggingItem.startMx, e.clientY - draggingItem.startMy);
+          const item = mapItems.find(x => x.id === draggingItem.id);
+          if (!item) { draggingItem = null; return; }
+
+          const wasMoved = draggingItem.hasMoved;
+          if (dist > 5) draggingItem.hasMoved = true;
+
+          if (draggingItem.hasMoved) {
+            const wx = (e.clientX - rect.left - cam.x) / cam.scale;
+            const wy = (e.clientY - rect.top - cam.y) / cam.scale;
+            const f = screenToGridFloat(wx, wy);
+            const gx = Math.max(0, Math.min(GRID_SIZE - item.size, Math.floor(f.gx - (item.size - 1) / 2)));
+            const gy = Math.max(0, Math.min(GRID_SIZE - item.size, Math.floor(f.gy - (item.size - 1) / 2)));
+
+            document.getElementById('coordDisplay').textContent = `Перенос: X:${gx} Y:${gy}`;
+
+            if (!wasMoved || gx !== draggingItem.curGx || gy !== draggingItem.curGy) {
+              draggingItem.curGx = gx;
+              draggingItem.curGy = gy;
+              item.gx = gx;
+              item.gy = gy;
+              renderEntities();
+              updateHoverPreview();
+            }
+          }
+          return;
+        }
+
+        // 2. Перемещение камеры карты
         if (isPanning) {
+          if (Math.hypot(e.clientX - panStart.mx, e.clientY - panStart.my) > 4) {
+            panStart.moved = true;
+          }
           cam.x = panStart.cx + (e.clientX - panStart.mx);
           cam.y = panStart.cy + (e.clientY - panStart.my);
           applyCamera();
           return;
         }
-        const rect = vp.getBoundingClientRect();
+
         if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) return;
 
         const wx = (e.clientX - rect.left - cam.x) / cam.scale;
@@ -1273,7 +1721,43 @@
         }
       });
 
-      window.addEventListener('mouseup', () => { isPanning = false; });
+      window.addEventListener('mouseup', () => {
+        // Завершение переноса объекта ЛКМ
+        if (draggingItem) {
+          const drag = draggingItem;
+          draggingItem = null;
+          const item = mapItems.find(x => x.id === drag.id);
+
+          if (item) {
+            if (drag.hasMoved) {
+              if (canPlaceFootprint(drag.curGx, drag.curGy, item.size, item.id)) {
+                item.gx = drag.curGx;
+                item.gy = drag.curGy;
+                scheduleCloudSave();
+                renderPlayersSidebar();
+              } else {
+                item.gx = drag.origGx;
+                item.gy = drag.origGy;
+                showToast('Клетки заняты — объект возвращён на место!');
+              }
+            }
+            selectedItemId = item.id;
+            renderEntities();
+            showSelectedCard(item);
+          }
+          updateHoverPreview();
+          return;
+        }
+
+        // Клик по пустому месту карты снимает выделение и скрывает кнопки
+        if (isPanning) {
+          const wasPlainClick = !panStart.moved;
+          isPanning = false;
+          if (wasPlainClick && activeTool === 'pan' && selectedItemId) {
+            deselectEntity();
+          }
+        }
+      });
 
       vp.addEventListener('wheel', e => {
         e.preventDefault();
@@ -1283,6 +1767,7 @@
 
       window.addEventListener('keydown', e => {
         if (e.key === 'Escape') {
+          closeMapMessageModal();
           cancelActiveTool();
           deselectEntity();
         }
@@ -1319,6 +1804,10 @@
       preloadSprite('statue_champ', 'assets/statue_champ.png');
       preloadSprite('statue_conqueror', 'assets/statue_conqueror.png');
       preloadSprite('statue_other', 'assets/statue_other.png');
+      preloadSprite('castle', 'assets/castle.png');
+      preloadSprite('turret', 'assets/turret.png');
+      preloadSprite('fort', 'assets/fort.png');
+      preloadSprite('target', 'assets/target.png');
 
       buildBaseGridSvg();
       centerCamera();
