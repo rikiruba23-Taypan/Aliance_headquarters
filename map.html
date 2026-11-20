@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Альянс «Гармония» — Карта расстановки топок (Whiteout Survival)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+          colors: { slate: { 850: '#141c2b', 925: '#0b111e', 950: '#060a12' } }
+        }
+      }
+    };
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background-color: #060a12; color: #f1f5f9; overflow: hidden; }
+    .pill-btn.active { background: #0284c7; color: #ffffff; border-color: #38bdf8; }
+    .tool-btn.active { background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); color: #fff; border-color: #38bdf8; box-shadow: 0 0 14px rgba(56, 189, 248, 0.35); }
+    #mapViewport {
+      position: relative;
+      overflow: hidden;
+      user-select: none;
+      touch-action: none;
+    }
+    #mapViewport.theme-tundra {
+      background: radial-gradient(circle at 50% 50%, #c8d6ea 0%, #aebfd9 60%, #96aac9 100%);
+    }
+    #mapViewport.theme-dark {
+      background: radial-gradient(circle at 50% 50%, #121c2f 0%, #0a101d 70%, #050811 100%);
+    }
+    #mapWorld {
+      position: absolute;
+      left: 0;
+      top: 0;
+      transform-origin: 0 0;
+      will-change: transform;
+    }
+    .map-entity {
+      position: absolute;
+      pointer-events: auto;
+      cursor: pointer;
+      transition: filter 0.12s ease;
+    }
+    .map-entity:hover {
+      filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.9));
+    }
+    .map-entity.selected {
+      filter: drop-shadow(0 0 12px rgba(251, 191, 36, 1));
+    }
+    .topka-level {
+      position: absolute;
+      left: 13.5%;
+      top: 90.5%;
+      transform: translate(-50%, -50%);
+      width: 17%;
+      height: 17%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 9999px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 800;
+      font-size: 11px;
+      line-height: 1;
+      pointer-events: none;
+    }
+    .topka-level.crystal {
+      background: linear-gradient(135deg, #f97316 0%, #dc2626 100%);
+      color: #ffffff;
+      border: 1.5px solid #fde047;
+      box-shadow: 0 0 6px rgba(249, 115, 22, 0.85);
+    }
+    .topka-level.normal {
+      color: #0f172a;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.65);
+    }
+    .topka-nick {
+      position: absolute;
+      left: 22%;
+      right: 20%;
+      top: 83.5%;
+      height: 14%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.9);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 0 3px;
+      pointer-events: none;
+    }
+    .line-badge {
+      position: absolute;
+      top: 4px;
+      right: 12px;
+      padding: 1px 5px;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      font-weight: 800;
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(56, 189, 248, 0.7);
+      color: #38bdf8;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body class="h-screen flex flex-col bg-slate-950 text-slate-100">
+
+  <!-- ==================== ВЕРХНЯЯ ПАНЕЛЬ ==================== -->
+  <header class="shrink-0 z-30 bg-slate-925/95 backdrop-blur-md border-b border-slate-800 px-3 py-2">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5">
+        <a href="raids.html" class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold text-sky-300 flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-arrow-left"></i><span class="hidden sm:inline">Штаб Рейдов</span>
+        </a>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold text-sm text-white">🗺️ КАРТА РАССТАНОВКИ ТОПОК</span>
+            <span id="userRoleBadge" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">Офицер</span>
+          </div>
+          <div class="text-[10px] text-slate-400" id="headerUserNick">Загрузка...</div>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 text-xs">
+        <!-- Альянс -->
+        <div class="flex items-center bg-slate-900 p-0.5 rounded-xl border border-slate-800">
+          <button type="button" id="mFilterMain" onclick="switchAlliance('Основа')" class="pill-btn active px-2.5 py-1 rounded-lg font-semibold text-slate-300 transition">Основа</button>
+          <button type="button" id="mFilterAcad" onclick="switchAlliance('Академия')" class="pill-btn px-2.5 py-1 rounded-lg font-semibold text-slate-300 transition">Академия</button>
+        </div>
+
+        <!-- Подсветка линий до ловушки -->
+        <select id="lineOverlaySelect" onchange="renderEntities()" class="bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-amber-300 font-semibold">
+          <option value="none">Линии: выкл</option>
+          <option value="bear1">📏 Линии до Ловушки 1</option>
+          <option value="bear2">📏 Линии до Ловушки 2</option>
+        </select>
+
+        <!-- Тема поля -->
+        <button type="button" id="themeToggleBtn" onclick="toggleMapTheme()" class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-semibold transition" title="Сменить фон карты">
+          ❄️ Тундра
+        </button>
+
+        <!-- Экспорт PNG -->
+        <button type="button" onclick="exportMapPng()" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold shadow transition flex items-center gap-1.5">
+          <i class="fa-solid fa-camera"></i><span>Скачать PNG</span>
+        </button>
+
+        <!-- Облако -->
+        <div id="cloudSaveBadge" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-[11px] font-mono text-emerald-400">
+          <i id="cloudSaveIcon" class="fa-solid fa-cloud-check"></i>
+          <span id="cloudSaveText">Готово</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== РАБОЧАЯ ОБЛАСТЬ ==================== -->
+  <div class="flex-1 flex min-h-0">
+
+    <!-- ЛЕВАЯ ПАНЕЛЬ: ОБЪЕКТЫ И СПИСОК ИГРОКОВ -->
+    <aside class="w-72 sm:w-80 shrink-0 bg-slate-925 border-r border-slate-800 flex flex-col min-h-0 z-20">
+
+      <!-- Панель инструментов карты -->
+      <div class="p-3 border-b border-slate-800 space-y-2">
+        <div class="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400">
+          <span>Инструменты и постройки</span>
+          <button type="button" onclick="clearMapConfirm()" class="text-rose-400 hover:text-rose-300 font-normal normal-case">Очистить карту</button>
+        </div>
+        <div class="grid grid-cols-2 gap-1.5 text-[11px]">
+          <button type="button" data-tool="pan" onclick="setTool('pan')" class="tool-btn active px-2.5 py-2 rounded-xl bg-slate-900 border border-slate-800 font-semibold flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-hand text-sky-400"></i><span>Двигать / Выбор</span>
+          </button>
+          <button type="button" data-tool="erase" onclick="setTool('erase')" class="tool-btn px-2.5 py-2 rounded-xl bg-slate-900 border border-slate-800 font-semibold flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-eraser text-rose-400"></i><span>Удалить с карты</span>
+          </button>
+          <button type="button" data-tool="bear1" onclick="setTool('bear1')" class="tool-btn px-2.5 py-2 rounded-xl bg-slate-900 border border-amber-500/30 font-semibold flex items-center gap-1.5 transition">
+            <span>🐻</span><span>Ловушка 1 (3×3)</span>
+          </button>
+          <button type="button" data-tool="bear2" onclick="setTool('bear2')" class="tool-btn px-2.5 py-2 rounded-xl bg-slate-900 border border-amber-500/30 font-semibold flex items-center gap-1.5 transition">
+            <span>🐻</span><span>Ловушка 2 (3×3)</span>
+          </button>
+          <button type="button" data-tool="hq" onclick="setTool('hq')" class="tool-btn px-2.5 py-2 rounded-xl bg-slate-900 border border-slate-800 font-semibold flex items-center gap-1.5 transition">
+            <span>🏰</span><span>Штаб (3×3)</span>
+          </button>
+          <button type="button" data-tool="banner" onclick="setTool('banner')" class="tool-btn px-2.5 py-2 rounded-xl bg-slate-900 border border-slate-800 font-semibold flex items-center gap-1.5 transition">
+            <span>🚩</span><span>Стяг (1×1)</span>
+          </button>
+          <button type="button" data-tool="statue" onclick="setTool('statue')" class="tool-btn px-2.5 py-2 rounded-xl bg-slate-900 border border-amber-500/30 font-semibold flex items-center gap-1.5 transition">
+            <span>🏆</span><span>Статуя (2×2)</span>
+          </button>
+          <button type="button" data-tool="obstacle" onclick="setTool('obstacle')" class="tool-btn px-2.5 py-2 rounded-xl bg-slate-900 border border-slate-800 font-semibold flex items-center gap-1.5 transition">
+            <span>⛰️</span><span>Преграда (1×1)</span>
+          </button>
+        </div>
+
+        <!-- Выбор конкретной статуи (появляется при нажатии на кнопку «Статуя») -->
+        <div id="statueSelectorBox" class="hidden pt-1">
+          <select id="statueTypeSelect" onchange="updateStatueHint()" class="w-full bg-slate-900 border border-amber-500/50 rounded-xl px-2.5 py-1.5 text-[11px] font-bold text-amber-300 focus:outline-none">
+            <option value="champ_silver">🏆 Серебряная статуя чемпиона</option>
+            <option value="conqueror">⚔️ Захватчик</option>
+            <option value="other">🗿 Другая статуя</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Фильтр списка игроков -->
+      <div class="p-3 border-b border-slate-800 space-y-2 text-xs">
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-white">Топки игроков (2×2)</span>
+          <span id="placedCounter" class="font-mono text-[11px] text-emerald-400">0 / 0</span>
+        </div>
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-500 text-[11px]"></i>
+          <input id="playerSearchInput" type="text" oninput="renderPlayersSidebar()" placeholder="Поиск игрока..."
+            class="w-full bg-slate-900 border border-slate-700 focus:border-sky-500 rounded-xl pl-8 pr-2.5 py-1.5 text-xs text-white focus:outline-none" />
+        </div>
+        <div class="grid grid-cols-2 gap-1.5">
+          <select id="placedFilterSelect" onchange="renderPlayersSidebar()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-slate-200">
+            <option value="all">Все игроки</option>
+            <option value="unplaced">Не на карте</option>
+            <option value="placed">Уже на карте</option>
+          </select>
+          <select id="sortPlayersSelect" onchange="renderPlayersSidebar()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-slate-200">
+            <option value="furnace">Сорт: Печь ↓</option>
+            <option value="rally">Сорт: Сбор ↓</option>
+            <option value="nick">Сорт: Ник А–Я</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Прокручиваемый список игроков -->
+      <div id="playersSidebarList" class="flex-1 overflow-y-auto p-2 space-y-1.5 text-xs">
+        <div class="py-8 text-center text-slate-500">Загрузка базы игроков...</div>
+      </div>
+    </aside>
+
+    <!-- ПРАВАЯ ОБЛАСТЬ: ИНТЕРАКТИВНАЯ ИЗОМЕТРИЧЕСКАЯ КАРТА -->
+    <main id="mapViewport" class="flex-1 theme-tundra">
+      <div id="mapWorld">
+        <!-- SVG слой сетки + превью установки -->
+        <svg id="gridSvg" class="block pointer-events-none"></svg>
+        <!-- Слой построек и топок -->
+        <div id="entitiesLayer" class="absolute inset-0 pointer-events-none"></div>
+      </div>
+
+      <!-- Верхняя подсказка активного режима -->
+      <div id="modeHintBanner" class="hidden absolute top-3 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-2xl bg-slate-950/90 border border-sky-500/60 text-xs font-semibold text-white shadow-2xl flex items-center gap-3">
+        <span id="modeHintText">Выберите свободную клетку на карте</span>
+        <button type="button" onclick="cancelActiveTool()" class="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-rose-700 text-[11px] text-slate-200">Отмена (Esc)</button>
+      </div>
+
+      <!-- Инфо-карточка выбранного объекта -->
+      <div id="selectedInfoCard" class="hidden absolute bottom-4 left-4 z-20 w-72 rounded-2xl bg-slate-950/92 backdrop-blur-md border border-slate-700 p-3.5 shadow-2xl text-xs space-y-2.5">
+        <div class="flex items-start justify-between gap-2">
+          <div>
+            <div id="selCardTitle" class="font-extrabold text-sm text-white">—</div>
+            <div id="selCardSub" class="text-[11px] font-mono text-slate-400 mt-0.5">—</div>
+          </div>
+          <button type="button" onclick="deselectEntity()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="selCardDistances" class="text-[11px] font-mono text-sky-300 bg-slate-900/90 rounded-xl px-2.5 py-1.5 border border-slate-800"></div>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="startMoveSelected()" class="py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold transition">
+            <i class="fa-solid fa-arrows-up-down-left-right mr-1"></i>Переместить
+          </button>
+          <button type="button" onclick="removeSelectedEntity()" class="py-1.5 rounded-xl bg-rose-900/80 hover:bg-rose-700 text-rose-100 font-bold transition">
+            <i class="fa-solid fa-trash mr-1"></i>Убрать
+          </button>
+        </div>
+      </div>
+
+      <!-- Кнопки масштаба и координат -->
+      <div class="absolute bottom-4 right-4 z-20 flex flex-col items-end gap-2">
+        <div id="coordDisplay" class="px-2.5 py-1 rounded-xl bg-slate-950/85 border border-slate-700 font-mono text-[11px] text-sky-300">
+          Клетка: —
+        </div>
+        <div class="flex items-center gap-1 bg-slate-950/90 border border-slate-700 p-1 rounded-2xl shadow-xl">
+          <button type="button" onclick="zoomMap(1.18)" class="w-8 h-8 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold" title="Приблизить">+</button>
+          <button type="button" onclick="zoomMap(0.85)" class="w-8 h-8 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold" title="Отдалить">−</button>
+          <button type="button" onclick="centerCamera()" class="px-2.5 h-8 rounded-xl bg-slate-900 hover:bg-slate-800 text-sky-300 text-xs font-bold" title="По центру карты">Центр</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="toastBanner" class="fixed top-16 right-4 z-50 bg-slate-900 border border-sky-500/50 text-sky-200 text-xs font-semibold px-4 py-2 rounded-xl shadow-2xl opacity-0 transition-opacity pointer-events-none">
+    Готово!
+  </div>
+
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwsX-LADURoQu_MsQ2XJVsSPsHAgMebI4_QDXmpPpi3OcpW3ScwPep9ukQBFJfDMrjQ7g/exec';
+
+    // Геометрия изометрической квадратной сетки (как в Whiteout Survival)
+    const GRID_SIZE = 50;
+    const TILE_W = 64;
+    const TILE_H = 38;
+    const WORLD_PAD = 180;
+    const WORLD_W = GRID_SIZE * TILE_W + WORLD_PAD * 2;
+    const WORLD_H = GRID_SIZE * TILE_H + WORLD_PAD * 2;
+    const ORIGIN_X = WORLD_W / 2;
+    const ORIGIN_Y = WORLD_PAD;
+
+    const OBJECT_SIZES = {
+      city: 2,      // Топка игрока: 2x2
+      bear1: 3,     // Ловушка 1: 3x3
+      bear2: 3,     // Ловушка 2: 3x3
+      hq: 3,        // Штаб альянса: 3x3
+      statue: 2,    // Статуя: 2x2
+      banner: 1,    // Стяг альянса: 1x1
+      obstacle: 1   // Преграда: 1x1
+    };
+
+    // Справочник статуй (новые статуи добавляются сюда одной строкой)
+    const STATUE_TYPES = {
+      champ_silver: { label: 'Серебряная статуя чемпиона', short: 'Чемпион',   icon: '🏆', sprite: 'statue_champ' },
+      conqueror:    { label: 'Захватчик',                  short: 'Захватчик', icon: '⚔️', sprite: 'statue_conqueror' },
+      other:        { label: 'Другая статуя',              short: 'Статуя',    icon: '🗿', sprite: 'statue_other' }
+    };
+
+    let currentUser = null;
+    let allPlayers = [];
+    let currentAlliance = 'Основа';
+    let mapTheme = 'tundra'; // 'tundra' | 'dark'
+
+    // Состояние карты (сохраняется в облако)
+    let mapItems = []; // [{ id, type, gx, gy, size, playerKey? }]
+    let saveTimer = null;
+
+    // Камера
+    let cam = { x: 0, y: 0, scale: 0.85 };
+    let isPanning = false;
+    let panStart = { mx: 0, my: 0, cx: 0, cy: 0 };
+
+    // Активный инструмент / выбор
+    let activeTool = 'pan'; // 'pan' | 'erase' | 'bear1' | 'bear2' | 'hq' | 'banner' | 'obstacle' | 'city'
+    let activeCityPlayerKey = null;
+    let movingItemId = null;
+    let selectedItemId = null;
+    let hoverCell = null; // { gx, gy }
+
+    // Изображения для предзагрузки и PNG-экспорта
+    const IMG_CACHE = {};
+    function preloadSprite(name, primarySrc, fallbackSrc) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onerror = () => { if (fallbackSrc && img.src !== fallbackSrc) img.src = fallbackSrc; };
+      img.src = primarySrc;
+      IMG_CACHE[name] = img;
+    }
+
+    function getPasscode() {
+      return sessionStorage.getItem('harmony_passcode') || localStorage.getItem('harmony_passcode') || '';
+    }
+
+    function getPlayerKey(p) {
+      return p.playerId ? `ID:${p.playerId}` : `NICK:${(p.nick || '').toLowerCase()}`;
+    }
+
+    function getFilteredPlayers() {
+      return allPlayers.filter(p => (p.status || 'Активен') === 'Активен' && (p.alliance || 'Основа') === currentAlliance);
+    }
+
+    function findPlayer(pKey) {
+      return allPlayers.find(p => getPlayerKey(p) === pKey) || null;
+    }
+
+    function parseFurnaceInfo(furnaceLevel) {
+      const str = String(furnaceLevel || '');
+      const num = str.replace(/\D/g, '') || '?';
+      const isCrystal = str.toLowerCase().includes('крист') || str.includes('💎');
+      const score = (isCrystal ? 1000 : 0) + (Number(num) || 0);
+      return { num, isCrystal, score };
+    }
+
+    // ==================== ИЗОМЕТРИЧЕСКАЯ МАТЕМАТИКА ====================
+    function gridToScreen(gx, gy) {
+      return {
+        x: ORIGIN_X + (gx - gy) * (TILE_W / 2),
+        y: ORIGIN_Y + (gx + gy) * (TILE_H / 2)
+      };
+    }
+
+    function screenToGridFloat(wx, wy) {
+      const dx = wx - ORIGIN_X;
+      const dy = wy - ORIGIN_Y;
+      const gx = (dx / (TILE_W / 2) + dy / (TILE_H / 2)) / 2;
+      const gy = (dy / (TILE_H / 2) - dx / (TILE_W / 2)) / 2;
+      return { gx, gy };
+    }
+
+    function diamondPoints(gx, gy, size = 1) {
+      const p1 = gridToScreen(gx, gy);
+      const p2 = gridToScreen(gx + size, gy);
+      const p3 = gridToScreen(gx + size, gy + size);
+      const p4 = gridToScreen(gx, gy + size);
+      return `${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y} ${p4.x},${p4.y}`;
+    }
+
+    // ==================== КОЛЛИЗИИ И ПРОВЕРКА ЗАНЯТОСТИ ====================
+    function isCellOccupied(gx, gy, ignoreId = null) {
+      if (gx < 0 || gy < 0 || gx >= GRID_SIZE || gy >= GRID_SIZE) return true;
+      for (const item of mapItems) {
+        if (ignoreId && item.id === ignoreId) continue;
+        if (gx >= item.gx && gx < item.gx + item.size && gy >= item.gy && gy < item.gy + item.size) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function canPlaceFootprint(gx, gy, size, ignoreId = null) {
+      if (gx < 0 || gy < 0 || gx + size > GRID_SIZE || gy + size > GRID_SIZE) return false;
+      for (let dx = 0; dx < size; dx++) {
+        for (let dy = 0; dy < size; dy++) {
+          if (isCellOccupied(gx + dx, gy + dy, ignoreId)) return false;
+        }
+      }
+      return true;
+    }
+
+    function calcLineToTrap(cityItem, trapType) {
+      const trap = mapItems.find(x => x.type === trapType);
+      if (!trap) return null;
+      const c1x = cityItem.gx + cityItem.size / 2;
+      const c1y = cityItem.gy + cityItem.size / 2;
+      const c2x = trap.gx + trap.size / 2;
+      const c2y = trap.gy + trap.size / 2;
+      // Расстояние по осям между краями города (2x2) и ловушки (3x3)
+      const dist = Math.max(Math.abs(c1x - c2x), Math.abs(c1y - c2y)) - 2.5;
+      const line = Math.max(1, Math.min(6, Math.floor(Math.max(0, dist) / 2) + 1));
+      const estSec = line * 7;
+      return { line, estSec };
+    }
+
+    // ==================== ОТРИСОВКА СЕТКИ И ПРЕВЬЮ ====================
+    function buildBaseGridSvg() {
+      const svg = document.getElementById('gridSvg');
+      svg.setAttribute('width', WORLD_W);
+      svg.setAttribute('height', WORLD_H);
+
+      const isTundra = mapTheme === 'tundra';
+      const strokeMain = isTundra ? 'rgba(30, 58, 108, 0.17)' : 'rgba(56, 189, 248, 0.14)';
+      const strokeBold = isTundra ? 'rgba(30, 58, 108, 0.34)' : 'rgba(56, 189, 248, 0.30)';
+      const borderFill = isTundra ? 'rgba(255, 255, 255, 0.22)' : 'rgba(15, 23, 42, 0.45)';
+
+      let lines = `<polygon points="${diamondPoints(0, 0, GRID_SIZE)}" fill="${borderFill}" stroke="${strokeBold}" stroke-width="2" />`;
+      for (let i = 1; i < GRID_SIZE; i++) {
+        const isMajor = i % 6 === 0;
+        const sw = isMajor ? 1.3 : 0.8;
+        const sc = isMajor ? strokeBold : strokeMain;
+
+        const a1 = gridToScreen(i, 0);
+        const a2 = gridToScreen(i, GRID_SIZE);
+        lines += `<line x1="${a1.x}" y1="${a1.y}" x2="${a2.x}" y2="${a2.y}" stroke="${sc}" stroke-width="${sw}" />`;
+
+        const b1 = gridToScreen(0, i);
+        const b2 = gridToScreen(GRID_SIZE, i);
+        lines += `<line x1="${b1.x}" y1="${b1.y}" x2="${b2.x}" y2="${b2.y}" stroke="${sc}" stroke-width="${sw}" />`;
+      }
+      svg.innerHTML = `<g id="gridLinesLayer">${lines}</g><g id="hoverPreviewLayer"></g>`;
+    }
+
+    function updateHoverPreview() {
+      const layer = document.getElementById('hoverPreviewLayer');
+      if (!layer) return;
+      if (!hoverCell || activeTool === 'pan' || activeTool === 'erase') {
+        layer.innerHTML = '';
+        return;
+      }
+
+      const size = OBJECT_SIZES[activeTool] || 1;
+      const gx = Math.max(0, Math.min(GRID_SIZE - size, hoverCell.gx));
+      const gy = Math.max(0, Math.min(GRID_SIZE - size, hoverCell.gy));
+
+      // Игнорируем собственный старый след при перемещении или переносе уникальной ловушки/игрока
+      let ignoreId = movingItemId;
+      if (!ignoreId && (activeTool === 'bear1' || activeTool === 'bear2')) {
+        const existing = mapItems.find(x => x.type === activeTool);
+        if (existing) ignoreId = existing.id;
+      }
+      if (!ignoreId && activeTool === 'city' && activeCityPlayerKey) {
+        const existing = mapItems.find(x => x.type === 'city' && x.playerKey === activeCityPlayerKey);
+        if (existing) ignoreId = existing.id;
+      }
+
+      let html = '';
+      for (let dx = 0; dx < size; dx++) {
+        for (let dy = 0; dy < size; dy++) {
+          const occ = isCellOccupied(gx + dx, gy + dy, ignoreId);
+          const fill = occ ? 'rgba(239, 68, 68, 0.58)' : 'rgba(34, 197, 94, 0.52)';
+          const stroke = occ ? '#fca5a5' : '#86efac';
+          html += `<polygon points="${diamondPoints(gx + dx, gy + dy, 1)}" fill="${fill}" stroke="${stroke}" stroke-width="1.5" />`;
+        }
+      }
+      layer.innerHTML = html;
+    }
+
+    // ==================== ОТРИСОВКА ПОСТРОЕК И ТОПОК ====================
+    function renderEntities() {
+      const layer = document.getElementById('entitiesLayer');
+      const lineMode = document.getElementById('lineOverlaySelect').value;
+
+      // Сортировка по глубине (задние сначала, передние поверх)
+      const sorted = [...mapItems].sort((a, b) => (a.gx + a.gy) - (b.gx + b.gy));
+
+      layer.innerHTML = sorted.map(item => {
+        const center = gridToScreen(item.gx + item.size / 2, item.gy + item.size / 2);
+        const zIdx = (item.gx + item.gy) * 10 + item.size;
+        const isSel = item.id === selectedItemId;
+        const safeId = item.id.replace(/'/g, "\\'");
+
+        if (item.type === 'city') {
+          const p = findPlayer(item.playerKey);
+          const nick = p ? p.nick : (item.fallbackNick || 'Игрок');
+          const fInfo = parseFurnaceInfo(p ? p.furnaceLevel : item.fallbackFurnace);
+          const w = TILE_W * 2.08;
+          const h = w;
+          const left = center.x - w / 2;
+          const top = center.y - h * 0.62;
+
+          let lineBadgeHtml = '';
+          if (lineMode !== 'none') {
+            const lInfo = calcLineToTrap(item, lineMode);
+            if (lInfo) lineBadgeHtml = `<span class="line-badge">Л${lInfo.line} (~${lInfo.estSec}с)</span>`;
+          }
+
+          return `
+            <div onclick="onEntityClick(event, '${safeId}')" class="map-entity ${isSel ? 'selected' : ''}"
+                 style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};"
+                 title="${nick} (Печь: ${p ? p.furnaceLevel || '—' : '—'})">
+              <img src="assets/topka.png" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='assets/topka.jpg';}" class="w-full h-full object-contain pointer-events-none select-none" draggable="false" />
+              <div class="topka-level ${fInfo.isCrystal ? 'crystal' : 'normal'}">${fInfo.num}</div>
+              <div class="topka-nick">${nick}</div>
+              ${lineBadgeHtml}
+            </div>
+          `;
+        }
+
+        if (item.type === 'bear1' || item.type === 'bear2') {
+          const w = TILE_W * 3.05;
+          const h = w * 0.88;
+          const left = center.x - w / 2;
+          const top = center.y - h * 0.56;
+          const imgName = item.type === 'bear1' ? 'bear1' : 'bear2';
+          return `
+            <div onclick="onEntityClick(event, '${safeId}')" class="map-entity ${isSel ? 'selected' : ''}"
+                 style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};"
+                 title="${item.type === 'bear1' ? '1-я охотничья ловушка (3×3)' : '2-я охотничья ловушка (3×3)'}">
+              <img src="assets/${imgName}.png" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='assets/${imgName}.jpg';}" class="w-full h-full object-contain pointer-events-none select-none" draggable="false" />
+            </div>
+          `;
+        }
+
+        if (item.type === 'hq') {
+          const w = TILE_W * 3.05;
+          const h = w * 0.90;
+          const left = center.x - w / 2;
+          const top = center.y - h * 0.56;
+          return `
+            <div onclick="onEntityClick(event, '${safeId}')" class="map-entity ${isSel ? 'selected' : ''} flex items-center justify-center"
+                 style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="Штаб альянса (3×3)">
+              <img src="assets/hq.png" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-full h-full object-contain pointer-events-none select-none" draggable="false" />
+              <div style="display:none;" class="px-3 py-2 rounded-2xl bg-indigo-900/90 border-2 border-amber-400 flex-col items-center justify-center text-center shadow-xl">
+                <div class="text-2xl leading-none">🏰</div>
+                <div class="text-[10px] font-extrabold text-amber-300 mt-1 whitespace-nowrap">ШТАБ АЛЬЯНСА</div>
+              </div>
+            </div>
+          `;
+        }
+
+        if (item.type === 'statue') {
+          const st = STATUE_TYPES[item.subType] || STATUE_TYPES.other;
+          const w = TILE_W * 1.95;
+          const h = w;
+          const left = center.x - w / 2;
+          const top = center.y - h * 0.60;
+          return `
+            <div onclick="onEntityClick(event, '${safeId}')" class="map-entity ${isSel ? 'selected' : ''} flex flex-col items-center justify-center"
+                 style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="${st.label} (2×2)">
+              <img src="assets/${st.sprite}.png" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-full h-full object-contain pointer-events-none select-none" draggable="false" />
+              <div style="display:none;" class="px-2.5 py-2 rounded-2xl bg-amber-950/90 border-2 border-amber-400/90 flex-col items-center justify-center text-center shadow-xl">
+                <div class="text-xl leading-none">${st.icon}</div>
+                <div class="text-[9px] font-extrabold text-amber-200 mt-1 leading-tight whitespace-nowrap">${st.short}</div>
+              </div>
+              <div class="absolute bottom-1 px-1.5 py-0.5 rounded-md bg-slate-950/85 border border-amber-400/60 text-[9px] font-bold text-amber-200 whitespace-nowrap pointer-events-none">
+                ${st.short}
+              </div>
+            </div>
+          `;
+        }
+
+        if (item.type === 'banner') {
+          const w = TILE_W * 1.15;
+          const h = TILE_W * 1.35;
+          const left = center.x - w / 2;
+          const top = center.y - h * 0.72;
+          return `
+            <div onclick="onEntityClick(event, '${safeId}')" class="map-entity ${isSel ? 'selected' : ''} flex flex-col items-center justify-end"
+                 style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="Стяг альянса (1×1)">
+              <img src="assets/banner.png" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-full h-full object-contain pointer-events-none select-none" draggable="false" />
+              <div style="display:none;" class="w-8 h-8 rounded-full bg-rose-600/90 border-2 border-amber-300 items-center justify-center shadow-lg text-sm">🚩</div>
+            </div>
+          `;
+        }
+
+        if (item.type === 'obstacle') {
+          const w = TILE_W * 0.95;
+          const h = TILE_H * 1.1;
+          const left = center.x - w / 2;
+          const top = center.y - h * 0.55;
+          return `
+            <div onclick="onEntityClick(event, '${safeId}')" class="map-entity ${isSel ? 'selected' : ''} flex items-center justify-center"
+                 style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="Преграда (1×1)">
+              <div class="w-8 h-8 rounded-xl bg-slate-700/90 border border-slate-400 flex items-center justify-center shadow text-sm">⛰️</div>
+            </div>
+          `;
+        }
+        return '';
+      }).join('');
+    }
+
+    // ==================== ИНТЕРАКЦИЯ С КАРТОЙ ====================
+    function applyCamera() {
+      const world = document.getElementById('mapWorld');
+      world.style.transform = `translate(${cam.x}px, ${cam.y}px) scale(${cam.scale})`;
+    }
+
+    function centerCamera() {
+      const vp = document.getElementById('mapViewport');
+      const mid = gridToScreen(GRID_SIZE / 2, GRID_SIZE / 2);
+      cam.scale = 0.85;
+      cam.x = vp.clientWidth / 2 - mid.x * cam.scale;
+      cam.y = vp.clientHeight / 2 - mid.y * cam.scale;
+      applyCamera();
+    }
+
+    function focusOnItem(item) {
+      const vp = document.getElementById('mapViewport');
+      const c = gridToScreen(item.gx + item.size / 2, item.gy + item.size / 2);
+      cam.x = vp.clientWidth / 2 - c.x * cam.scale;
+      cam.y = vp.clientHeight / 2 - c.y * cam.scale;
+      applyCamera();
+    }
+
+    function zoomMap(factor, anchorX = null, anchorY = null) {
+      const vp = document.getElementById('mapViewport');
+      const ax = anchorX !== null ? anchorX : vp.clientWidth / 2;
+      const ay = anchorY !== null ? anchorY : vp.clientHeight / 2;
+      const oldScale = cam.scale;
+      const nextScale = Math.max(0.4, Math.min(2.1, oldScale * factor));
+      cam.x = ax - (ax - cam.x) * (nextScale / oldScale);
+      cam.y = ay - (ay - cam.y) * (nextScale / oldScale);
+      cam.scale = nextScale;
+      applyCamera();
+    }
+
+    function setTool(tool, playerKey = null, moveId = null) {
+      activeTool = tool;
+      activeCityPlayerKey = playerKey;
+      movingItemId = moveId;
+
+      document.querySelectorAll('.tool-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-tool') === tool);
+      });
+
+      const statueBox = document.getElementById('statueSelectorBox');
+      if (statueBox) statueBox.classList.toggle('hidden', tool !== 'statue' || !!moveId);
+
+      const banner = document.getElementById('modeHintBanner');
+      const hintTxt = document.getElementById('modeHintText');
+      if (tool === 'pan') {
+        banner.classList.add('hidden');
+      } else {
+        banner.classList.remove('hidden');
+        if (tool === 'city') {
+          const p = findPlayer(playerKey);
+          hintTxt.textContent = `Установка топки: ${p ? p.nick : 'Игрок'} (2×2) — кликните по зелёным клеткам`;
+        } else if (tool === 'statue') {
+          const sub = document.getElementById('statueTypeSelect').value;
+          const st = STATUE_TYPES[sub] || STATUE_TYPES.other;
+          hintTxt.textContent = `Установка статуи: ${st.label} (2×2) — кликните по зелёным клеткам`;
+        } else if (tool === 'erase') {
+          hintTxt.textContent = 'Режим удаления: кликните по любому объекту на карте';
+        } else {
+          const names = { bear1: 'Ловушка 1 (3×3)', bear2: 'Ловушка 2 (3×3)', hq: 'Штаб альянса (3×3)', banner: 'Стяг альянса (1×1)', obstacle: 'Преграда (1×1)' };
+          hintTxt.textContent = `Установка: ${names[tool] || tool} — кликните по карте`;
+        }
+      }
+      updateHoverPreview();
+      renderPlayersSidebar();
+    }
+
+    function updateStatueHint() {
+      if (activeTool === 'statue' && !movingItemId) {
+        const sub = document.getElementById('statueTypeSelect').value;
+        const st = STATUE_TYPES[sub] || STATUE_TYPES.other;
+        document.getElementById('modeHintText').textContent = `Установка статуи: ${st.label} (2×2) — кликните по зелёным клеткам`;
+      }
+    }
+
+    function cancelActiveTool() {
+      setTool('pan', null, null);
+    }
+
+    function onEntityClick(e, itemId) {
+      e.stopPropagation();
+      const item = mapItems.find(x => x.id === itemId);
+      if (!item) return;
+
+      if (activeTool === 'erase') {
+        mapItems = mapItems.filter(x => x.id !== itemId);
+        if (selectedItemId === itemId) deselectEntity();
+        renderEntities();
+        renderPlayersSidebar();
+        scheduleCloudSave();
+        return;
+      }
+
+      if (activeTool !== 'pan') return;
+
+      selectedItemId = itemId;
+      renderEntities();
+      showSelectedCard(item);
+    }
+
+    function showSelectedCard(item) {
+      const card = document.getElementById('selectedInfoCard');
+      const title = document.getElementById('selCardTitle');
+      const sub = document.getElementById('selCardSub');
+      const dist = document.getElementById('selCardDistances');
+
+      if (item.type === 'city') {
+        const p = findPlayer(item.playerKey);
+        title.textContent = p ? p.nick : (item.fallbackNick || 'Игрок');
+        sub.textContent = p
+          ? `Печь: ${p.furnaceLevel || '—'} • Тир: ${p.troopTier || '—'} • Сбор: ${(Number(p.rallyCap)||0).toLocaleString('ru-RU')}`
+          : `Клетка (${item.gx}, ${item.gy})`;
+        const l1 = calcLineToTrap(item, 'bear1');
+        const l2 = calcLineToTrap(item, 'bear2');
+        dist.innerHTML = `
+          <div>Координаты: <b>X:${item.gx} Y:${item.gy}</b></div>
+          <div>До Ловушки 1: <b>${l1 ? `Линия ${l1.line} (~${l1.estSec}с)` : 'не на карте'}</b></div>
+          <div>До Ловушки 2: <b>${l2 ? `Линия ${l2.line} (~${l2.estSec}с)` : 'не на карте'}</b></div>
+        `;
+      } else if (item.type === 'statue') {
+        const st = STATUE_TYPES[item.subType] || STATUE_TYPES.other;
+        title.textContent = `${st.icon} ${st.label}`;
+        sub.textContent = `Статуя (2×2) • Клетка X:${item.gx} Y:${item.gy}`;
+        dist.textContent = 'Нажмите «Переместить» чтобы перенести статую на другие клетки.';
+      } else {
+        const labels = { bear1: '🐻 1-я охотничья ловушка', bear2: '🐻 2-я охотничья ловушка', hq: '🏰 Штаб альянса', banner: '🚩 Стяг альянса', obstacle: '⛰️ Преграда' };
+        title.textContent = labels[item.type] || item.type;
+        sub.textContent = `Размер: ${item.size}×${item.size} • Клетка X:${item.gx} Y:${item.gy}`;
+        dist.textContent = 'Нажмите «Переместить» чтобы перенести объект на другие клетки.';
+      }
+      card.classList.remove('hidden');
+    }
+
+    function deselectEntity() {
+      selectedItemId = null;
+      document.getElementById('selectedInfoCard').classList.add('hidden');
+      renderEntities();
+    }
+
+    function startMoveSelected() {
+      const item = mapItems.find(x => x.id === selectedItemId);
+      if (!item) return;
+      document.getElementById('selectedInfoCard').classList.add('hidden');
+      setTool(item.type, item.playerKey || null, item.id);
+    }
+
+    function removeSelectedEntity() {
+      if (!selectedItemId) return;
+      mapItems = mapItems.filter(x => x.id !== selectedItemId);
+      deselectEntity();
+      renderPlayersSidebar();
+      scheduleCloudSave();
+    }
+
+    function placeAtHover() {
+      if (!hoverCell || activeTool === 'pan' || activeTool === 'erase') return;
+      const size = OBJECT_SIZES[activeTool] || 1;
+      const gx = Math.max(0, Math.min(GRID_SIZE - size, hoverCell.gx));
+      const gy = Math.max(0, Math.min(GRID_SIZE - size, hoverCell.gy));
+
+      let ignoreId = movingItemId;
+      if (!ignoreId && (activeTool === 'bear1' || activeTool === 'bear2')) {
+        const ex = mapItems.find(x => x.type === activeTool);
+        if (ex) ignoreId = ex.id;
+      }
+      if (!ignoreId && activeTool === 'city' && activeCityPlayerKey) {
+        const ex = mapItems.find(x => x.type === 'city' && x.playerKey === activeCityPlayerKey);
+        if (ex) ignoreId = ex.id;
+      }
+
+      if (!canPlaceFootprint(gx, gy, size, ignoreId)) {
+        showToast('Преграда: клетки уже заняты!');
+        return;
+      }
+
+      if (ignoreId) {
+        const target = mapItems.find(x => x.id === ignoreId);
+        if (target) {
+          target.gx = gx;
+          target.gy = gy;
+        }
+      } else {
+        const p = activeTool === 'city' ? findPlayer(activeCityPlayerKey) : null;
+        mapItems.push({
+          id: 'obj_' + Date.now() + '_' + Math.floor(Math.random() * 999),
+          type: activeTool,
+          subType: activeTool === 'statue' ? (document.getElementById('statueTypeSelect').value || 'champ_silver') : undefined,
+          gx,
+          gy,
+          size,
+          playerKey: activeTool === 'city' ? activeCityPlayerKey : undefined,
+          fallbackNick: p ? p.nick : undefined,
+          fallbackFurnace: p ? p.furnaceLevel : undefined
+        });
+      }
+
+      // После установки города, ловушки, штаба, статуи или переноса — возвращаемся в режим выбора
+      if (movingItemId || activeTool === 'city' || activeTool === 'bear1' || activeTool === 'bear2' || activeTool === 'hq' || activeTool === 'statue') {
+        cancelActiveTool();
+      }
+
+      renderEntities();
+      renderPlayersSidebar();
+      scheduleCloudSave();
+    }
+
+    // ==================== БОКОВАЯ ПАНЕЛЬ ИГРОКОВ ====================
+    function renderPlayersSidebar() {
+      const container = document.getElementById('playersSidebarList');
+      const q = (document.getElementById('playerSearchInput').value || '').trim().toLowerCase();
+      const filter = document.getElementById('placedFilterSelect').value;
+      const sortBy = document.getElementById('sortPlayersSelect').value;
+
+      const players = getFilteredPlayers();
+      const placedMap = new Map();
+      mapItems.filter(x => x.type === 'city' && x.playerKey).forEach(x => placedMap.set(x.playerKey, x));
+
+      document.getElementById('placedCounter').textContent = `${placedMap.size} / ${players.length}`;
+
+      let list = players.filter(p => {
+        const pKey = getPlayerKey(p);
+        const isPlaced = placedMap.has(pKey);
+        if (filter === 'placed' && !isPlaced) return false;
+        if (filter === 'unplaced' && isPlaced) return false;
+        if (q && !(p.nick || '').toLowerCase().includes(q)) return false;
+        return true;
+      });
+
+      list.sort((a, b) => {
+        if (sortBy === 'rally') return (Number(b.rallyCap) || 0) - (Number(a.rallyCap) || 0);
+        if (sortBy === 'nick') return (a.nick || '').localeCompare(b.nick || '', 'ru');
+        return parseFurnaceInfo(b.furnaceLevel).score - parseFurnaceInfo(a.furnaceLevel).score;
+      });
+
+      if (list.length === 0) {
+        container.innerHTML = `<div class="py-8 text-center text-slate-500">Нет игроков по фильтру</div>`;
+        return;
+      }
+
+      container.innerHTML = list.map(p => {
+        const pKey = getPlayerKey(p);
+        const placedItem = placedMap.get(pKey);
+        const isActivePick = activeTool === 'city' && activeCityPlayerKey === pKey;
+        const fInfo = parseFurnaceInfo(p.furnaceLevel);
+        const safeKey = pKey.replace(/'/g, "\\'");
+
+        return `
+          <div onclick="onSidebarPlayerClick('${safeKey}')"
+               class="p-2 rounded-xl border cursor-pointer transition flex items-center justify-between gap-2 ${
+                 isActivePick
+                   ? 'bg-sky-600/30 border-sky-400'
+                   : placedItem
+                   ? 'bg-emerald-950/20 border-emerald-500/30 hover:border-emerald-400'
+                   : 'bg-slate-900/90 border-slate-800 hover:border-sky-500/60'
+               }">
+            <div class="flex items-center gap-2 min-w-0">
+              <div class="w-7 h-7 rounded-lg flex items-center justify-center font-mono text-[11px] font-extrabold shrink-0 ${
+                fInfo.isCrystal ? 'bg-gradient-to-br from-orange-500 to-red-600 text-white' : 'bg-sky-500/20 text-sky-300 border border-sky-500/40'
+              }">${fInfo.num}</div>
+              <div class="min-w-0">
+                <div class="font-bold text-white truncate">${p.nick}</div>
+                <div class="text-[10px] font-mono text-slate-400">Сбор: ${(Number(p.rallyCap) || 0).toLocaleString('ru-RU')}</div>
+              </div>
+            </div>
+            <div class="shrink-0 text-right">
+              ${placedItem
+                ? `<span class="text-[10px] font-mono text-emerald-400 font-bold">✓ ${placedItem.gx},${placedItem.gy}</span>`
+                : `<span class="px-2 py-0.5 rounded-lg bg-sky-600/30 text-sky-300 text-[10px] font-bold">+ Поставить</span>`
+              }
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function onSidebarPlayerClick(pKey) {
+      const existing = mapItems.find(x => x.type === 'city' && x.playerKey === pKey);
+      if (existing) {
+        selectedItemId = existing.id;
+        focusOnItem(existing);
+        renderEntities();
+        showSelectedCard(existing);
+      } else {
+        deselectEntity();
+        setTool('city', pKey, null);
+      }
+    }
+
+    // ==================== ОБЛАЧНОЕ СОХРАНЕНИЕ И ЗАГРУЗКА ====================
+    function getMapConfigKey() {
+      return `map_${currentAlliance}`;
+    }
+
+    function setCloudStatus(state, text) {
+      const box = document.getElementById('cloudSaveBadge');
+      const icon = document.getElementById('cloudSaveIcon');
+      const txt = document.getElementById('cloudSaveText');
+      txt.textContent = text;
+      if (state === 'saving') {
+        box.className = 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-950/80 border border-amber-500/40 text-[11px] font-mono text-amber-300';
+        icon.className = 'fa-solid fa-spinner fa-spin';
+      } else if (state === 'error') {
+        box.className = 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-rose-950/80 border border-rose-500/40 text-[11px] font-mono text-rose-300';
+        icon.className = 'fa-solid fa-triangle-exclamation';
+      } else {
+        box.className = 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 border border-emerald-500/30 text-[11px] font-mono text-emerald-400';
+        icon.className = 'fa-solid fa-cloud-check';
+      }
+    }
+
+    async function switchAlliance(alliance) {
+      if (currentUser && !currentUser.isOwner && alliance !== currentUser.alliance) return;
+      currentAlliance = alliance;
+      document.getElementById('mFilterMain').classList.toggle('active', alliance === 'Основа');
+      document.getElementById('mFilterAcad').classList.toggle('active', alliance === 'Академия');
+      deselectEntity();
+      cancelActiveTool();
+      await loadCloudMap();
+    }
+
+    async function loadCloudMap() {
+      const key = getMapConfigKey();
+      setCloudStatus('saving', 'Загрузка...');
+
+      const cachedLocal = localStorage.getItem('harmony_' + key);
+      if (cachedLocal) {
+        try { mapItems = JSON.parse(cachedLocal) || []; } catch (e) { mapItems = []; }
+      } else {
+        mapItems = [
+          { id: 'init_bear1', type: 'bear1', gx: 14, gy: 16, size: 3 },
+          { id: 'init_bear2', type: 'bear2', gx: 20, gy: 16, size: 3 }
+        ];
+      }
+      renderEntities();
+      renderPlayersSidebar();
+
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'get_event_config', passcode: getPasscode(), configKey: key })
+        }).then(r => r.json());
+
+        if (res.ok && res.config && Array.isArray(res.config.items)) {
+          mapItems = res.config.items;
+          localStorage.setItem('harmony_' + key, JSON.stringify(mapItems));
+          renderEntities();
+          renderPlayersSidebar();
+          setCloudStatus('saved', res.updatedAt ? `Облако (${res.updatedAt.slice(11, 16)})` : 'Синхронизировано');
+        } else {
+          setCloudStatus('saved', 'Новая карта');
+        }
+      } catch (e) {
+        setCloudStatus('error', 'Локальный режим');
+      }
+    }
+
+    function scheduleCloudSave() {
+      const key = getMapConfigKey();
+      localStorage.setItem('harmony_' + key, JSON.stringify(mapItems));
+      setCloudStatus('saving', 'Сохранение...');
+      if (saveTimer) clearTimeout(saveTimer);
+      saveTimer = setTimeout(async () => {
+        try {
+          const res = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+              action: 'save_event_config',
+              passcode: getPasscode(),
+              configKey: key,
+              config: { items: mapItems }
+            })
+          }).then(r => r.json());
+          if (res.ok) setCloudStatus('saved', `Сохранено (${res.updatedAt.slice(11, 16)})`);
+          else setCloudStatus('error', 'Ошибка сохранения');
+        } catch (e) {
+          setCloudStatus('error', 'Нет связи');
+        }
+      }, 900);
+    }
+
+    function clearMapConfirm() {
+      if (!confirm('Убрать все топки и постройки с карты?')) return;
+      mapItems = [
+        { id: 'init_bear1', type: 'bear1', gx: 14, gy: 16, size: 3 },
+        { id: 'init_bear2', type: 'bear2', gx: 20, gy: 16, size: 3 }
+      ];
+      deselectEntity();
+      renderEntities();
+      renderPlayersSidebar();
+      scheduleCloudSave();
+    }
+
+    function toggleMapTheme() {
+      mapTheme = mapTheme === 'tundra' ? 'dark' : 'tundra';
+      const vp = document.getElementById('mapViewport');
+      const btn = document.getElementById('themeToggleBtn');
+      vp.classList.toggle('theme-tundra', mapTheme === 'tundra');
+      vp.classList.toggle('theme-dark', mapTheme === 'dark');
+      btn.textContent = mapTheme === 'tundra' ? '❄️ Тундра' : '🌑 Тёмная';
+      buildBaseGridSvg();
+    }
+
+    // ==================== ЭКСПОРТ ГОТОВОЙ КАРТЫ В PNG ====================
+    function exportMapPng() {
+      if (mapItems.length === 0) return showToast('Карта пуста!');
+
+      let minGx = GRID_SIZE, minGy = GRID_SIZE, maxGx = 0, maxGy = 0;
+      mapItems.forEach(it => {
+        minGx = Math.min(minGx, it.gx);
+        minGy = Math.min(minGy, it.gy);
+        maxGx = Math.max(maxGx, it.gx + it.size);
+        maxGy = Math.max(maxGy, it.gy + it.size);
+      });
+      minGx = Math.max(0, minGx - 2);
+      minGy = Math.max(0, minGy - 2);
+      maxGx = Math.min(GRID_SIZE, maxGx + 2);
+      maxGy = Math.min(GRID_SIZE, maxGy + 2);
+
+      // Находим границы в экранных координатах
+      const corners = [
+        gridToScreen(minGx, minGy),
+        gridToScreen(maxGx, minGy),
+        gridToScreen(maxGx, maxGy),
+        gridToScreen(minGx, maxGy)
+      ];
+      const pad = 120;
+      const minX = Math.min(...corners.map(c => c.x)) - pad;
+      const maxX = Math.max(...corners.map(c => c.x)) + pad;
+      const minY = Math.min(...corners.map(c => c.y)) - pad;
+      const maxY = Math.max(...corners.map(c => c.y)) + pad;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.ceil(maxX - minX);
+      canvas.height = Math.ceil(maxY - minY);
+      const ctx = canvas.getContext('2d');
+
+      // Фон
+      ctx.fillStyle = mapTheme === 'tundra' ? '#b8c8df' : '#0b1220';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.save();
+      ctx.translate(-minX, -minY);
+
+      // Сетка
+      ctx.strokeStyle = mapTheme === 'tundra' ? 'rgba(30, 58, 108, 0.22)' : 'rgba(56, 189, 248, 0.18)';
+      ctx.lineWidth = 1;
+      for (let i = minGx; i <= maxGx; i++) {
+        const a = gridToScreen(i, minGy), b = gridToScreen(i, maxGy);
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      }
+      for (let j = minGy; j <= maxGy; j++) {
+        const a = gridToScreen(minGx, j), b = gridToScreen(maxGx, j);
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      }
+
+      // Объекты
+      const sorted = [...mapItems].sort((a, b) => (a.gx + a.gy) - (b.gx + b.gy));
+      sorted.forEach(item => {
+        const c = gridToScreen(item.gx + item.size / 2, item.gy + item.size / 2);
+        if (item.type === 'bear1' || item.type === 'bear2') {
+          const img = IMG_CACHE[item.type];
+          const w = TILE_W * 3.05, h = w * 0.88;
+          if (img && img.complete && img.naturalWidth) {
+            ctx.drawImage(img, c.x - w / 2, c.y - h * 0.56, w, h);
+          }
+        } else if (item.type === 'city') {
+          const img = IMG_CACHE.topka;
+          const w = TILE_W * 2.08, h = w;
+          const x = c.x - w / 2, y = c.y - h * 0.62;
+          if (img && img.complete && img.naturalWidth) {
+            ctx.drawImage(img, x, y, w, h);
+          }
+          const p = findPlayer(item.playerKey);
+          const nick = p ? p.nick : (item.fallbackNick || 'Игрок');
+          const fInfo = parseFurnaceInfo(p ? p.furnaceLevel : item.fallbackFurnace);
+
+          // Кружок уровня
+          const cx = x + w * 0.135, cy = y + h * 0.905;
+          if (fInfo.isCrystal) {
+            ctx.beginPath();
+            ctx.arc(cx, cy, w * 0.085, 0, Math.PI * 2);
+            ctx.fillStyle = '#ea580c';
+            ctx.fill();
+            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = '#fde047';
+            ctx.stroke();
+          }
+          ctx.font = '800 12px Inter, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = fInfo.isCrystal ? '#ffffff' : '#0f172a';
+          ctx.fillText(fInfo.num, cx, cy);
+
+          // Ник игрока
+          ctx.font = '700 10px Inter, sans-serif';
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText(nick.slice(0, 14), x + w * 0.51, y + h * 0.905);
+        } else if (item.type === 'hq') {
+          const img = IMG_CACHE.hq;
+          const w = TILE_W * 3.05, h = w * 0.90;
+          if (img && img.complete && img.naturalWidth) {
+            ctx.drawImage(img, c.x - w / 2, c.y - h * 0.56, w, h);
+          } else {
+            ctx.fillStyle = 'rgba(49, 46, 129, 0.92)';
+            ctx.strokeStyle = '#fbbf24';
+            ctx.lineWidth = 2;
+            ctx.fillRect(c.x - 52, c.y - 22, 104, 44);
+            ctx.strokeRect(c.x - 52, c.y - 22, 104, 44);
+            ctx.fillStyle = '#fde68a';
+            ctx.font = '800 11px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🏰 ШТАБ', c.x, c.y);
+          }
+        } else if (item.type === 'statue') {
+          const st = STATUE_TYPES[item.subType] || STATUE_TYPES.other;
+          const img = IMG_CACHE[st.sprite];
+          const w = TILE_W * 1.95, h = w;
+          if (img && img.complete && img.naturalWidth) {
+            ctx.drawImage(img, c.x - w / 2, c.y - h * 0.60, w, h);
+          } else {
+            ctx.fillStyle = 'rgba(120, 53, 15, 0.92)';
+            ctx.strokeStyle = '#fbbf24';
+            ctx.lineWidth = 2;
+            ctx.fillRect(c.x - 44, c.y - 20, 88, 40);
+            ctx.strokeRect(c.x - 44, c.y - 20, 88, 40);
+            ctx.fillStyle = '#fde68a';
+            ctx.font = '800 10px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`${st.icon} ${st.short}`, c.x, c.y);
+          }
+        } else if (item.type === 'banner') {
+          const img = IMG_CACHE.banner;
+          const w = TILE_W * 1.15, h = TILE_W * 1.35;
+          if (img && img.complete && img.naturalWidth) {
+            ctx.drawImage(img, c.x - w / 2, c.y - h * 0.72, w, h);
+          } else {
+            ctx.beginPath();
+            ctx.arc(c.x, c.y - 6, 15, 0, Math.PI * 2);
+            ctx.fillStyle = '#e11d48';
+            ctx.fill();
+            ctx.font = '14px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🚩', c.x, c.y - 5);
+          }
+        } else if (item.type === 'obstacle') {
+          ctx.beginPath();
+          ctx.arc(c.x, c.y - 6, 15, 0, Math.PI * 2);
+          ctx.fillStyle = '#475569';
+          ctx.fill();
+          ctx.font = '14px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('⛰️', c.x, c.y - 5);
+        }
+      });
+
+      ctx.restore();
+
+      // Заголовок в углу
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+      ctx.fillRect(16, 16, 330, 38);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '800 14px Inter, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`АЛЬЯНС «ГАРМОНИЯ» (${currentAlliance}) — КАРТА БАЗЫ`, 28, 35);
+
+      try {
+        const link = document.createElement('a');
+        link.download = `karta_${currentAlliance}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        showToast('Карта сохранена в PNG!');
+      } catch (err) {
+        alert('Экспорт PNG работает при открытии сайта через GitHub Pages (из-за политики браузера на локальных файлах).');
+      }
+    }
+
+    function showToast(msg) {
+      const el = document.getElementById('toastBanner');
+      el.textContent = msg;
+      el.classList.remove('opacity-0');
+      setTimeout(() => el.classList.add('opacity-0'), 2300);
+    }
+
+    // ==================== СОБЫТИЯ МЫШИ И ЗАПУСК ====================
+    function initMapInteractions() {
+      const vp = document.getElementById('mapViewport');
+
+      vp.addEventListener('contextmenu', e => {
+        e.preventDefault();
+        if (activeTool !== 'pan') cancelActiveTool();
+      });
+
+      vp.addEventListener('mousedown', e => {
+        if (e.button === 2 || e.button === 1 || (e.button === 0 && activeTool === 'pan')) {
+          isPanning = true;
+          panStart = { mx: e.clientX, my: e.clientY, cx: cam.x, cy: cam.y };
+        } else if (e.button === 0 && activeTool !== 'pan' && activeTool !== 'erase') {
+          placeAtHover();
+        }
+      });
+
+      window.addEventListener('mousemove', e => {
+        if (isPanning) {
+          cam.x = panStart.cx + (e.clientX - panStart.mx);
+          cam.y = panStart.cy + (e.clientY - panStart.my);
+          applyCamera();
+          return;
+        }
+        const rect = vp.getBoundingClientRect();
+        if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) return;
+
+        const wx = (e.clientX - rect.left - cam.x) / cam.scale;
+        const wy = (e.clientY - rect.top - cam.y) / cam.scale;
+        const f = screenToGridFloat(wx, wy);
+        const size = OBJECT_SIZES[activeTool] || 1;
+        const gx = Math.floor(f.gx - (size - 1) / 2);
+        const gy = Math.floor(f.gy - (size - 1) / 2);
+
+        if (f.gx >= 0 && f.gy >= 0 && f.gx < GRID_SIZE && f.gy < GRID_SIZE) {
+          document.getElementById('coordDisplay').textContent = `Клетка: X:${Math.floor(f.gx)} Y:${Math.floor(f.gy)}`;
+        }
+
+        if (!hoverCell || hoverCell.gx !== gx || hoverCell.gy !== gy) {
+          hoverCell = { gx, gy };
+          updateHoverPreview();
+        }
+      });
+
+      window.addEventListener('mouseup', () => { isPanning = false; });
+
+      vp.addEventListener('wheel', e => {
+        e.preventDefault();
+        const rect = vp.getBoundingClientRect();
+        zoomMap(e.deltaY < 0 ? 1.12 : 0.89, e.clientX - rect.left, e.clientY - rect.top);
+      }, { passive: false });
+
+      window.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+          cancelActiveTool();
+          deselectEntity();
+        }
+      });
+    }
+
+    function applySession(data) {
+      if (!data || !data.user || !data.user.isOfficer) {
+        alert('Доступ к карте расстановки открыт только Владельцу и Офицерам!');
+        window.location.href = 'index.html';
+        return;
+      }
+      currentUser = data.user;
+      allPlayers = data.allPlayers || [];
+
+      document.getElementById('headerUserNick').textContent = `${currentUser.nick} (${currentUser.alliance || 'Основа'} • ${currentUser.role})`;
+      const badge = document.getElementById('userRoleBadge');
+      badge.textContent = currentUser.role || 'Офицер';
+      if (currentUser.isOwner) {
+        badge.className = 'text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40';
+      } else {
+        currentAlliance = currentUser.alliance || 'Основа';
+        document.getElementById(currentAlliance === 'Основа' ? 'mFilterAcad' : 'mFilterMain').classList.add('hidden');
+      }
+      switchAlliance(currentAlliance);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      preloadSprite('bear1', 'assets/bear1.png', 'assets/bear1.jpg');
+      preloadSprite('bear2', 'assets/bear2.png', 'assets/bear2.jpg');
+      preloadSprite('topka', 'assets/topka.png', 'assets/topka.jpg');
+      preloadSprite('hq', 'assets/hq.png');
+      preloadSprite('banner', 'assets/banner.png');
+      preloadSprite('statue_champ', 'assets/statue_champ.png');
+      preloadSprite('statue_conqueror', 'assets/statue_conqueror.png');
+      preloadSprite('statue_other', 'assets/statue_other.png');
+
+      buildBaseGridSvg();
+      centerCamera();
+      initMapInteractions();
+
+      const code = getPasscode();
+      if (!code) { window.location.href = 'index.html'; return; }
+
+      const cached = sessionStorage.getItem('harmony_session_cache');
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (parsed && parsed.allPlayers) applySession(parsed);
+        } catch (e) {}
+      }
+
+      fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'sync', passcode: code, page: 'map.html', userAgent: navigator.userAgent })
+      })
+        .then(r => r.json())
+        .then(res => {
+          if (res.ok) {
+            sessionStorage.setItem('harmony_session_cache', JSON.stringify(res));
+            applySession(res);
+          } else {
+            window.location.href = 'index.html';
+          }
+        });
+    });
+  </script>
+</body>
+</html>
