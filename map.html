@@ -176,11 +176,9 @@
           <button type="button" id="mapType_custom" onclick="switchMapType('custom')" class="pill-btn px-2.5 py-1 rounded-lg font-semibold text-slate-300 transition">🎯 Другое</button>
         </div>
 
-        <!-- Подсветка линий до ловушки -->
-        <select id="lineOverlaySelect" onchange="renderEntities()" class="bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-amber-300 font-semibold">
-          <option value="none">Линии: выкл</option>
-          <option value="bear1">📏 Линии до Ловушки 1</option>
-          <option value="bear2">📏 Линии до Ловушки 2</option>
+        <!-- Подсветка линий и времени марша до объектов текущей карты -->
+        <select id="lineOverlaySelect" onchange="onLineOverlayChange()" class="bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-amber-300 font-semibold max-w-[230px]">
+          <option value="none">📏 Линии и марш: выкл</option>
         </select>
 
         <!-- Тема поля -->
@@ -243,7 +241,7 @@
             <span>👑</span><span>Замок (6×6)</span>
           </button>
           <button type="button" data-tool="turret" onclick="setTool('turret')" class="tool-btn px-2.5 py-2 rounded-xl bg-slate-900 border border-rose-500/30 font-semibold flex items-center gap-1.5 transition">
-            <span>🗼</span><span>Турель (2×2)</span>
+            <span>🗼</span><span>Оруд. башня (2×2)</span>
           </button>
           <button type="button" data-tool="fort" onclick="setTool('fort')" class="tool-btn px-2.5 py-2 rounded-xl bg-slate-900 border border-purple-500/30 font-semibold flex items-center gap-1.5 transition">
             <span>🏯</span><span>Форт (4×4)</span>
@@ -263,7 +261,7 @@
         </div>
       </div>
 
-      <!-- Фильтр списка игроков -->
+      <!-- Фильтры и сортировка списка игроков -->
       <div class="p-3 border-b border-slate-800 space-y-2 text-xs">
         <div class="flex items-center justify-between">
           <span class="font-bold text-white">Топки игроков (2×2)</span>
@@ -271,7 +269,7 @@
         </div>
         <div class="relative">
           <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-500 text-[11px]"></i>
-          <input id="playerSearchInput" type="text" oninput="renderPlayersSidebar()" placeholder="Поиск игрока..."
+          <input id="playerSearchInput" type="text" oninput="renderPlayersSidebar()" placeholder="Поиск игрока по нику..."
             class="w-full bg-slate-900 border border-slate-700 focus:border-sky-500 rounded-xl pl-8 pr-2.5 py-1.5 text-xs text-white focus:outline-none" />
         </div>
         <div class="grid grid-cols-2 gap-1.5">
@@ -280,12 +278,34 @@
             <option value="unplaced">Не на карте</option>
             <option value="placed">Уже на карте</option>
           </select>
+          <select id="traitFilterSelect" onchange="renderPlayersSidebar()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-sky-300">
+            <option value="all">Состав: любой</option>
+            <option value="crystal">💎 Крист. печь</option>
+            <option value="t10">⚔️ Войска T10+</option>
+            <option value="leaders">👑 Сбор ≥ 1М</option>
+            <option value="marches6">🏃 6 маршей</option>
+            <option value="hasGov">🛡️ Есть Губернатор</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-1.5">
           <select id="sortPlayersSelect" onchange="renderPlayersSidebar()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-slate-200">
             <option value="furnace">Сорт: Печь ↓</option>
             <option value="rally">Сорт: Сбор ↓</option>
+            <option value="march">Сорт: Марш ↓</option>
+            <option value="tier">Сорт: Тир войск ↓</option>
+            <option value="topEq">Сорт: ТОП-шмот ↓</option>
+            <option value="governor">Сорт: Губернатор ↓</option>
+            <option value="hero">Сорт: Герой ↓</option>
             <option value="nick">Сорт: Ник А–Я</option>
           </select>
+          <select id="heroFilterSelect" onchange="onHeroFilterChange()" class="bg-slate-900 border border-amber-500/40 rounded-lg px-2 py-1 text-[11px] text-amber-300 font-semibold">
+            <option value="">🦸 Герой: любой</option>
+          </select>
         </div>
+        <label id="onlyWithHeroWrap" class="hidden flex items-center gap-1.5 text-[11px] text-amber-200 cursor-pointer select-none pt-0.5">
+          <input id="onlyWithHeroCheck" type="checkbox" onchange="renderPlayersSidebar()" class="accent-amber-500 w-3.5 h-3.5 rounded" />
+          <span>Показать только тех, у кого настроен герой</span>
+        </label>
       </div>
 
       <!-- Прокручиваемый список игроков -->
@@ -417,14 +437,88 @@
       custom: 'Своя схема'
     };
 
+    const MAP_HEROES = [
+      { key: 'джесси', name: 'Джесси', gen: 1 }, { key: 'джассер', name: 'Джассер', gen: 1 },
+      { key: 'со_юн', name: 'Со Юн', gen: 1 }, { key: 'сергей', name: 'Сергей', gen: 1 },
+      { key: 'патрик', name: 'Патрик', gen: 1 }, { key: 'джеронимо', name: 'Джеронимо', gen: 1 },
+      { key: 'молли', name: 'Молли', gen: 1 }, { key: 'бахити', name: 'Бахити', gen: 1 },
+      { key: 'флинт', name: 'Флинт', gen: 2 }, { key: 'филли', name: 'Филли', gen: 2 },
+      { key: 'алонсо', name: 'Алонсо', gen: 2 }, { key: 'логан', name: 'Логан', gen: 3 },
+      { key: 'миа', name: 'Мия', gen: 3 }, { key: 'грег', name: 'Грег', gen: 3 },
+      { key: 'яхмос', name: 'Яхмос', gen: 4 }, { key: 'рейна', name: 'Райна', gen: 4 },
+      { key: 'линн', name: 'Линн', gen: 4 }, { key: 'гектор', name: 'Гектор', gen: 5 },
+      { key: 'нора', name: 'Нора', gen: 5 }, { key: 'гвен', name: 'Гвен', gen: 5 },
+      { key: 'ву_минг', name: 'Ву Минг', gen: 6 }, { key: 'рене', name: 'Рене', gen: 6 },
+      { key: 'уэйн', name: 'Уэйн', gen: 6 }, { key: 'эдит', name: 'Эдит', gen: 7 },
+      { key: 'гордон', name: 'Гордон', gen: 7 }, { key: 'брэдли', name: 'Брэдли', gen: 7 },
+      { key: 'гатот', name: 'Гатот', gen: 8 }, { key: 'соня', name: 'Соня', gen: 8 },
+      { key: 'гендрик', name: 'Гендрик', gen: 8 }, { key: 'магнус', name: 'Магнус', gen: 9 },
+      { key: 'фред', name: 'Фред', gen: 9 }, { key: 'ксура', name: 'Ксура', gen: 9 },
+      { key: 'грегори', name: 'Грегори', gen: 10 }, { key: 'фрея', name: 'Фрея', gen: 10 },
+      { key: 'бланшет', name: 'Бланшет', gen: 10 }, { key: 'элеонора', name: 'Элеонора', gen: 11 },
+      { key: 'ллойд', name: 'Ллойд', gen: 11 }, { key: 'руфус', name: 'Руфус', gen: 11 },
+      { key: 'гервор', name: 'Гервор', gen: 12 }, { key: 'карол', name: 'Карол', gen: 12 },
+      { key: 'лигейя', name: 'Лигейя', gen: 12 }, { key: 'гисела', name: 'Гисела', gen: 13 },
+      { key: 'флора', name: 'Флора', gen: 13 }, { key: 'вулканс', name: 'Вулканс', gen: 13 },
+      { key: 'элиф', name: 'Элиф', gen: 14 }, { key: 'доминик', name: 'Доминик', gen: 14 },
+      { key: 'кара', name: 'Кара', gen: 14 }, { key: 'хэнк', name: 'Хэнк', gen: 15 },
+      { key: 'эстрелла', name: 'Эстрелла', gen: 15 }, { key: 'вивека', name: 'Вивека', gen: 15 },
+      { key: 'сейгель', name: 'Сейгель', gen: 16 }, { key: 'урсар', name: 'Урсар', gen: 16 },
+      { key: 'эйслинг', name: 'Эйслинг', gen: 16 }, { key: 'эйден', name: 'Эйден', gen: 17 },
+      { key: 'берта', name: 'Берта', gen: 17 }, { key: 'элеанор', name: 'Элеанор', gen: 17 },
+      { key: 'наталия', name: 'Наталия', gen: 1 }, { key: 'джина', name: 'Джина', gen: 1 },
+      { key: 'лин_сюэ', name: 'Лин Сюэ', gen: 1 }, { key: 'лумак_бокан', name: 'Лумак Бокан', gen: 1 },
+      { key: 'зинман', name: 'Зинман', gen: 1 }, { key: 'смит', name: 'Смит', gen: 1 },
+      { key: 'юджин', name: 'Юджин', gen: 1 }, { key: 'чарли', name: 'Чарли', gen: 1 },
+      { key: 'клорис', name: 'Клорис', gen: 1 }
+    ];
+
+    const GOV_TIER_SCORES = [
+      '', 'Необычные (зелёные)', 'Необычные (зелёные) 1 звезда',
+      'Редкие (синие)', 'Редкие (синие) 1 звезда', 'Редкие (синие) 2 звезды', 'Редкие (синие) 3 звезды',
+      'Великие (фиолетовые)', 'Великие (фиолетовые) 1 звезда', 'Великие (фиолетовые) 2 звезды', 'Великие (фиолетовые) 3 звезды',
+      'Великие (фиолетовые) С1', 'Великие (фиолетовые) С1 1 звезда', 'Великие (фиолетовые) С1 2 звезды', 'Великие (фиолетовые) С1 3 звезды',
+      'Мифические (золотые)', 'Мифические (золотые) 1 звезда', 'Мифические (золотые) 2 звезды', 'Мифические (золотые) 3 звезды',
+      'Мифические (золотые) С1', 'Мифические (золотые) С1 1 звезда', 'Мифические (золотые) С1 2 звезды', 'Мифические (золотые) С1 3 звезды',
+      'Мифические (золотые) С2', 'Мифические (золотые) С2 1 звезда', 'Мифические (золотые) С2 2 звезды', 'Мифические (золотые) С2 3 звезды'
+    ];
+
+    function getTurretDisplayName(item) {
+      const raw = String(item.label || '').trim();
+      if (raw === 'Север' || item.id === 'init_turret_n') return 'Северная орудийная башня';
+      if (raw === 'Запад' || item.id === 'init_turret_w') return 'Западная орудийная башня';
+      if (raw === 'Юг' || item.id === 'init_turret_s') return 'Южная орудийная башня';
+      if (raw === 'Восток' || item.id === 'init_turret_e') return 'Восточная орудийная башня';
+      return raw || 'Орудийная башня';
+    }
+
+    function getObjectDisplayName(item) {
+      if (item.type === 'turret') return getTurretDisplayName(item);
+      if (item.type === 'statue') {
+        const st = STATUE_TYPES[item.subType] || STATUE_TYPES.other;
+        return st.label;
+      }
+      const labels = {
+        bear1: '1-я охотничья ловушка',
+        bear2: '2-я охотничья ловушка',
+        hq: 'Штаб альянса',
+        banner: 'Стяг альянса',
+        obstacle: 'Преграда',
+        castle: 'Солнечный замок',
+        fort: 'Форт / Цитадель',
+        target: 'Объект / Цель'
+      };
+      return labels[item.type] || item.type;
+    }
+
     function getDefaultItemsForMapType(type) {
       if (type === 'castle') {
         return [
           { id: 'init_castle', type: 'castle', gx: 22, gy: 22, size: 6 },
-          { id: 'init_turret_n', type: 'turret', gx: 24, gy: 14, size: 2, label: 'Север' },
-          { id: 'init_turret_s', type: 'turret', gx: 24, gy: 34, size: 2, label: 'Юг' },
-          { id: 'init_turret_w', type: 'turret', gx: 14, gy: 24, size: 2, label: 'Запад' },
-          { id: 'init_turret_e', type: 'turret', gx: 34, gy: 24, size: 2, label: 'Восток' }
+          { id: 'init_turret_n', type: 'turret', gx: 24, gy: 14, size: 2, label: 'Северная орудийная башня' },
+          { id: 'init_turret_w', type: 'turret', gx: 14, gy: 24, size: 2, label: 'Западная орудийная башня' },
+          { id: 'init_turret_s', type: 'turret', gx: 24, gy: 34, size: 2, label: 'Южная орудийная башня' },
+          { id: 'init_turret_e', type: 'turret', gx: 34, gy: 24, size: 2, label: 'Восточная орудийная башня' }
         ];
       }
       if (type === 'fort') {
@@ -547,18 +641,142 @@
       return true;
     }
 
-    function calcLineToTrap(cityItem, trapType) {
-      const trap = mapItems.find(x => x.type === trapType);
-      if (!trap) return null;
+    const LANDMARK_TYPES = ['castle', 'turret', 'fort', 'target', 'bear1', 'bear2', 'hq'];
+
+    function formatMarchSec(sec) {
+      const s = Math.max(1, Math.round(sec));
+      if (s < 60) return `${s}с`;
+      const m = Math.floor(s / 60);
+      const rem = s % 60;
+      return `${m}м ${String(rem).padStart(2, '0')}с`;
+    }
+
+    function calcDistanceToTarget(cityItem, targetItem) {
+      if (!cityItem || !targetItem) return null;
       const c1x = cityItem.gx + cityItem.size / 2;
       const c1y = cityItem.gy + cityItem.size / 2;
-      const c2x = trap.gx + trap.size / 2;
-      const c2y = trap.gy + trap.size / 2;
-      // Расстояние по осям между краями города (2x2) и ловушки (3x3)
-      const dist = Math.max(Math.abs(c1x - c2x), Math.abs(c1y - c2y)) - 2.5;
-      const line = Math.max(1, Math.min(6, Math.floor(Math.max(0, dist) / 2) + 1));
-      const estSec = line * 7;
-      return { line, estSec };
+      const c2x = targetItem.gx + targetItem.size / 2;
+      const c2y = targetItem.gy + targetItem.size / 2;
+
+      const halfSum = (cityItem.size + targetItem.size) / 2;
+      const edgeDist = Math.max(0, Math.max(Math.abs(c1x - c2x), Math.abs(c1y - c2y)) - halfSum);
+      const line = Math.max(1, Math.floor(edgeDist / 2) + 1);
+
+      const euclid = Math.hypot(c1x - c2x, c1y - c2y);
+      const estSec = Math.max(7, Math.round(euclid * 2.9));
+      return { line, estSec, euclid };
+    }
+
+    function getMapLandmarks() {
+      return mapItems
+        .filter(x => LANDMARK_TYPES.includes(x.type))
+        .sort((a, b) => LANDMARK_TYPES.indexOf(a.type) - LANDMARK_TYPES.indexOf(b.type));
+    }
+
+    function refreshLineOverlayOptions() {
+      const sel = document.getElementById('lineOverlaySelect');
+      if (!sel) return;
+      const prev = sel.value;
+      const landmarks = getMapLandmarks();
+
+      const icons = {
+        castle: '👑', turret: '🗼', fort: '🏯', target: '🎯',
+        bear1: '🐻', bear2: '🐻', hq: '🏰'
+      };
+
+      sel.innerHTML = '<option value="none">📏 Линии и марш: выкл</option>' +
+        landmarks.map(lm => {
+          const ic = icons[lm.type] || '📍';
+          return `<option value="${lm.id}">${ic} До: ${getObjectDisplayName(lm)}</option>`;
+        }).join('');
+
+      if (prev !== 'none' && landmarks.some(lm => lm.id === prev)) {
+        sel.value = prev;
+      } else {
+        sel.value = 'none';
+      }
+    }
+
+    function onLineOverlayChange() {
+      buildBaseGridSvg();
+      updateHoverPreview();
+      renderEntities();
+    }
+
+    function getHeroRec(p, heroKey) {
+      if (!p || !p.heroesData || !heroKey) return null;
+      const h = p.heroesData;
+      if (h[heroKey] && h[heroKey].configured) return h[heroKey];
+      if (heroKey === 'миа' && h['мия'] && h['мия'].configured) return h['мия'];
+      if (heroKey === 'рейна' && h['райна'] && h['райна'].configured) return h['райна'];
+      return null;
+    }
+
+    function calcHeroScore(p, heroKey) {
+      const rec = getHeroRec(p, heroKey);
+      if (!rec) return -1;
+      const lvl = Number(rec.level) || 0;
+      const stars = Number(rec.starsFull || 0) * 10 + Number(rec.starsBars || 0);
+      const eTop = Number(rec.eTop !== undefined ? rec.eTop : (rec.e1 || 0));
+      const cannon = rec.cannon ? (50 + (Number(String(rec.cannonLvl || '').replace(/\D/g, '')) || 1) * 5) : 0;
+      return stars * 100 + eTop * 20 + lvl + cannon;
+    }
+
+    function parseTroopTierInfo(troopTier) {
+      const str = String(troopTier || '');
+      const num = Number(str.replace(/\D/g, '')) || 0;
+      const isCrystal = str.toLowerCase().includes('крист') || str.includes('💎');
+      return { num, isCrystal, score: (isCrystal ? 1000 : 0) + num };
+    }
+
+    function calcTopEqScore(p) {
+      const topEq = p.topEquipmentData || (p.heroesData && p.heroesData._topEquipment) || {};
+      let sum = 0;
+      ['infantry', 'lancers', 'marksmen'].forEach(cat => {
+        const eq = topEq[cat];
+        if (!eq) return;
+        sum += (Number(String(eq.gLvl || '').replace(/\D/g, '')) || 0);
+        sum += (Number(String(eq.glLvl || '').replace(/\D/g, '')) || 0);
+        sum += (Number(String(eq.bLvl || '').replace(/\D/g, '')) || 0);
+        sum += (Number(String(eq.btLvl || '').replace(/\D/g, '')) || 0);
+      });
+      return sum;
+    }
+
+    function calcGovernorInfo(p) {
+      const gov = (p.heroesData && p.heroesData._governor) || {};
+      let gearScore = 0, charmSum = 0, gearCount = 0;
+      ['hat', 'jacket', 'ring', 'watch', 'shorts', 'key'].forEach(slot => {
+        const d = gov[slot];
+        if (!d) return;
+        const idx = GOV_TIER_SCORES.indexOf(d.tier || '');
+        if (idx > 0) { gearScore += idx * 10; gearCount++; }
+        charmSum += (Number(d.cTop) || 0) + (Number(d.cLeft) || 0) + (Number(d.cRight) || 0);
+      });
+      return { score: gearScore + charmSum * 2, gearCount, charmSum };
+    }
+
+    function initHeroFilterOptions() {
+      const sel = document.getElementById('heroFilterSelect');
+      if (!sel) return;
+      sel.innerHTML = '<option value="">🦸 Герой: любой</option>' +
+        MAP_HEROES.map(h => `<option value="${h.key}">${h.name} (G${h.gen})</option>`).join('');
+    }
+
+    function onHeroFilterChange() {
+      const heroKey = document.getElementById('heroFilterSelect').value;
+      const wrap = document.getElementById('onlyWithHeroWrap');
+      if (heroKey) {
+        document.getElementById('sortPlayersSelect').value = 'hero';
+        wrap.classList.remove('hidden');
+      } else {
+        wrap.classList.add('hidden');
+        document.getElementById('onlyWithHeroCheck').checked = false;
+        if (document.getElementById('sortPlayersSelect').value === 'hero') {
+          document.getElementById('sortPlayersSelect').value = 'furnace';
+        }
+      }
+      renderPlayersSidebar();
     }
 
     // ==================== ОТРИСОВКА СЕТКИ И ПРЕВЬЮ ====================
@@ -590,6 +808,23 @@
       // На карте «Замок» добавляем визуальный контур Красной зоны (не блокирует расстановку)
       if (currentMapType === 'castle') {
         lines += `<polygon points="${diamondPoints(12, 12, 26)}" fill="rgba(225, 29, 72, 0.08)" stroke="rgba(244, 63, 94, 0.65)" stroke-width="2.5" stroke-dasharray="10,6" />`;
+      }
+
+      // Если включён режим линий — рисуем линии марша от каждой топки к выбранному объекту
+      const lineTargetId = document.getElementById('lineOverlaySelect')?.value || 'none';
+      if (lineTargetId !== 'none') {
+        const targetObj = mapItems.find(x => x.id === lineTargetId);
+        if (targetObj) {
+          const tc = gridToScreen(targetObj.gx + targetObj.size / 2, targetObj.gy + targetObj.size / 2);
+          // Подсвечиваем целевой объект
+          lines += `<polygon points="${diamondPoints(targetObj.gx, targetObj.gy, targetObj.size)}" fill="rgba(251, 191, 36, 0.18)" stroke="#fbbf24" stroke-width="2.5" />`;
+          // Линии от всех расставленных городов к выбранному объекту
+          mapItems.filter(x => x.type === 'city').forEach(city => {
+            const cc = gridToScreen(city.gx + city.size / 2, city.gy + city.size / 2);
+            const isSelCity = city.id === selectedItemId;
+            lines += `<line x1="${cc.x}" y1="${cc.y}" x2="${tc.x}" y2="${tc.y}" stroke="${isSelCity ? '#fbbf24' : 'rgba(56, 189, 248, 0.55)'}" stroke-width="${isSelCity ? '2.5' : '1.5'}" stroke-dasharray="6,5" />`;
+          });
+        }
       }
 
       svg.innerHTML = `<g id="gridLinesLayer">${lines}</g><g id="hoverPreviewLayer"></g>`;
@@ -650,13 +885,16 @@
 
     // ==================== ОТРИСОВКА ПОСТРОЕК И ТОПОК ====================
     function buildFloatingBarHtml(item, safeId) {
-      const msgTitle = item.type === 'city' ? 'Написать игроку о переезде' : 'Отправить объявление альянсу';
-      return `
-        <div class="entity-floating-bar" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()">
-          <button type="button" onclick="openMapMessageModal('${safeId}')" title="${msgTitle}"
+      const msgBtn = item.type === 'city'
+        ? `<button type="button" onclick="openMapMessageModal('${safeId}')" title="Отправить личное сообщение игроку"
             class="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[11px] font-bold flex items-center gap-1 transition">
             <i class="fa-solid fa-envelope"></i><span>Сообщение</span>
-          </button>
+          </button>`
+        : '';
+
+      return `
+        <div class="entity-floating-bar" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()">
+          ${msgBtn}
           <button type="button" onclick="deleteEntityById('${safeId}')" title="Удалить с карты"
             class="px-2 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-bold flex items-center gap-1 transition">
             <i class="fa-solid fa-trash"></i>
@@ -667,7 +905,8 @@
 
     function renderEntities() {
       const layer = document.getElementById('entitiesLayer');
-      const lineMode = document.getElementById('lineOverlaySelect').value;
+      const lineTargetId = document.getElementById('lineOverlaySelect').value;
+      const lineTargetObj = lineTargetId !== 'none' ? mapItems.find(x => x.id === lineTargetId) : null;
 
       // Сортировка по глубине (задние сначала, передние поверх)
       const sorted = [...mapItems].sort((a, b) => (a.gx + a.gy) - (b.gx + b.gy));
@@ -691,9 +930,9 @@
           const top = center.y - h * 0.62;
 
           let lineBadgeHtml = '';
-          if (lineMode !== 'none') {
-            const lInfo = calcLineToTrap(item, lineMode);
-            if (lInfo) lineBadgeHtml = `<span class="line-badge">Л${lInfo.line} (~${lInfo.estSec}с)</span>`;
+          if (lineTargetObj) {
+            const dInfo = calcDistanceToTarget(item, lineTargetObj);
+            if (dInfo) lineBadgeHtml = `<span class="line-badge">Л${dInfo.line} • ~${formatMarchSec(dInfo.estSec)}</span>`;
           }
 
           return `
@@ -814,19 +1053,19 @@
         }
 
         if (item.type === 'turret') {
-          const w = TILE_W * 2.0;
+          const w = TILE_W * 2.15;
           const h = w * 0.95;
           const left = center.x - w / 2;
           const top = center.y - h * 0.58;
-          const tLabel = item.label ? `Турель (${item.label})` : 'Турель';
+          const tLabel = getTurretDisplayName(item);
           return `
             <div onmousedown="onEntityMouseDown(event, '${safeId}')" class="map-entity ${stateCls} flex items-center justify-center"
                  style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="${tLabel} (2×2)">
               ${floatingBar}
               <img src="assets/turret.png" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-full h-full object-contain pointer-events-none select-none" draggable="false" />
-              <div style="display:none;" class="px-3 py-2 rounded-2xl bg-rose-950/95 border-2 border-rose-400/90 flex-col items-center justify-center text-center shadow-xl">
+              <div style="display:none;" class="px-2.5 py-2 rounded-2xl bg-rose-950/95 border-2 border-rose-400/90 flex-col items-center justify-center text-center shadow-xl max-w-[138px]">
                 <div class="text-xl leading-none">🗼</div>
-                <div class="text-[9px] font-extrabold text-rose-200 mt-1 whitespace-nowrap">${tLabel}</div>
+                <div class="text-[9px] font-extrabold text-rose-200 mt-1 leading-tight">${tLabel}</div>
               </div>
             </div>
           `;
@@ -991,6 +1230,8 @@
     function deleteEntityById(itemId) {
       mapItems = mapItems.filter(x => x.id !== itemId);
       if (selectedItemId === itemId) deselectEntity();
+      refreshLineOverlayOptions();
+      buildBaseGridSvg();
       renderEntities();
       renderPlayersSidebar();
       scheduleCloudSave();
@@ -999,55 +1240,30 @@
 
     function openMapMessageModal(itemId) {
       const item = mapItems.find(x => x.id === itemId);
-      if (!item) return;
+      if (!item || item.type !== 'city') return;
 
       const titleEl = document.getElementById('mapMsgTitle');
       const subEl = document.getElementById('mapMsgSub');
       const textEl = document.getElementById('mapMsgText');
 
-      if (item.type === 'city') {
-        const p = findPlayer(item.playerKey);
-        const nick = p ? p.nick : (item.fallbackNick || 'Игрок');
-        const l1 = calcLineToTrap(item, 'bear1');
-        const l2 = calcLineToTrap(item, 'bear2');
-        const hints = [];
-        if (l1) hints.push(`Линия ${l1.line} от Ловушки 1`);
-        if (l2) hints.push(`Линия ${l2.line} от Ловушки 2`);
+      const p = findPlayer(item.playerKey);
+      const nick = p ? p.nick : (item.fallbackNick || 'Игрок');
+      const landmarks = getMapLandmarks().slice(0, 2);
+      const hints = landmarks.map(lm => {
+        const d = calcDistanceToTarget(item, lm);
+        return d ? `${getObjectDisplayName(lm)}: Л${d.line} (~${formatMarchSec(d.estSec)})` : '';
+      }).filter(Boolean);
 
-        mapMsgContext = {
-          mode: 'personal',
-          targetId: p ? (p.playerId || '') : '',
-          targetNick: nick
-        };
-        const mapLabel = MAP_TYPE_LABELS[currentMapType] || 'Улей альянса';
-        titleEl.textContent = `✉️ Сообщение игроку: ${nick}`;
-        subEl.textContent = 'Отправится лично бойцу и всплывёт окном при входе на портал';
-        textEl.value = `Просим переместить ваш город на позицию согласно утверждённому плану «${mapLabel}» (ориентир: клетка X:${item.gx}, Y:${item.gy}${hints.length ? ' — ' + hints.join(', ') : ''}).`;
-      } else {
-        const st = item.type === 'statue' ? (STATUE_TYPES[item.subType] || STATUE_TYPES.other) : null;
-        const labels = {
-          bear1: '1-я охотничья ловушка',
-          bear2: '2-я охотничья ловушка',
-          hq: 'Штаб альянса',
-          banner: 'Стяг альянса',
-          obstacle: 'Преграда',
-          statue: st ? st.label : 'Статуя',
-          castle: 'Солнечный замок',
-          turret: item.label ? `Турель (${item.label})` : 'Турель',
-          fort: 'Форт / Цитадель',
-          target: 'Боевой объект'
-        };
-        const objName = labels[item.type] || item.type;
-        const mapLabel = MAP_TYPE_LABELS[currentMapType] || 'Улей альянса';
+      mapMsgContext = {
+        mode: 'personal',
+        targetId: p ? (p.playerId || '') : '',
+        targetNick: nick
+      };
 
-        mapMsgContext = {
-          mode: 'mass',
-          massTarget: currentAlliance
-        };
-        titleEl.textContent = `📢 Объявление альянсу «${currentAlliance}»`;
-        subEl.textContent = 'Отправится всем активным участникам выбранного альянса';
-        textEl.value = `Внимание! Согласно утверждённому плану «${mapLabel}» объект «${objName}» размещён на позиции X:${item.gx}, Y:${item.gy}. Просим ориентироваться на обновлённую схему.`;
-      }
+      const mapLabel = MAP_TYPE_LABELS[currentMapType] || 'Улей альянса';
+      titleEl.textContent = `✉️ Личное сообщение: ${nick}`;
+      subEl.textContent = 'Отправится исключительно этому игроку (всплывёт при входе)';
+      textEl.value = `Просим переместить ваш город на позицию согласно утверждённому плану «${mapLabel}» (клетка X:${item.gx}, Y:${item.gy}${hints.length ? ' • ' + hints.join(', ') : ''}).`;
 
       document.getElementById('mapMessageModal').classList.remove('hidden');
       textEl.focus();
@@ -1121,28 +1337,21 @@
         sub.textContent = p
           ? `Печь: ${p.furnaceLevel || '—'} • Тир: ${p.troopTier || '—'} • Сбор: ${(Number(p.rallyCap)||0).toLocaleString('ru-RU')}`
           : `Клетка (${item.gx}, ${item.gy})`;
-        const l1 = calcLineToTrap(item, 'bear1');
-        const l2 = calcLineToTrap(item, 'bear2');
+
+        const landmarks = getMapLandmarks();
+        const distLines = landmarks.map(lm => {
+          const d = calcDistanceToTarget(item, lm);
+          return d ? `<div>${getObjectDisplayName(lm)}: <b class="text-amber-300">Л${d.line} • ~${formatMarchSec(d.estSec)}</b></div>` : '';
+        }).join('');
+
         dist.innerHTML = `
-          <div>Координаты: <b>X:${item.gx} Y:${item.gy}</b></div>
-          <div>До Ловушки 1: <b>${l1 ? `Линия ${l1.line} (~${l1.estSec}с)` : 'не на карте'}</b></div>
-          <div>До Ловушки 2: <b>${l2 ? `Линия ${l2.line} (~${l2.estSec}с)` : 'не на карте'}</b></div>
+          <div class="pb-1 mb-1 border-b border-slate-800">Координаты: <b class="text-white">X:${item.gx} Y:${item.gy}</b></div>
+          <div class="space-y-0.5 max-h-28 overflow-y-auto">${distLines || '<span class="text-slate-500">Нет ключевых объектов на карте</span>'}</div>
         `;
-      } else if (item.type === 'statue') {
-        const st = STATUE_TYPES[item.subType] || STATUE_TYPES.other;
-        title.textContent = `${st.icon} ${st.label}`;
-        sub.textContent = `Статуя (2×2) • Клетка X:${item.gx} Y:${item.gy}`;
-        dist.textContent = 'Нажмите «Переместить» чтобы перенести статую на другие клетки.';
       } else {
-        const labels = {
-          bear1: '🐻 1-я охотничья ловушка', bear2: '🐻 2-я охотничья ловушка', hq: '🏰 Штаб альянса',
-          banner: '🚩 Стяг альянса', obstacle: '⛰️ Преграда',
-          castle: '👑 Солнечный замок', turret: item.label ? `🗼 Турель (${item.label})` : '🗼 Турель',
-          fort: '🏯 Форт / Цитадель', target: '🎯 Объект / Цель'
-        };
-        title.textContent = labels[item.type] || item.type;
+        title.textContent = getObjectDisplayName(item);
         sub.textContent = `Размер: ${item.size}×${item.size} • Клетка X:${item.gx} Y:${item.gy}`;
-        dist.textContent = 'Зажмите ЛКМ для переноса или нажмите «Сообщение» над объектом.';
+        dist.textContent = 'Зажмите ЛКМ для переноса объекта или нажмите корзину над ним для удаления.';
       }
       card.classList.remove('hidden');
     }
@@ -1215,6 +1424,8 @@
         cancelActiveTool();
       }
 
+      refreshLineOverlayOptions();
+      buildBaseGridSvg();
       renderEntities();
       renderPlayersSidebar();
       scheduleCloudSave();
@@ -1225,7 +1436,10 @@
       const container = document.getElementById('playersSidebarList');
       const q = (document.getElementById('playerSearchInput').value || '').trim().toLowerCase();
       const filter = document.getElementById('placedFilterSelect').value;
+      const trait = document.getElementById('traitFilterSelect')?.value || 'all';
       const sortBy = document.getElementById('sortPlayersSelect').value;
+      const heroKey = document.getElementById('heroFilterSelect')?.value || '';
+      const onlyWithHero = document.getElementById('onlyWithHeroCheck')?.checked || false;
 
       const players = getFilteredPlayers();
       const placedMap = new Map();
@@ -1239,19 +1453,34 @@
         if (filter === 'placed' && !isPlaced) return false;
         if (filter === 'unplaced' && isPlaced) return false;
         if (q && !(p.nick || '').toLowerCase().includes(q)) return false;
+
+        if (trait === 'crystal' && !parseFurnaceInfo(p.furnaceLevel).isCrystal) return false;
+        if (trait === 't10' && parseTroopTierInfo(p.troopTier).num < 10) return false;
+        if (trait === 'leaders' && (Number(p.rallyCap) || 0) < 1000000) return false;
+        if (trait === 'marches6' && (Number(p.marchesCount) || 5) < 6) return false;
+        if (trait === 'hasGov' && calcGovernorInfo(p).score === 0) return false;
+
+        if (heroKey && onlyWithHero && !getHeroRec(p, heroKey)) return false;
         return true;
       });
 
       list.sort((a, b) => {
+        if (sortBy === 'hero' && heroKey) return calcHeroScore(b, heroKey) - calcHeroScore(a, heroKey);
         if (sortBy === 'rally') return (Number(b.rallyCap) || 0) - (Number(a.rallyCap) || 0);
+        if (sortBy === 'march') return (Number(b.marchCap) || 0) - (Number(a.marchCap) || 0);
+        if (sortBy === 'tier') return parseTroopTierInfo(b.troopTier).score - parseTroopTierInfo(a.troopTier).score;
+        if (sortBy === 'topEq') return calcTopEqScore(b) - calcTopEqScore(a);
+        if (sortBy === 'governor') return calcGovernorInfo(b).score - calcGovernorInfo(a).score;
         if (sortBy === 'nick') return (a.nick || '').localeCompare(b.nick || '', 'ru');
         return parseFurnaceInfo(b.furnaceLevel).score - parseFurnaceInfo(a.furnaceLevel).score;
       });
 
       if (list.length === 0) {
-        container.innerHTML = `<div class="py-8 text-center text-slate-500">Нет игроков по фильтру</div>`;
+        container.innerHTML = `<div class="py-8 text-center text-slate-500">Нет игроков по заданным фильтрам</div>`;
         return;
       }
+
+      const heroMeta = heroKey ? MAP_HEROES.find(h => h.key === heroKey) : null;
 
       container.innerHTML = list.map(p => {
         const pKey = getPlayerKey(p);
@@ -1259,6 +1488,26 @@
         const isActivePick = activeTool === 'city' && activeCityPlayerKey === pKey;
         const fInfo = parseFurnaceInfo(p.furnaceLevel);
         const safeKey = pKey.replace(/'/g, "\\'");
+
+        // Динамическая строка параметров в зависимости от выбранного фильтра/сортировки
+        let subLine = `Сбор: ${(Number(p.rallyCap) || 0).toLocaleString('ru-RU')}`;
+        if (heroKey) {
+          const rec = getHeroRec(p, heroKey);
+          subLine = rec
+            ? `<span class="text-amber-300">${heroMeta ? heroMeta.name : heroKey}: Ур.${rec.level||70} • ${rec.starsFull??5}★ • Экв.${rec.eTop??rec.e1??5}</span>`
+            : `<span class="text-slate-500">${heroMeta ? heroMeta.name : heroKey}: не настроен</span>`;
+        } else if (sortBy === 'march') {
+          subLine = `Марш: <span class="text-rose-300">${(Number(p.marchCap) || 0).toLocaleString('ru-RU')}</span> (${p.marchesCount || 5}м)`;
+        } else if (sortBy === 'tier') {
+          subLine = `Войска: <span class="text-sky-300">${p.troopTier || '—'}</span>`;
+        } else if (sortBy === 'topEq') {
+          subLine = `ТОП-шмот (сумма ур.): <span class="text-emerald-300">${calcTopEqScore(p)}</span>`;
+        } else if (sortBy === 'governor') {
+          const g = calcGovernorInfo(p);
+          subLine = g.score > 0
+            ? `<span class="text-amber-300">Губ: ${g.gearCount}/6 • Тал.∑${g.charmSum}</span>`
+            : `<span class="text-slate-500">Губернатор: не заполнен</span>`;
+        }
 
         return `
           <div onclick="onSidebarPlayerClick('${safeKey}')"
@@ -1275,7 +1524,7 @@
               }">${fInfo.num}</div>
               <div class="min-w-0">
                 <div class="font-bold text-white truncate">${p.nick}</div>
-                <div class="text-[10px] font-mono text-slate-400">Сбор: ${(Number(p.rallyCap) || 0).toLocaleString('ru-RU')}</div>
+                <div class="text-[10px] font-mono text-slate-400 truncate">${subLine}</div>
               </div>
             </div>
             <div class="shrink-0 text-right">
@@ -1359,6 +1608,8 @@
       } else {
         mapItems = getDefaultItemsForMapType(currentMapType);
       }
+      refreshLineOverlayOptions();
+      buildBaseGridSvg();
       renderEntities();
       renderPlayersSidebar();
 
@@ -1372,6 +1623,8 @@
         if (res.ok && res.config && Array.isArray(res.config.items)) {
           mapItems = res.config.items;
           localStorage.setItem('harmony_' + key, JSON.stringify(mapItems));
+          refreshLineOverlayOptions();
+          buildBaseGridSvg();
           renderEntities();
           renderPlayersSidebar();
           setCloudStatus('saved', res.updatedAt ? `Облако (${res.updatedAt.slice(11, 16)})` : 'Синхронизировано');
@@ -1586,7 +1839,7 @@
           const img = IMG_CACHE[item.type];
           const sizesMap = {
             castle: { w: TILE_W * 5.8, h: TILE_H * 5.8, bw: 160, bh: 54, bg: 'rgba(136, 19, 55, 0.92)', br: '#fbbf24', txt: '👑 СОЛНЕЧНЫЙ ЗАМОК' },
-            turret: { w: TILE_W * 2.0, h: TILE_W * 1.9, bw: 92,  bh: 34, bg: 'rgba(136, 19, 55, 0.92)', br: '#fb7185', txt: item.label ? `🗼 ${item.label}` : '🗼 Турель' },
+            turret: { w: TILE_W * 2.15, h: TILE_W * 2.0, bw: 170, bh: 34, bg: 'rgba(136, 19, 55, 0.92)', br: '#fb7185', txt: `🗼 ${getTurretDisplayName(item)}` },
             fort:   { w: TILE_W * 3.9, h: TILE_H * 3.9, bw: 136, bh: 44, bg: 'rgba(59, 7, 100, 0.92)',  br: '#c084fc', txt: '🏯 ФОРТ' },
             target: { w: TILE_W * 2.9, h: TILE_H * 2.9, bw: 112, bh: 38, bg: 'rgba(12, 74, 110, 0.92)', br: '#38bdf8', txt: '🎯 ОБЪЕКТ' }
           };
@@ -1742,6 +1995,7 @@
               }
             }
             selectedItemId = item.id;
+            buildBaseGridSvg();
             renderEntities();
             showSelectedCard(item);
           }
@@ -1809,6 +2063,7 @@
       preloadSprite('fort', 'assets/fort.png');
       preloadSprite('target', 'assets/target.png');
 
+      initHeroFilterOptions();
       buildBaseGridSvg();
       centerCamera();
       initMapInteractions();
