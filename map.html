@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Альянс «Гармония» — Тактическая Карта Альянса (Whiteout Survival)</title>
+  <title>Альянс «Гармония» — Карта Штата 1200×1200 (Whiteout Survival)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -53,6 +53,9 @@
       position: absolute;
       left: 0;
       top: 0;
+      width: 0;
+      height: 0;
+      overflow: visible;
       transform-origin: 0 0;
       will-change: transform;
     }
@@ -136,7 +139,7 @@
     /* Плавающая панель кнопок над объектом */
     .entity-floating-bar {
       position: absolute;
-      top: -40px;
+      top: -42px;
       left: 50%;
       transform: translateX(-50%);
       display: flex;
@@ -145,7 +148,7 @@
       padding: 4px 6px;
       border-radius: 12px;
       background: rgba(15, 23, 42, 0.96);
-      border: 1px solid rgba(56, 189, 248, 0.75);
+      border: 1px solid rgba(56, 189, 248, 0.78);
       box-shadow: 0 8px 22px rgba(0, 0, 0, 0.75);
       white-space: nowrap;
       z-index: 10000;
@@ -260,21 +263,25 @@
       box-shadow: 0 6px 14px rgba(0,0,0,0.35);
       backdrop-filter: blur(4px);
     }
+
+    /* Тонкий скроллбар для панели областей */
+    .thin-scroll::-webkit-scrollbar { height: 4px; width: 4px; }
+    .thin-scroll::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.45); border-radius: 99px; }
   </style>
 </head>
 <body class="h-screen flex flex-col bg-slate-950 text-slate-100">
 
   <!-- ==================== ВЕРХНЯЯ ПАНЕЛЬ ==================== -->
   <header class="shrink-0 z-30 bg-slate-925/95 backdrop-blur-md border-b border-slate-800 px-3 py-2 space-y-1.5">
+    <!-- Строка 1: Навигация, Альянс, Быстрые области, Переход X:Y и Облако -->
     <div class="flex flex-wrap items-center justify-between gap-2">
-      <!-- Левая часть: Назад + Заголовок -->
       <div class="flex items-center gap-2.5">
         <a id="backNavLink" href="index.html" class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold text-sky-300 flex items-center gap-1.5 transition">
           <i class="fa-solid fa-arrow-left"></i><span id="backNavText" class="hidden sm:inline">Назад</span>
         </a>
         <div>
           <div class="flex items-center gap-2">
-            <span class="font-extrabold text-sm text-white">🗺️ КАРТА АЛЬЯНСА</span>
+            <span class="font-extrabold text-sm text-white">🗺️ КАРТА ШТАТА 1200×1200</span>
             <span id="userRoleBadge" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30">Загрузка...</span>
             <span id="readOnlyNoticeBadge" class="hidden text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">👁️ Просмотр</span>
           </div>
@@ -282,21 +289,23 @@
         </div>
       </div>
 
-      <!-- Центр и право: Альянс + Вкладки карт + Облако -->
       <div class="flex flex-wrap items-center gap-1.5 text-xs">
-        <!-- Альянс -->
+        <!-- Переключатель Альянса -->
         <div id="allianceSwitcherWrap" class="flex items-center bg-slate-900 p-0.5 rounded-xl border border-slate-800">
           <button type="button" id="mFilterMain" onclick="switchAlliance('Основа')" class="pill-btn active px-2.5 py-1 rounded-lg font-semibold text-slate-300 transition">Основа</button>
           <button type="button" id="mFilterAcad" onclick="switchAlliance('Академия')" class="pill-btn px-2.5 py-1 rounded-lg font-semibold text-slate-300 transition">Академия</button>
         </div>
 
-        <!-- Варианты карты -->
-        <div class="flex items-center bg-slate-900 p-0.5 rounded-xl border border-amber-500/30">
-          <button type="button" id="mapType_hive" onclick="switchMapType('hive')" class="pill-btn active px-2.5 py-1 rounded-lg font-semibold text-slate-300 transition">🏠 Улей</button>
-          <button type="button" id="mapType_castle" onclick="switchMapType('castle')" class="pill-btn px-2.5 py-1 rounded-lg font-semibold text-slate-300 transition">🏰 Замок</button>
-          <button type="button" id="mapType_fort" onclick="switchMapType('fort')" class="pill-btn px-2.5 py-1 rounded-lg font-semibold text-slate-300 transition">🏯 Форт</button>
-          <button type="button" id="mapType_custom" onclick="switchMapType('custom')" class="pill-btn px-2.5 py-1 rounded-lg font-semibold text-slate-300 transition">🎯 Другое</button>
-        </div>
+        <!-- Быстрый переход по координатам X:Y -->
+        <form onsubmit="event.preventDefault(); jumpToInputCoords();" class="flex items-center gap-1 bg-slate-900 border border-slate-700 rounded-xl px-2 py-1">
+          <span class="text-[10px] font-mono text-slate-400">X</span>
+          <input id="quickJumpX" type="number" min="0" max="1199" placeholder="754" class="w-12 bg-slate-950 border border-slate-800 rounded px-1 py-0.5 text-[11px] font-mono text-white text-center focus:outline-none focus:border-sky-500" />
+          <span class="text-[10px] font-mono text-slate-400">Y</span>
+          <input id="quickJumpY" type="number" min="0" max="1199" placeholder="443" class="w-12 bg-slate-950 border border-slate-800 rounded px-1 py-0.5 text-[11px] font-mono text-white text-center focus:outline-none focus:border-sky-500" />
+          <button type="submit" class="px-2 py-0.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[10px] font-bold transition" title="Перелететь к координатам">
+            <i class="fa-solid fa-location-crosshairs"></i>
+          </button>
+        </form>
 
         <!-- Статус облака -->
         <div id="cloudSaveBadge" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-[11px] font-mono text-emerald-400">
@@ -306,58 +315,52 @@
       </div>
     </div>
 
-    <!-- Вторая компактная строка инструментов и режимов -->
-    <div class="flex flex-wrap items-center justify-between gap-1.5 pt-1 border-t border-slate-800/80 text-[11px]">
-      <div class="flex flex-wrap items-center gap-1.5">
-        <!-- Линии и марш -->
-        <select id="lineOverlaySelect" onchange="onLineOverlayChange()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-amber-300 font-semibold max-w-[215px]">
-          <option value="none">📏 Линии и марш: выкл</option>
-        </select>
-
-        <!-- Территория (Стяги 7×7 + Штаб 15×15) -->
-        <button type="button" id="territoryToggleBtn" onclick="toggleTerritoryOverlay()" class="toggle-chip px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-semibold transition" title="Показать зону покрытия Стягов (7×7) и Штаба (15×15)">
-          🛡️ Территория
-        </button>
-
-        <!-- Кнопка «Найти себя» (для любого игрока, если его город есть на карте) -->
-        <button type="button" id="findMyCityBtn" onclick="focusMyCity()" class="hidden px-2.5 py-1 rounded-lg bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/50 text-emerald-300 font-bold transition">
-          📍 Мой город
-        </button>
-
-        <!-- Якорь реальных координат (офицеры) -->
-        <button type="button" id="anchorBtn" onclick="openAnchorModal()" class="officer-only hidden px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sky-300 font-mono font-semibold transition" title="Настроить реальные координаты X:Y карты">
-          📍 Коорд. X:Y
+    <!-- Строка 2: Кнопки быстрого перемещения к областям (с добавлением своих) + Инструменты -->
+    <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-800/80 text-[11px]">
+      <!-- Быстрые области карты -->
+      <div class="flex items-center gap-1.5 min-w-0 max-w-full overflow-x-auto thin-scroll pb-0.5">
+        <span class="text-[10px] font-mono uppercase text-slate-500 shrink-0">Области:</span>
+        <div id="bookmarksBar" class="flex items-center gap-1 shrink-0"></div>
+        <button type="button" onclick="openBookmarkModal()" class="officer-only hidden shrink-0 px-2 py-1 rounded-lg bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 font-bold transition flex items-center gap-1" title="Сохранить текущую область или координаты как кнопку быстрого перехода">
+          <i class="fa-solid fa-plus text-[10px]"></i><span>Область</span>
         </button>
       </div>
 
+      <!-- Режимы и действия -->
       <div class="flex flex-wrap items-center gap-1.5">
-        <!-- Отменить (Ctrl+Z) -->
-        <button type="button" id="undoBtn" onclick="undoLastAction()" disabled class="officer-only hidden px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 disabled:opacity-40 border border-slate-700 text-slate-200 font-semibold transition" title="Отменить последнее действие (Ctrl+Z)">
+        <select id="lineOverlaySelect" onchange="onLineOverlayChange()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-amber-300 font-semibold max-w-[205px]">
+          <option value="none">📏 Линии и марш: выкл</option>
+        </select>
+
+        <button type="button" id="territoryToggleBtn" onclick="toggleTerritoryOverlay()" class="toggle-chip px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-semibold transition" title="Показать зону покрытия Стягов (7×7) и Штаба (15×15)">
+          🛡️ Территория
+        </button>
+
+        <button type="button" id="findMyCityBtn" onclick="focusMyCity()" class="hidden px-2 py-1 rounded-lg bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/50 text-emerald-300 font-bold transition">
+          📍 Мой город
+        </button>
+
+        <button type="button" id="undoBtn" onclick="undoLastAction()" disabled class="officer-only hidden px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 disabled:opacity-40 border border-slate-700 text-slate-200 font-semibold transition" title="Отменить последнее действие (Ctrl+Z)">
           <i class="fa-solid fa-rotate-left mr-1"></i>Отмена
         </button>
 
-        <!-- Авторасстановка -->
-        <button type="button" id="autoPlaceBtn" onclick="openAutoPlaceModal()" class="officer-only hidden px-2.5 py-1 rounded-lg bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-500/40 text-indigo-200 font-bold transition" title="Автоматически расставить игроков вокруг цели">
-          ✨ Авторасстановка
+        <button type="button" id="autoPlaceBtn" onclick="openAutoPlaceModal()" class="officer-only hidden px-2 py-1 rounded-lg bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-500/40 text-indigo-200 font-bold transition" title="Автоматически расставить игроков вокруг объекта">
+          ✨ Авто
         </button>
 
-        <!-- Передать линии в Медведя -->
-        <button type="button" id="syncBearBtn" onclick="openSyncBearModal()" class="officer-only hidden px-2.5 py-1 rounded-lg bg-amber-950/80 hover:bg-amber-900 border border-amber-500/40 text-amber-200 font-bold transition" title="Передать рассчитанные линии Л1–Л5 в планировщик Медведя">
-          🐻 Линии → Медведь
+        <button type="button" id="syncBearBtn" onclick="openSyncBearModal()" class="officer-only hidden px-2 py-1 rounded-lg bg-amber-950/80 hover:bg-amber-900 border border-amber-500/40 text-amber-200 font-bold transition" title="Передать рассчитанные линии Л1–Л5 в планировщик Медведя">
+          🐻 → Медведь
         </button>
 
-        <!-- Пакетное оповещение перемещённых -->
-        <button type="button" id="batchNotifyBtn" onclick="openBatchNotifyModal()" class="officer-only hidden px-2.5 py-1 rounded-lg bg-rose-950/80 hover:bg-rose-900 border border-rose-500/50 text-rose-200 font-bold transition" title="Оповестить всех игроков, чьи топки были сдвинуты в этом сеансе">
+        <button type="button" id="batchNotifyBtn" onclick="openBatchNotifyModal()" class="officer-only hidden px-2 py-1 rounded-lg bg-rose-950/80 hover:bg-rose-900 border border-rose-500/50 text-rose-200 font-bold transition" title="Оповестить всех игроков, чьи топки были сдвинуты">
           📢 Переезды (<span id="batchNotifyCount">0</span>)
         </button>
 
-        <!-- Тема поля -->
-        <button type="button" id="themeToggleBtn" onclick="toggleMapTheme()" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-semibold transition">
+        <button type="button" id="themeToggleBtn" onclick="toggleMapTheme()" class="px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-semibold transition">
           ❄️ Тундра
         </button>
 
-        <!-- Экспорт PNG -->
-        <button type="button" onclick="exportMapPng()" class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold shadow transition flex items-center gap-1">
+        <button type="button" onclick="exportMapPng()" class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold shadow transition flex items-center gap-1" title="Скачать видимую область карты в PNG (2× чёткость)">
           <i class="fa-solid fa-camera"></i><span>PNG</span>
         </button>
       </div>
@@ -366,11 +369,11 @@
   <!-- ==================== РАБОЧАЯ ОБЛАСТЬ ==================== -->
   <div class="flex-1 flex min-h-0">
 
-    <!-- ЛЕВАЯ ПАНЕЛЬ: ОБЪЕКТЫ И СПИСОК ИГРОКОВ -->
+    <!-- ЛЕВАЯ ПАНЕЛЬ: ИНСТРУМЕНТЫ И СПИСОК ИГРОКОВ -->
     <aside id="leftSidebar" class="w-72 sm:w-80 shrink-0 bg-slate-925 border-r border-slate-800 flex flex-col min-h-0 z-20">
 
       <!-- Панель инструментов (видна только Офицерам и Владельцу) -->
-      <div class="officer-only hidden p-3 border-b border-slate-800 space-y-2 max-h-[45vh] overflow-y-auto">
+      <div class="officer-only hidden p-3 border-b border-slate-800 space-y-2 max-h-[44vh] overflow-y-auto thin-scroll">
         <div class="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400">
           <span>Инструменты и постройки</span>
           <button type="button" onclick="clearMapConfirm()" class="text-rose-400 hover:text-rose-300 font-normal normal-case">Сброс к шаблону</button>
@@ -417,7 +420,7 @@
             <span>🏯</span><span>Форт (4×4)</span>
           </button>
           <button type="button" data-tool="target" onclick="setTool('target')" class="tool-btn px-2.5 py-1.5 rounded-xl bg-slate-900 border border-sky-500/30 font-semibold flex items-center gap-1.5 transition">
-            <span>🎯</span><span>Объект (3×3)</span>
+            <span>🎯</span><span>Комплекс / Объект</span>
           </button>
         </div>
 
@@ -430,9 +433,9 @@
           </select>
         </div>
 
-        <!-- Настройка подписи Резерва (2×2) -->
-        <div id="reserveSelectorBox" class="hidden pt-1">
-          <input id="reserveLabelInput" type="text" value="Резерв" oninput="updateToolSubHint()" placeholder="Напр. Резерв под кита / R4"
+        <!-- Подпись для Резерва / Форта / Комплекса -->
+        <div id="customLabelBox" class="hidden pt-1">
+          <input id="customLabelInput" type="text" value="" oninput="updateToolSubHint()" placeholder="Подпись (напр. Форт №3 или Комплекс атаки)"
             class="w-full bg-slate-900 border border-emerald-500/50 rounded-xl px-2.5 py-1.5 text-[11px] text-emerald-200 focus:outline-none" />
         </div>
 
@@ -454,7 +457,7 @@
           </div>
           <input id="zoneLabelInput" type="text" value="Зона союзников" oninput="updateToolSubHint()" placeholder="Подпись зоны..."
             class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-white focus:outline-none" />
-          <div class="text-[10px] text-slate-400">Зоны лежат под зданиями и не мешают ставить топки. Кликните в режиме «Удалить», чтобы убрать зону.</div>
+          <div class="text-[10px] text-slate-400">Зоны лежат под зданиями и не мешают ставить топки. В режиме «Удалить» кликните по зоне.</div>
         </div>
       </div>
 
@@ -522,17 +525,18 @@
       </div>
 
       <!-- Прокручиваемый список игроков -->
-      <div id="playersSidebarList" class="flex-1 overflow-y-auto p-2 space-y-1.5 text-xs">
+      <div id="playersSidebarList" class="flex-1 overflow-y-auto thin-scroll p-2 space-y-1.5 text-xs">
         <div class="py-8 text-center text-slate-500">Загрузка базы игроков...</div>
       </div>
     </aside>
 
-    <!-- ПРАВАЯ ОБЛАСТЬ: ИНТЕРАКТИВНАЯ ИЗОМЕТРИЧЕСКАЯ КАРТА -->
+    <!-- ПРАВАЯ ОБЛАСТЬ: ЕДИНАЯ КАРТА ШТАТА 1200×1200 -->
     <main id="mapViewport" class="flex-1 theme-tundra">
+      <!-- Динамический Canvas-слой (сетка, территория, Красная зона, зоны, линии марша, превью) -->
+      <canvas id="mapCanvas" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+
+      <!-- DOM-слой видимых построек и топок -->
       <div id="mapWorld">
-        <!-- SVG слой сетки, территории, зон, линий и превью -->
-        <svg id="gridSvg" class="block pointer-events-none"></svg>
-        <!-- Слой построек и топок -->
         <div id="entitiesLayer" class="absolute inset-0 pointer-events-none"></div>
       </div>
 
@@ -542,7 +546,7 @@
         <button type="button" onclick="cancelActiveTool()" class="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-rose-700 text-[11px] text-slate-200">Отмена (Esc)</button>
       </div>
 
-      <!-- Плашка подтверждения обмена двух топок местами (Swap) -->
+      <!-- Плашка подтверждения обмена двух топок (Swap) -->
       <div id="swapConfirmBanner" class="hidden absolute top-3 left-1/2 -translate-x-1/2 z-30 px-4 py-2.5 rounded-2xl bg-slate-950/96 border-2 border-amber-400 text-xs text-white shadow-2xl flex flex-wrap items-center gap-3">
         <div class="flex items-center gap-2">
           <span class="text-base">⇄</span>
@@ -582,8 +586,8 @@
         <div id="selCardDistances" class="text-[11px] font-mono text-sky-300 bg-slate-900/90 rounded-xl px-2.5 py-2 border border-slate-800"></div>
 
         <div id="selCardActions" class="officer-only hidden grid grid-cols-2 gap-2">
-          <button type="button" onclick="startMoveSelected()" class="py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold transition">
-            <i class="fa-solid fa-arrows-up-down-left-right mr-1"></i>Переместить
+          <button type="button" onclick="openMoveCoordsModal(selectedItemId)" class="py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold transition">
+            <i class="fa-solid fa-location-dot mr-1"></i>По коорд. X:Y
           </button>
           <button type="button" onclick="removeSelectedEntity()" class="py-1.5 rounded-xl bg-rose-900/80 hover:bg-rose-700 text-rose-100 font-bold transition">
             <i class="fa-solid fa-trash mr-1"></i>Убрать
@@ -591,15 +595,15 @@
         </div>
       </div>
 
-      <!-- Кнопки масштаба и реальных координат -->
+      <!-- Кнопки масштаба и реальных координат под курсором -->
       <div class="absolute bottom-4 right-4 z-20 flex flex-col items-end gap-2">
         <div id="coordDisplay" class="px-3 py-1 rounded-xl bg-slate-950/90 border border-slate-700 font-mono text-[11px] text-sky-300 shadow-lg">
-          X:— Y:—
+          X:754 Y:443
         </div>
         <div class="flex items-center gap-1 bg-slate-950/90 border border-slate-700 p-1 rounded-2xl shadow-xl">
           <button type="button" onclick="zoomMap(1.18)" class="w-8 h-8 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold" title="Приблизить">+</button>
           <button type="button" onclick="zoomMap(0.85)" class="w-8 h-8 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold" title="Отдалить">−</button>
-          <button type="button" onclick="centerCamera()" class="px-2.5 h-8 rounded-xl bg-slate-900 hover:bg-slate-800 text-sky-300 text-xs font-bold" title="По центру карты">Центр</button>
+          <button type="button" onclick="focusActiveBookmark()" class="px-2.5 h-8 rounded-xl bg-slate-900 hover:bg-slate-800 text-sky-300 text-xs font-bold" title="К центру текущей области">Центр</button>
         </div>
       </div>
     </main>
@@ -607,7 +611,102 @@
 
   <!-- ==================== МОДАЛЬНЫЕ ОКНА ==================== -->
 
-  <!-- 1. Личное сообщение игроку -->
+  <!-- 1. Перемещение объекта по точным координатам X:Y (+ редактирование подписи) -->
+  <div id="moveCoordsModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-amber-500/50 rounded-3xl max-w-md w-full p-5 space-y-4 shadow-2xl text-xs">
+      <div class="flex items-start justify-between gap-2 pb-2 border-b border-slate-800">
+        <div>
+          <h3 id="moveCoordsTitle" class="text-sm font-extrabold text-white">📍 Переместить по координатам</h3>
+          <p id="moveCoordsSub" class="text-[11px] text-slate-400 mt-0.5">Введите точные игровые координаты X и Y (0–1199)</p>
+        </div>
+        <button type="button" onclick="closeMoveCoordsModal()" class="text-slate-400 hover:text-white text-base p-1"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form onsubmit="event.preventDefault(); submitMoveCoords();" class="space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-semibold text-sky-300 mb-1">Координата X</label>
+            <input id="moveCoordsX" type="number" min="0" max="1199" required class="w-full bg-slate-950 border border-slate-700 focus:border-amber-400 rounded-xl px-3 py-2 font-mono text-sm text-white focus:outline-none" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-sky-300 mb-1">Координата Y</label>
+            <input id="moveCoordsY" type="number" min="0" max="1199" required class="w-full bg-slate-950 border border-slate-700 focus:border-amber-400 rounded-xl px-3 py-2 font-mono text-sm text-white focus:outline-none" />
+          </div>
+        </div>
+
+        <div id="moveCoordsLabelWrap" class="hidden">
+          <label class="block text-[11px] font-semibold text-slate-300 mb-1">Название / подпись объекта</label>
+          <input id="moveCoordsLabel" type="text" placeholder="Например: Форт №3 или Северная орудийная башня" class="w-full bg-slate-950 border border-slate-700 focus:border-sky-500 rounded-xl px-3 py-2 text-xs text-white focus:outline-none" />
+        </div>
+
+        <div id="moveCoordsError" class="hidden rounded-xl bg-rose-950/75 border border-rose-500/40 px-3 py-2 text-[11px] text-rose-200"></div>
+
+        <div class="flex items-center justify-end gap-2 pt-1">
+          <button type="button" onclick="closeMoveCoordsModal()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300">Отмена</button>
+          <button type="submit" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-xs font-extrabold text-slate-950 transition">
+            <i class="fa-solid fa-location-crosshairs mr-1"></i>Переместить
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. Добавление и управление быстрыми областями (закладками) -->
+  <div id="bookmarkModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-emerald-500/50 rounded-3xl max-w-md w-full p-5 space-y-4 shadow-2xl text-xs max-h-[88vh] flex flex-col">
+      <div class="flex items-start justify-between gap-2 pb-2 border-b border-slate-800 shrink-0">
+        <div>
+          <h3 class="text-sm font-extrabold text-white">📌 Быстрые области карты</h3>
+          <p class="text-[11px] text-slate-400 mt-0.5">Добавьте кнопку быстрого перелёта к форту, комплексу или сектору</p>
+        </div>
+        <button type="button" onclick="closeBookmarkModal()" class="text-slate-400 hover:text-white text-base p-1"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form onsubmit="event.preventDefault(); submitAddBookmark();" class="space-y-2.5 shrink-0">
+        <div class="grid grid-cols-4 gap-2">
+          <div>
+            <label class="block text-[10px] text-slate-400 mb-1">Иконка</label>
+            <select id="bmIconSelect" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2 py-2 text-center text-sm">
+              <option value="🏯">🏯</option>
+              <option value="🎯">🎯</option>
+              <option value="🏰">🏰</option>
+              <option value="🏠">🏠</option>
+              <option value="⚔️">⚔️</option>
+              <option value="🛡️">🛡️</option>
+              <option value="🚩">🚩</option>
+              <option value="🔥">🔥</option>
+            </select>
+          </div>
+          <div class="col-span-3">
+            <label class="block text-[10px] text-slate-400 mb-1">Название кнопки</label>
+            <input id="bmNameInput" type="text" required placeholder="Напр. Форт №3 или Комплекс атаки" class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-400 rounded-xl px-3 py-2 text-xs text-white focus:outline-none" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-[10px] text-slate-400 mb-1">Центр X (по умолчанию — текущий экран)</label>
+            <input id="bmXInput" type="number" min="0" max="1199" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 font-mono text-white" />
+          </div>
+          <div>
+            <label class="block text-[10px] text-slate-400 mb-1">Центр Y</label>
+            <input id="bmYInput" type="number" min="0" max="1199" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 font-mono text-white" />
+          </div>
+        </div>
+
+        <button type="submit" class="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-extrabold text-white transition">
+          <i class="fa-solid fa-plus mr-1"></i>Добавить область в шапку
+        </button>
+      </form>
+
+      <div class="pt-2 border-t border-slate-800 flex-1 overflow-y-auto thin-scroll space-y-1.5">
+        <div class="text-[10px] font-mono uppercase text-slate-400">Сохранённые области:</div>
+        <div id="bmManageList" class="space-y-1.5"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Личное сообщение игроку -->
   <div id="mapMessageModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-sky-500/50 rounded-3xl max-w-md w-full p-5 space-y-4 shadow-2xl">
       <div class="flex items-start justify-between gap-2 pb-2 border-b border-slate-800">
@@ -629,17 +728,17 @@
     </div>
   </div>
 
-  <!-- 2. Пакетная рассылка перемещённым игрокам -->
+  <!-- 4. Пакетная рассылка перемещённым игрокам -->
   <div id="batchNotifyModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-rose-500/50 rounded-3xl max-w-lg w-full p-5 space-y-4 shadow-2xl max-h-[88vh] flex flex-col">
       <div class="flex items-start justify-between gap-2 pb-2 border-b border-slate-800 shrink-0">
         <div>
           <h3 class="text-sm font-extrabold text-white">📢 Пакетное оповещение переездов</h3>
-          <p class="text-[11px] text-slate-400 mt-0.5">Список бойцов, чьи топки вы сдвинули или переставили в этом сеансе</p>
+          <p class="text-[11px] text-slate-400 mt-0.5">Бойцы, чьи топки вы сдвинули или переставили в этом сеансе</p>
         </div>
         <button type="button" onclick="closeBatchNotifyModal()" class="text-slate-400 hover:text-white text-base p-1"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div id="batchNotifyList" class="flex-1 overflow-y-auto space-y-2 text-xs"></div>
+      <div id="batchNotifyList" class="flex-1 overflow-y-auto thin-scroll space-y-2 text-xs"></div>
       <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800 shrink-0">
         <button type="button" onclick="clearMovedSessionList()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-[11px] text-slate-300 font-semibold">Сбросить список</button>
         <div class="flex items-center gap-2">
@@ -647,50 +746,14 @@
             <i class="fa-solid fa-copy mr-1"></i>Список в чат
           </button>
           <button id="batchSendAllBtn" type="button" onclick="sendBatchNotifyAll()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-500 hover:to-orange-500 text-xs font-extrabold text-white shadow transition">
-            <i class="fa-solid fa-paper-plane mr-1"></i>Отправить всем на портал
+            <i class="fa-solid fa-paper-plane mr-1"></i>Отправить всем
           </button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 3. Настройка якоря реальных координат X:Y -->
-  <div id="anchorModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-sky-500/50 rounded-3xl max-w-md w-full p-5 space-y-4 shadow-2xl text-xs">
-      <div class="flex items-start justify-between gap-2 pb-2 border-b border-slate-800">
-        <div>
-          <h3 class="text-sm font-extrabold text-white">📍 Привязка реальных координат (X : Y)</h3>
-          <p class="text-[11px] text-slate-400 mt-0.5">Укажите игровые координаты любой постройки на карте — вся сетка пересчитается автоматически</p>
-        </div>
-        <button type="button" onclick="closeAnchorModal()" class="text-slate-400 hover:text-white text-base p-1"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div class="space-y-3">
-        <div>
-          <label class="block text-[11px] font-semibold text-slate-300 mb-1">Опорный объект на текущей карте</label>
-          <select id="anchorRefItemSelect" onchange="onAnchorRefSelectChange()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-amber-300 font-semibold"></select>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-[11px] font-semibold text-slate-300 mb-1">Реальный X (центр)</label>
-            <input id="anchorRefRealX" type="number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 font-mono text-white" />
-          </div>
-          <div>
-            <label class="block text-[11px] font-semibold text-slate-300 mb-1">Реальный Y (центр)</label>
-            <input id="anchorRefRealY" type="number" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 font-mono text-white" />
-          </div>
-        </div>
-        <div class="text-[11px] font-mono text-slate-400 bg-slate-950/80 border border-slate-800 rounded-xl p-2.5">
-          Текущая база сетки (клетка 0,0): <b id="anchorPreviewOrigin" class="text-sky-300">—</b>
-        </div>
-      </div>
-      <div class="flex items-center justify-end gap-2 pt-1">
-        <button type="button" onclick="closeAnchorModal()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300">Отмена</button>
-        <button type="button" onclick="applyAnchorSettings()" class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-xs font-extrabold text-white">Применить якорь</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 4. Авторасстановка улья вокруг цели -->
+  <!-- 5. Авторасстановка улья вокруг цели -->
   <div id="autoPlaceModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-indigo-500/50 rounded-3xl max-w-md w-full p-5 space-y-4 shadow-2xl text-xs">
       <div class="flex items-start justify-between gap-2 pb-2 border-b border-slate-800">
@@ -731,7 +794,7 @@
     </div>
   </div>
 
-  <!-- 5. Передача линий Л1–Л5 в «Охоту на Медведя» -->
+  <!-- 6. Передача линий Л1–Л5 в «Охоту на Медведя» -->
   <div id="syncBearModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-amber-500/50 rounded-3xl max-w-md w-full p-5 space-y-4 shadow-2xl text-xs">
       <div class="flex items-start justify-between gap-2 pb-2 border-b border-slate-800">
@@ -757,7 +820,7 @@
           </select>
         </div>
       </div>
-      <div id="syncBearPreviewList" class="max-h-48 overflow-y-auto bg-slate-950 border border-slate-800 rounded-xl p-2.5 space-y-1 font-mono text-[11px]"></div>
+      <div id="syncBearPreviewList" class="max-h-48 overflow-y-auto thin-scroll bg-slate-950 border border-slate-800 rounded-xl p-2.5 space-y-1 font-mono text-[11px]"></div>
       <div class="flex items-center justify-end gap-2 pt-1">
         <button type="button" onclick="closeSyncBearModal()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300">Отмена</button>
         <button id="syncBearApplyBtn" type="button" onclick="executeSyncBearLines()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-xs font-extrabold text-slate-950">Сохранить в Медведя</button>
@@ -771,15 +834,10 @@
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbwsX-LADURoQu_MsQ2XJVsSPsHAgMebI4_QDXmpPpi3OcpW3ScwPep9ukQBFJfDMrjQ7g/exec';
 
-    // Геометрия изометрической сетки (игровые пропорции Whiteout Survival)
-    const GRID_SIZE = 50;
+    // Полная карта штата Whiteout Survival: 1200×1200 клеток (X: 0..1199, Y: 0..1199)
+    const WORLD_GRID = 1200;
     const TILE_W = 84;
     const TILE_H = 60;
-    const WORLD_PAD = 220;
-    const WORLD_W = GRID_SIZE * TILE_W + WORLD_PAD * 2;
-    const WORLD_H = GRID_SIZE * TILE_H + WORLD_PAD * 2;
-    const ORIGIN_X = WORLD_W / 2;
-    const ORIGIN_Y = WORLD_PAD;
 
     const OBJECT_SIZES = {
       city: 2,      // Топка игрока: 2×2
@@ -793,20 +851,13 @@
       castle: 6,    // Солнечный замок: 6×6
       turret: 2,    // Орудийная башня: 2×2
       fort: 4,      // Форт / Цитадель: 4×4
-      target: 3     // Объект / Цель: 3×3
+      target: 3     // Комплекс / Объект: 3×3
     };
 
     const STATUE_TYPES = {
       champ_silver: { label: 'Серебряная статуя чемпиона', short: 'Чемпион',   icon: '🏆', sprite: 'statue_champ' },
       conqueror:    { label: 'Захватчик',                  short: 'Захватчик', icon: '⚔️', sprite: 'statue_conqueror' },
       other:        { label: 'Другая статуя',              short: 'Статуя',    icon: '🗿', sprite: 'statue_other' }
-    };
-
-    const MAP_TYPE_LABELS = {
-      hive:   'Улей альянса',
-      castle: 'Битва за Замок',
-      fort:   'Битва за Форт',
-      custom: 'Своя схема'
     };
 
     const ZONE_PRESETS = {
@@ -822,7 +873,7 @@
       relocate: { icon: '🔄', label: 'Требуется переезд', cls: 'role-relocate', border: '#f43f5e' }
     };
 
-    const LANDMARK_TYPES = ['castle', 'turret', 'fort', 'target', 'bear1', 'bear2', 'hq'];
+    const LANDMARK_TYPES = ['bear1', 'bear2', 'hq', 'castle', 'turret', 'fort', 'target'];
 
     const MAP_HEROES = [
       { key: 'джесси', name: 'Джесси', gen: 1 }, { key: 'джассер', name: 'Джассер', gen: 1 },
@@ -870,46 +921,41 @@
       'Мифические (золотые) С2', 'Мифические (золотые) С2 1 звезда', 'Мифические (золотые) С2 2 звезды', 'Мифические (золотые) С2 3 звезды'
     ];
 
-    // Базовые якоря реальных игровых координат (Север = верх, Юг = низ, Запад = лево, Восток = право)
-    const DEFAULT_ANCHORS = {
-      hive:   { maxX: 780, maxY: 470 },
-      castle: { maxX: 625, maxY: 625 },
-      fort:   { maxX: 525, maxY: 525 },
-      custom: { maxX: 525, maxY: 525 }
-    };
-
     // ==================== СОСТОЯНИЕ ПРИЛОЖЕНИЯ ====================
     let currentUser = null;
     let isReadOnly = true;
     let myPlayerKey = '';
     let allPlayers = [];
     let currentAlliance = 'Основа';
-    let currentMapType = 'hive';
     let mapTheme = 'tundra';
 
+    // Единое состояние карты мира (x, y — реальные игровые координаты 0..1199)
     let mapItems = [];
     let mapZones = [];
-    let mapAnchor = { ...DEFAULT_ANCHORS.hive };
+    let mapBookmarks = [];
+    let activeBookmarkId = 'bm_hive';
     let showTerritory = false;
 
     let undoStack = [];
-    let movedCitiesMap = {}; // { playerKey: { nick, oldX, oldY, newX, newY, itemId } }
-    let pendingSwap = null;  // { sourceId, targetId, origGx, origGy }
+    let movedCitiesMap = {}; // { playerKey: { playerKey, itemId, nick, oldX, oldY, newX, newY } }
+    let pendingSwap = null;  // { sourceId, targetId, origX, origY }
     let saveTimer = null;
 
     let cam = { x: 0, y: 0, scale: 0.78 };
     let isPanning = false;
     let panStart = { mx: 0, my: 0, cx: 0, cy: 0, moved: false };
+    let renderRafId = null;
 
     let activeTool = 'pan';
     let activeCityPlayerKey = null;
     let movingItemId = null;
     let selectedItemId = null;
-    let hoverCell = null;
-    let draggingItem = null;
+    let hoverCell = null; // { x, y }
+    let draggingItem = null; // { id, startMx, startMy, origX, origY, curX, curY, hasMoved }
     let mapMsgContext = null;
+    let moveCoordsItemId = null;
 
-    // Кэш спрайтов для PNG-экспорта
+    // Предзагрузка спрайтов для PNG-экспорта
     const IMG_CACHE = {};
     function preloadSprite(name, primarySrc, fallbackSrc) {
       const img = new Image();
@@ -919,76 +965,41 @@
       IMG_CACHE[name] = img;
     }
 
-    // ==================== РЕАЛЬНЫЕ КООРДИНАТЫ (X:Y) И ШАБЛОНЫ ====================
-    function realToGrid(realX, realY, size = 1, anchor = mapAnchor) {
-      return {
-        gx: anchor.maxY - (realY + size - 1),
-        gy: anchor.maxX - (realX + size - 1)
-      };
+    // ==================== СТАРТОВЫЙ ШАБЛОН ЕДИНОЙ КАРТЫ ШТАТА ====================
+    function makeWorldObj(id, type, x, y, extra = {}) {
+      return { id, type, x, y, size: OBJECT_SIZES[type] || 1, ...extra };
     }
 
-    function gridToReal(gx, gy, size = 1, anchor = mapAnchor) {
-      return {
-        x: anchor.maxX - (gy + size - 1),
-        y: anchor.maxY - (gx + size - 1)
-      };
-    }
+    function getDefaultWorldState() {
+      // Улей альянса (дубль стяга X:744 Y:440 автоматически исключён)
+      const hiveBanners = [
+        [747, 451], [744, 447], [744, 440], [751, 454], [751, 433],
+        [766, 447], [766, 440], [758, 433], [765, 433], [772, 438]
+      ];
 
-    function formatItemRealCoords(item) {
-      const r = gridToReal(item.gx, item.gy, item.size || 1);
-      return `X:${r.x} Y:${r.y}`;
-    }
+      const items = [
+        // Постоянные постройки Улья
+        makeWorldObj('init_bear1', 'bear1', 749, 446),
+        makeWorldObj('init_bear2', 'bear2', 759, 438),
+        makeWorldObj('init_hq', 'hq', 754, 443),
+        makeWorldObj('init_statue_champ', 'statue', 755, 456, { subType: 'champ_silver' }),
+        makeWorldObj('init_statue_conq', 'statue', 755, 454, { subType: 'conqueror' }),
+        ...hiveBanners.map((b, idx) => makeWorldObj(`init_banner_${idx + 1}`, 'banner', b[0], b[1])),
 
-    function makeRealObj(id, type, realX, realY, anchor, extra = {}) {
-      const size = OBJECT_SIZES[type] || 1;
-      const g = realToGrid(realX, realY, size, anchor);
-      return { id, type, gx: g.gx, gy: g.gy, size, ...extra };
-    }
+        // Солнечный замок и 4 орудийные башни в центре штата
+        makeWorldObj('init_castle', 'castle', 597, 597),
+        makeWorldObj('init_turret_n', 'turret', 604, 604, { label: 'Северная орудийная башня' }),
+        makeWorldObj('init_turret_w', 'turret', 594, 604, { label: 'Западная орудийная башня' }),
+        makeWorldObj('init_turret_s', 'turret', 594, 594, { label: 'Южная орудийная башня' }),
+        makeWorldObj('init_turret_e', 'turret', 604, 594, { label: 'Восточная орудийная башня' })
+      ];
 
-    function getDefaultStateForMapType(type) {
-      const anchor = { ...(DEFAULT_ANCHORS[type] || DEFAULT_ANCHORS.custom) };
+      const bookmarks = [
+        { id: 'bm_hive',   icon: '🏠', name: 'Улей',  x: 755, y: 444, scale: 0.78, pinned: true },
+        { id: 'bm_castle', icon: '🏰', name: 'Замок', x: 600, y: 600, scale: 0.65, pinned: true }
+      ];
 
-      if (type === 'hive') {
-        // Реальные координаты постоянных объектов Улья (дубль стяга X:744 Y:440 исключён)
-        const banners = [
-          [747, 451], [744, 447], [744, 440], [751, 454], [751, 433],
-          [766, 447], [766, 440], [758, 433], [765, 433], [772, 438]
-        ];
-        const items = [
-          makeRealObj('init_bear1', 'bear1', 749, 446, anchor),
-          makeRealObj('init_bear2', 'bear2', 759, 438, anchor),
-          makeRealObj('init_hq', 'hq', 754, 443, anchor),
-          makeRealObj('init_statue_champ', 'statue', 755, 456, anchor, { subType: 'champ_silver' }),
-          makeRealObj('init_statue_conq', 'statue', 755, 454, anchor, { subType: 'conqueror' }),
-          ...banners.map((b, idx) => makeRealObj(`init_banner_${idx + 1}`, 'banner', b[0], b[1], anchor))
-        ];
-        return { anchor, items, zones: [] };
-      }
-
-      if (type === 'castle') {
-        const items = [
-          makeRealObj('init_castle', 'castle', 597, 597, anchor),
-          makeRealObj('init_turret_n', 'turret', 604, 604, anchor, { label: 'Северная орудийная башня' }),
-          makeRealObj('init_turret_w', 'turret', 594, 604, anchor, { label: 'Западная орудийная башня' }),
-          makeRealObj('init_turret_s', 'turret', 594, 594, anchor, { label: 'Южная орудийная башня' }),
-          makeRealObj('init_turret_e', 'turret', 604, 594, anchor, { label: 'Восточная орудийная башня' })
-        ];
-        return { anchor, items, zones: [] };
-      }
-
-      if (type === 'fort') {
-        return {
-          anchor,
-          items: [makeRealObj('init_fort', 'fort', 498, 498, anchor)],
-          zones: []
-        };
-      }
-
-      return {
-        anchor,
-        items: [makeRealObj('init_target', 'target', 499, 499, anchor)],
-        zones: []
-      };
+      return { items, zones: [], bookmarks };
     }
 
     // ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ И СКОРИНГ ====================
@@ -1006,6 +1017,10 @@
 
     function findPlayer(pKey) {
       return allPlayers.find(p => getPlayerKey(p) === pKey) || null;
+    }
+
+    function formatItemCoords(item) {
+      return `X:${item.x} Y:${item.y}`;
     }
 
     function getTurretDisplayName(item) {
@@ -1028,15 +1043,15 @@
         return st.label;
       }
       if (item.type === 'reserve') return `Резерв: ${item.label || 'Свободно'}`;
+      if (item.type === 'fort') return item.label ? String(item.label) : 'Форт / Цитадель';
+      if (item.type === 'target') return item.label ? String(item.label) : 'Комплекс / Объект';
       const labels = {
         bear1: '1-я охотничья ловушка',
         bear2: '2-я охотничья ловушка',
         hq: 'Штаб альянса',
         banner: 'Стяг альянса',
         obstacle: 'Преграда',
-        castle: 'Солнечный замок',
-        fort: 'Форт / Цитадель',
-        target: 'Объект / Цель'
+        castle: 'Солнечный замок'
       };
       return labels[item.type] || item.type;
     }
@@ -1101,69 +1116,99 @@
       return { score: gearScore + charmSum * 2, gearCount, charmSum };
     }
 
-    // ==================== ИЗОМЕТРИЯ, КОЛЛИЗИИ И РАСЧЁТ МАРША ====================
-    function gridToScreen(gx, gy) {
+    // ==================== ИЗОМЕТРИЯ 1200×1200 (СЕВЕР = X+Y+, ЮГ = X-Y-, ЗАПАД = X-Y+, ВОСТОК = X+Y-) ====================
+    function tileToWorld(x, y) {
       return {
-        x: ORIGIN_X + (gx - gy) * (TILE_W / 2),
-        y: ORIGIN_Y + (gx + gy) * (TILE_H / 2)
+        wx: (x - y) * (TILE_W / 2),
+        wy: -(x + y) * (TILE_H / 2)
       };
     }
 
-    function screenToGridFloat(wx, wy) {
-      const dx = wx - ORIGIN_X;
-      const dy = wy - ORIGIN_Y;
-      const gx = (dx / (TILE_W / 2) + dy / (TILE_H / 2)) / 2;
-      const gy = (dy / (TILE_H / 2) - dx / (TILE_W / 2)) / 2;
-      return { gx, gy };
+    function worldToTileFloat(wx, wy) {
+      const u = wx / (TILE_W / 2);
+      const v = -wy / (TILE_H / 2);
+      return {
+        x: (u + v) / 2,
+        y: (v - u) / 2
+      };
     }
 
-    function diamondPoints(gx, gy, size = 1) {
-      const p1 = gridToScreen(gx, gy);
-      const p2 = gridToScreen(gx + size, gy);
-      const p3 = gridToScreen(gx + size, gy + size);
-      const p4 = gridToScreen(gx, gy + size);
-      return `${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y} ${p4.x},${p4.y}`;
+    function screenToWorld(sx, sy) {
+      return {
+        wx: (sx - cam.x) / cam.scale,
+        wy: (sy - cam.y) / cam.scale
+      };
     }
 
-    function isCellOccupied(gx, gy, ignoreId = null) {
-      if (gx < 0 || gy < 0 || gx >= GRID_SIZE || gy >= GRID_SIZE) return true;
+    // Границы видимого окна в координатах клеток X, Y (чтобы рисовать только видимую часть из 1200×1200)
+    function getViewportTileBounds(padTiles = 6) {
+      const vp = document.getElementById('mapViewport');
+      const w = vp ? vp.clientWidth : 1200;
+      const h = vp ? vp.clientHeight : 800;
+      const pts = [
+        screenToWorld(0, 0),
+        screenToWorld(w, 0),
+        screenToWorld(w, h),
+        screenToWorld(0, h)
+      ].map(p => worldToTileFloat(p.wx, p.wy));
+
+      const minX = Math.max(0, Math.floor(Math.min(...pts.map(p => p.x))) - padTiles);
+      const maxX = Math.min(WORLD_GRID, Math.ceil(Math.max(...pts.map(p => p.x))) + padTiles);
+      const minY = Math.max(0, Math.floor(Math.min(...pts.map(p => p.y))) - padTiles);
+      const maxY = Math.min(WORLD_GRID, Math.ceil(Math.max(...pts.map(p => p.y))) + padTiles);
+      return { minX, maxX, minY, maxY };
+    }
+
+    function getViewportCenterTile() {
+      const vp = document.getElementById('mapViewport');
+      const w = vp ? vp.clientWidth : 1200;
+      const h = vp ? vp.clientHeight : 800;
+      const wPt = screenToWorld(w / 2, h / 2);
+      const t = worldToTileFloat(wPt.wx, wPt.wy);
+      return {
+        x: Math.max(0, Math.min(WORLD_GRID - 1, Math.round(t.x))),
+        y: Math.max(0, Math.min(WORLD_GRID - 1, Math.round(t.y)))
+      };
+    }
+
+    // ==================== КОЛЛИЗИИ И РАСЧЁТ ДИСТАНЦИИ / МАРША ====================
+    function isCellOccupied(x, y, ignoreId = null) {
+      if (x < 0 || y < 0 || x >= WORLD_GRID || y >= WORLD_GRID) return true;
       for (const item of mapItems) {
         if (ignoreId && item.id === ignoreId) continue;
-        if (gx >= item.gx && gx < item.gx + item.size && gy >= item.gy && gy < item.gy + item.size) {
+        if (x >= item.x && x < item.x + item.size && y >= item.y && y < item.y + item.size) {
           return true;
         }
       }
       return false;
     }
 
-    function canPlaceFootprint(gx, gy, size, ignoreId = null) {
-      if (gx < 0 || gy < 0 || gx + size > GRID_SIZE || gy + size > GRID_SIZE) return false;
+    function canPlaceFootprint(x, y, size, ignoreId = null) {
+      if (x < 0 || y < 0 || x + size > WORLD_GRID || y + size > WORLD_GRID) return false;
       for (let dx = 0; dx < size; dx++) {
         for (let dy = 0; dy < size; dy++) {
-          if (isCellOccupied(gx + dx, gy + dy, ignoreId)) return false;
+          if (isCellOccupied(x + dx, y + dy, ignoreId)) return false;
         }
       }
       return true;
     }
 
-    // Проверка, наложилась ли перетаскиваемая топка ровно/частично на ОДНУ другую топку (для предложения обмена Swap)
-    function findSingleSwapCandidate(gx, gy, size, ignoreId) {
+    function findSingleSwapCandidate(x, y, size, ignoreId) {
       const hits = new Set();
       for (let dx = 0; dx < size; dx++) {
         for (let dy = 0; dy < size; dy++) {
-          const cx = gx + dx, cy = gy + dy;
-          if (cx < 0 || cy < 0 || cx >= GRID_SIZE || cy >= GRID_SIZE) return null;
+          const cx = x + dx, cy = y + dy;
+          if (cx < 0 || cy < 0 || cx >= WORLD_GRID || cy >= WORLD_GRID) return null;
           for (const item of mapItems) {
             if (item.id === ignoreId) continue;
-            if (cx >= item.gx && cx < item.gx + item.size && cy >= item.gy && cy < item.gy + item.size) {
-              if (item.type !== 'city') return null; // Пересечение со зданием/стягом — обмен невозможен
+            if (cx >= item.x && cx < item.x + item.size && cy >= item.y && cy < item.y + item.size) {
+              if (item.type !== 'city') return null;
               hits.add(item);
             }
           }
         }
       }
-      if (hits.size === 1) return Array.from(hits)[0];
-      return null;
+      return hits.size === 1 ? Array.from(hits)[0] : null;
     }
 
     function formatMarchSec(sec) {
@@ -1176,10 +1221,10 @@
 
     function calcDistanceToTarget(cityItem, targetItem) {
       if (!cityItem || !targetItem) return null;
-      const c1x = cityItem.gx + cityItem.size / 2;
-      const c1y = cityItem.gy + cityItem.size / 2;
-      const c2x = targetItem.gx + targetItem.size / 2;
-      const c2y = targetItem.gy + targetItem.size / 2;
+      const c1x = cityItem.x + cityItem.size / 2;
+      const c1y = cityItem.y + cityItem.size / 2;
+      const c2x = targetItem.x + targetItem.size / 2;
+      const c2y = targetItem.y + targetItem.size / 2;
 
       const halfSum = (cityItem.size + targetItem.size) / 2;
       const edgeDist = Math.max(0, Math.max(Math.abs(c1x - c2x), Math.abs(c1y - c2y)) - halfSum);
@@ -1195,13 +1240,13 @@
         .filter(x => LANDMARK_TYPES.includes(x.type))
         .sort((a, b) => LANDMARK_TYPES.indexOf(a.type) - LANDMARK_TYPES.indexOf(b.type));
     }
-// ==================== ИСТОРИЯ ДЕЙСТВИЙ (UNDO / CTRL+Z) ====================
+    // ==================== ИСТОРИЯ ДЕЙСТВИЙ (UNDO / CTRL+Z) ====================
     function pushUndoState() {
       if (isReadOnly) return;
       const snapshot = JSON.stringify({
         items: mapItems,
         zones: mapZones,
-        anchor: mapAnchor
+        bookmarks: mapBookmarks
       });
       if (undoStack.length > 0 && undoStack[undoStack.length - 1] === snapshot) return;
       undoStack.push(snapshot);
@@ -1222,11 +1267,14 @@
         const prev = JSON.parse(raw);
         mapItems = prev.items || [];
         mapZones = prev.zones || [];
-        if (prev.anchor) mapAnchor = prev.anchor;
+        if (Array.isArray(prev.bookmarks) && prev.bookmarks.length > 0) {
+          mapBookmarks = prev.bookmarks;
+        }
         deselectEntity();
+        renderBookmarksBar();
         refreshLineOverlayOptions();
-        buildBaseGridSvg();
-        renderEntities();
+        renderEntities(true);
+        scheduleMapRender();
         renderPlayersSidebar();
         updateUndoButton();
         scheduleCloudSave();
@@ -1234,7 +1282,145 @@
       } catch (e) {}
     }
 
-    // ==================== ЛИНИИ МАРША И ТЕРРИТОРИЯ ====================
+    // ==================== БЫСТРЫЕ ОБЛАСТИ (ЗАКЛАДКИ) И ПЕРЕХОД X:Y ====================
+    function renderBookmarksBar() {
+      const bar = document.getElementById('bookmarksBar');
+      if (!bar) return;
+
+      bar.innerHTML = mapBookmarks.map(bm => {
+        const isActive = bm.id === activeBookmarkId;
+        const safeId = bm.id.replace(/'/g, "\\'");
+        const safeName = String(bm.name || 'Область').replace(/[<>&]/g, '');
+        return `
+          <button type="button" onclick="flyToBookmark('${safeId}')"
+            class="pill-btn ${isActive ? 'active' : 'bg-slate-900 hover:bg-slate-800 border-slate-700 text-slate-200'} px-2.5 py-1 rounded-lg border font-semibold transition flex items-center gap-1 whitespace-nowrap"
+            title="${safeName} (X:${bm.x} Y:${bm.y})">
+            <span>${bm.icon || '📍'}</span>
+            <span>${safeName}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function flyToCoords(x, y, targetScale = null) {
+      const vp = document.getElementById('mapViewport');
+      if (!vp) return;
+      const cx = Math.max(0, Math.min(WORLD_GRID - 1, Number(x) || 0));
+      const cy = Math.max(0, Math.min(WORLD_GRID - 1, Number(y) || 0));
+      if (targetScale !== null) {
+        cam.scale = Math.max(0.28, Math.min(2.1, targetScale));
+      }
+      const wPt = tileToWorld(cx + 0.5, cy + 0.5);
+      cam.x = vp.clientWidth / 2 - wPt.wx * cam.scale;
+      cam.y = vp.clientHeight / 2 - wPt.wy * cam.scale;
+      applyCamera();
+      document.getElementById('coordDisplay').textContent = `X:${Math.round(cx)} Y:${Math.round(cy)}`;
+    }
+
+    function flyToBookmark(bmId) {
+      const bm = mapBookmarks.find(b => b.id === bmId);
+      if (!bm) return;
+      activeBookmarkId = bm.id;
+      renderBookmarksBar();
+      flyToCoords(bm.x, bm.y, bm.scale || 0.78);
+    }
+
+    function focusActiveBookmark() {
+      const bm = mapBookmarks.find(b => b.id === activeBookmarkId) || mapBookmarks[0];
+      if (bm) flyToCoords(bm.x, bm.y, bm.scale || 0.78);
+      else flyToCoords(755, 444, 0.78);
+    }
+
+    function jumpToInputCoords() {
+      const xVal = Number(document.getElementById('quickJumpX').value);
+      const yVal = Number(document.getElementById('quickJumpY').value);
+      if (Number.isNaN(xVal) || Number.isNaN(yVal) || xVal < 0 || xVal >= WORLD_GRID || yVal < 0 || yVal >= WORLD_GRID) {
+        return showToast('Введите координаты от 0 до 1199');
+      }
+      activeBookmarkId = '';
+      renderBookmarksBar();
+      flyToCoords(xVal, yVal, Math.max(cam.scale, 0.78));
+      showToast(`Переход к X:${xVal} Y:${yVal}`);
+    }
+
+    function openBookmarkModal() {
+      if (isReadOnly) return;
+      const center = getViewportCenterTile();
+      document.getElementById('bmNameInput').value = '';
+      document.getElementById('bmXInput').value = center.x;
+      document.getElementById('bmYInput').value = center.y;
+      renderBookmarkManageList();
+      document.getElementById('bookmarkModal').classList.remove('hidden');
+      document.getElementById('bmNameInput').focus();
+    }
+
+    function closeBookmarkModal() {
+      document.getElementById('bookmarkModal').classList.add('hidden');
+    }
+
+    function renderBookmarkManageList() {
+      const box = document.getElementById('bmManageList');
+      if (!box) return;
+      if (mapBookmarks.length === 0) {
+        box.innerHTML = `<div class="text-center text-slate-500 py-3">Нет сохранённых областей</div>`;
+        return;
+      }
+      box.innerHTML = mapBookmarks.map(bm => {
+        const safeId = bm.id.replace(/'/g, "\\'");
+        const safeName = String(bm.name || '').replace(/[<>&]/g, '');
+        return `
+          <div class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 flex items-center justify-between gap-2">
+            <button type="button" onclick="flyToBookmark('${safeId}'); closeBookmarkModal();" class="flex items-center gap-2 min-w-0 text-left hover:text-sky-300 transition">
+              <span>${bm.icon || '📍'}</span>
+              <span class="font-bold text-white truncate">${safeName}</span>
+              <span class="font-mono text-[10px] text-sky-400 shrink-0">X:${bm.x} Y:${bm.y}</span>
+            </button>
+            <button type="button" onclick="deleteBookmark('${safeId}')" class="text-slate-500 hover:text-rose-400 px-1.5" title="Удалить область">
+              <i class="fa-solid fa-trash text-[11px]"></i>
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function submitAddBookmark() {
+      if (isReadOnly) return;
+      const icon = document.getElementById('bmIconSelect').value || '📍';
+      const name = document.getElementById('bmNameInput').value.trim();
+      const x = Math.max(0, Math.min(WORLD_GRID - 1, Math.round(Number(document.getElementById('bmXInput').value) || 0)));
+      const y = Math.max(0, Math.min(WORLD_GRID - 1, Math.round(Number(document.getElementById('bmYInput').value) || 0)));
+      if (!name) return;
+
+      pushUndoState();
+      const newBm = {
+        id: 'bm_' + Date.now() + '_' + Math.floor(Math.random() * 999),
+        icon,
+        name,
+        x,
+        y,
+        scale: Number(cam.scale.toFixed(2)) || 0.78
+      };
+      mapBookmarks.push(newBm);
+      activeBookmarkId = newBm.id;
+      renderBookmarksBar();
+      renderBookmarkManageList();
+      document.getElementById('bmNameInput').value = '';
+      scheduleCloudSave();
+      showToast(`Область «${name}» добавлена в шапку`);
+    }
+
+    function deleteBookmark(bmId) {
+      if (isReadOnly) return;
+      if (mapBookmarks.length <= 1) return showToast('Должна остаться хотя бы одна область');
+      pushUndoState();
+      mapBookmarks = mapBookmarks.filter(b => b.id !== bmId);
+      if (activeBookmarkId === bmId) activeBookmarkId = mapBookmarks[0]?.id || '';
+      renderBookmarksBar();
+      renderBookmarkManageList();
+      scheduleCloudSave();
+    }
+
+    // ==================== ЛИНИИ МАРША, ТЕРРИТОРИЯ И ЗОНЫ ====================
     function refreshLineOverlayOptions() {
       const sel = document.getElementById('lineOverlaySelect');
       if (!sel) return;
@@ -1249,7 +1435,7 @@
       sel.innerHTML = '<option value="none">📏 Линии и марш: выкл</option>' +
         landmarks.map(lm => {
           const ic = icons[lm.type] || '📍';
-          return `<option value="${lm.id}">${ic} До: ${getObjectDisplayName(lm)}</option>`;
+          return `<option value="${lm.id}">${ic} До: ${getObjectDisplayName(lm)} (${lm.x}:${lm.y})</option>`;
         }).join('');
 
       if (prev !== 'none' && landmarks.some(lm => lm.id === prev)) {
@@ -1260,39 +1446,37 @@
     }
 
     function onLineOverlayChange() {
-      buildBaseGridSvg();
-      updateHoverPreview();
-      renderEntities();
+      renderEntities(true);
+      scheduleMapRender();
     }
 
     function toggleTerritoryOverlay() {
       showTerritory = !showTerritory;
       const btn = document.getElementById('territoryToggleBtn');
       if (btn) btn.classList.toggle('active', showTerritory);
-      buildBaseGridSvg();
+      scheduleMapRender();
     }
 
-    function getTerritoryCellsSet() {
+    function getTerritoryCellsSet(bounds = null) {
       const covered = new Set();
       mapItems.forEach(item => {
-        if (item.type === 'banner') {
-          // Стяг 1×1 покрывает зону 7×7 (радиус 3 клетки от центра)
-          for (let dx = -3; dx <= 3; dx++) {
-            for (let dy = -3; dy <= 3; dy++) {
-              const cx = item.gx + dx, cy = item.gy + dy;
-              if (cx >= 0 && cy >= 0 && cx < GRID_SIZE && cy < GRID_SIZE) {
-                covered.add(`${cx},${cy}`);
-              }
-            }
-          }
-        } else if (item.type === 'hq') {
-          // Штаб 3×3 покрывает зону 15×15 (по 6 клеток в каждую сторону от границ Штаба)
-          for (let dx = -6; dx <= 8; dx++) {
-            for (let dy = -6; dy <= 8; dy++) {
-              const cx = item.gx + dx, cy = item.gy + dy;
-              if (cx >= 0 && cy >= 0 && cx < GRID_SIZE && cy < GRID_SIZE) {
-                covered.add(`${cx},${cy}`);
-              }
+        if (item.type !== 'banner' && item.type !== 'hq') return;
+        const minDx = item.type === 'banner' ? -3 : -6;
+        const maxDx = item.type === 'banner' ? 3 : 8;
+        const minDy = minDx;
+        const maxDy = maxDx;
+
+        if (bounds) {
+          if (item.x + maxDx < bounds.minX - 2 || item.x + minDx > bounds.maxX + 2) return;
+          if (item.y + maxDy < bounds.minY - 2 || item.y + minDy > bounds.maxY + 2) return;
+        }
+
+        for (let dx = minDx; dx <= maxDx; dx++) {
+          for (let dy = minDy; dy <= maxDy; dy++) {
+            const cx = item.x + dx;
+            const cy = item.y + dy;
+            if (cx >= 0 && cy >= 0 && cx < WORLD_GRID && cy < WORLD_GRID) {
+              covered.add(`${cx},${cy}`);
             }
           }
         }
@@ -1307,204 +1491,342 @@
       updateToolSubHint();
     }
 
-    function findZoneAtCell(gx, gy) {
+    function findZoneAtCell(x, y) {
       for (let i = mapZones.length - 1; i >= 0; i--) {
         const z = mapZones[i];
-        if (gx >= z.gx && gx < z.gx + z.size && gy >= z.gy && gy < z.gy + z.size) {
+        if (x >= z.x && x < z.x + z.size && y >= z.y && y < z.y + z.size) {
           return z;
         }
       }
       return null;
     }
 
-    // ==================== ОТРИСОВКА SVG СЕТКИ, ЗОН И ПРЕВЬЮ ====================
-    function buildBaseGridSvg() {
-      const svg = document.getElementById('gridSvg');
-      svg.setAttribute('width', WORLD_W);
-      svg.setAttribute('height', WORLD_H);
+    // ==================== БЫСТРЫЙ CANVAS-РЕНДЕРЕР СЕТКИ 1200×1200 ====================
+    function resizeMapCanvas() {
+      const vp = document.getElementById('mapViewport');
+      const canvas = document.getElementById('mapCanvas');
+      if (!vp || !canvas) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = vp.clientWidth;
+      const h = vp.clientHeight;
+      if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+        canvas.width = Math.round(w * dpr);
+        canvas.height = Math.round(h * dpr);
+      }
+      scheduleMapRender();
+    }
 
-      const isTundra = mapTheme === 'tundra';
-      const strokeMain = isTundra ? 'rgba(30, 58, 108, 0.16)' : 'rgba(56, 189, 248, 0.13)';
-      const strokeBold = isTundra ? 'rgba(30, 58, 108, 0.34)' : 'rgba(56, 189, 248, 0.30)';
-      const borderFill = isTundra ? 'rgba(255, 255, 255, 0.22)' : 'rgba(15, 23, 42, 0.45)';
+    function scheduleMapRender() {
+      if (renderRafId) return;
+      renderRafId = requestAnimationFrame(() => {
+        renderRafId = null;
+        drawMapCanvas();
+      });
+    }
 
-      let lines = `<polygon points="${diamondPoints(0, 0, GRID_SIZE)}" fill="${borderFill}" stroke="${strokeBold}" stroke-width="2" />`;
+    function drawIsoPolygon(ctx, x, y, size) {
+      const p1 = tileToWorld(x, y);
+      const p2 = tileToWorld(x + size, y);
+      const p3 = tileToWorld(x + size, y + size);
+      const p4 = tileToWorld(x, y + size);
+      ctx.beginPath();
+      ctx.moveTo(p1.wx, p1.wy);
+      ctx.lineTo(p2.wx, p2.wy);
+      ctx.lineTo(p3.wx, p3.wy);
+      ctx.lineTo(p4.wx, p4.wy);
+      ctx.closePath();
+    }
 
-      for (let i = 1; i < GRID_SIZE; i++) {
-        const isMajor = i % 6 === 0;
-        const sw = isMajor ? 1.3 : 0.8;
-        const sc = isMajor ? strokeBold : strokeMain;
+    function drawRoundRectCanvas(ctx, x, y, w, h, r) {
+      const rr = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + rr, y);
+      ctx.arcTo(x + w, y, x + w, y + h, rr);
+      ctx.arcTo(x + w, y + h, x, y + h, rr);
+      ctx.arcTo(x, y + h, x, y, rr);
+      ctx.arcTo(x, y, x + w, y, rr);
+      ctx.closePath();
+    }
 
-        const a1 = gridToScreen(i, 0);
-        const a2 = gridToScreen(i, GRID_SIZE);
-        lines += `<line x1="${a1.x}" y1="${a1.y}" x2="${a2.x}" y2="${a2.y}" stroke="${sc}" stroke-width="${sw}" />`;
+    function drawMapCanvas() {
+      const vp = document.getElementById('mapViewport');
+      const canvas = document.getElementById('mapCanvas');
+      if (!vp || !canvas) return;
 
-        const b1 = gridToScreen(0, i);
-        const b2 = gridToScreen(GRID_SIZE, i);
-        lines += `<line x1="${b1.x}" y1="${b1.y}" x2="${b2.x}" y2="${b2.y}" stroke="${sc}" stroke-width="${sw}" />`;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = vp.clientWidth;
+      const h = vp.clientHeight;
+      if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+        canvas.width = Math.round(w * dpr);
+        canvas.height = Math.round(h * dpr);
       }
 
-      // 1. Территория альянса (Стяги 7×7 + Штаб 15×15) с единым контуром
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+
+      ctx.save();
+      ctx.translate(cam.x, cam.y);
+      ctx.scale(cam.scale, cam.scale);
+
+      const bounds = getViewportTileBounds(3);
+      const isTundra = mapTheme === 'tundra';
+
+      // 1. Светлая подложка видимой части штата и сетка (1200×1200, рисуем только экран)
+      if (bounds.minX < bounds.maxX && bounds.minY < bounds.maxY) {
+        const gp1 = tileToWorld(bounds.minX, bounds.minY);
+        const gp2 = tileToWorld(bounds.maxX, bounds.minY);
+        const gp3 = tileToWorld(bounds.maxX, bounds.maxY);
+        const gp4 = tileToWorld(bounds.minX, bounds.maxY);
+        ctx.beginPath();
+        ctx.moveTo(gp1.wx, gp1.wy);
+        ctx.lineTo(gp2.wx, gp2.wy);
+        ctx.lineTo(gp3.wx, gp3.wy);
+        ctx.lineTo(gp4.wx, gp4.wy);
+        ctx.closePath();
+        ctx.fillStyle = isTundra ? 'rgba(255, 255, 255, 0.20)' : 'rgba(15, 23, 42, 0.44)';
+        ctx.fill();
+
+        const strokeMain = isTundra ? 'rgba(30, 58, 108, 0.16)' : 'rgba(56, 189, 248, 0.13)';
+        const strokeBold = isTundra ? 'rgba(30, 58, 108, 0.36)' : 'rgba(56, 189, 248, 0.32)';
+        const step = cam.scale < 0.36 ? 5 : 1;
+
+        // Вертикальные/диагональные линии по X
+        const startX = Math.floor(bounds.minX / step) * step;
+        for (let ix = startX; ix <= bounds.maxX; ix += step) {
+          const isMajor = (ix % 10 === 0);
+          const a = tileToWorld(ix, bounds.minY);
+          const b = tileToWorld(ix, bounds.maxY);
+          ctx.beginPath();
+          ctx.moveTo(a.wx, a.wy);
+          ctx.lineTo(b.wx, b.wy);
+          ctx.strokeStyle = isMajor ? strokeBold : strokeMain;
+          ctx.lineWidth = (isMajor ? 1.4 : 0.8) / Math.max(0.5, cam.scale);
+          ctx.stroke();
+        }
+
+        // Линии по Y
+        const startY = Math.floor(bounds.minY / step) * step;
+        for (let iy = startY; iy <= bounds.maxY; iy += step) {
+          const isMajor = (iy % 10 === 0);
+          const a = tileToWorld(bounds.minX, iy);
+          const b = tileToWorld(bounds.maxX, iy);
+          ctx.beginPath();
+          ctx.moveTo(a.wx, a.wy);
+          ctx.lineTo(b.wx, b.wy);
+          ctx.strokeStyle = isMajor ? strokeBold : strokeMain;
+          ctx.lineWidth = (isMajor ? 1.4 : 0.8) / Math.max(0.5, cam.scale);
+          ctx.stroke();
+        }
+      }
+
+      // Внешняя рамка границ штата 0..1200
+      drawIsoPolygon(ctx, 0, 0, WORLD_GRID);
+      ctx.strokeStyle = 'rgba(251, 191, 36, 0.55)';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // 2. Территория альянса (Стяги 7×7 + Штаб 15×15)
       if (showTerritory) {
-        const covered = getTerritoryCellsSet();
+        const covered = getTerritoryCellsSet(bounds);
         const fillCol = isTundra ? 'rgba(14, 165, 233, 0.22)' : 'rgba(56, 189, 248, 0.18)';
-        const borderCol = isTundra ? 'rgba(2, 132, 199, 0.85)' : 'rgba(56, 189, 248, 0.85)';
-        let terrHtml = '';
+        const borderCol = isTundra ? 'rgba(2, 132, 199, 0.88)' : 'rgba(56, 189, 248, 0.88)';
+        ctx.fillStyle = fillCol;
+        ctx.strokeStyle = borderCol;
+        ctx.lineWidth = 2.2;
 
         covered.forEach(key => {
           const [cx, cy] = key.split(',').map(Number);
-          terrHtml += `<polygon points="${diamondPoints(cx, cy, 1)}" fill="${fillCol}" />`;
+          if (cx < bounds.minX - 1 || cx > bounds.maxX + 1 || cy < bounds.minY - 1 || cy > bounds.maxY + 1) return;
+          drawIsoPolygon(ctx, cx, cy, 1);
+          ctx.fill();
 
-          // Рисуем внешнюю границу территории только там, где соседняя клетка не покрыта
-          if (!covered.has(`${cx},${cy - 1}`)) {
-            const p1 = gridToScreen(cx, cy), p2 = gridToScreen(cx + 1, cy);
-            terrHtml += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${borderCol}" stroke-width="2.2" />`;
-          }
-          if (!covered.has(`${cx + 1},${cy}`)) {
-            const p1 = gridToScreen(cx + 1, cy), p2 = gridToScreen(cx + 1, cy + 1);
-            terrHtml += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${borderCol}" stroke-width="2.2" />`;
-          }
-          if (!covered.has(`${cx},${cy + 1}`)) {
-            const p1 = gridToScreen(cx + 1, cy + 1), p2 = gridToScreen(cx, cy + 1);
-            terrHtml += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${borderCol}" stroke-width="2.2" />`;
-          }
-          if (!covered.has(`${cx - 1},${cy}`)) {
-            const p1 = gridToScreen(cx, cy + 1), p2 = gridToScreen(cx, cy);
-            terrHtml += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${borderCol}" stroke-width="2.2" />`;
-          }
+          const drawEdge = (ax, ay, bx, by) => {
+            const p1 = tileToWorld(ax, ay), p2 = tileToWorld(bx, by);
+            ctx.beginPath(); ctx.moveTo(p1.wx, p1.wy); ctx.lineTo(p2.wx, p2.wy); ctx.stroke();
+          };
+          if (!covered.has(`${cx},${cy - 1}`)) drawEdge(cx, cy, cx + 1, cy);
+          if (!covered.has(`${cx + 1},${cy}`)) drawEdge(cx + 1, cy, cx + 1, cy + 1);
+          if (!covered.has(`${cx},${cy + 1}`)) drawEdge(cx + 1, cy + 1, cx, cy + 1);
+          if (!covered.has(`${cx - 1},${cy}`)) drawEdge(cx, cy + 1, cx, cy);
         });
-        lines += `<g id="territoryLayer">${terrHtml}</g>`;
       }
 
-      // 2. Красная зона на карте «Битва за Замок»
-      if (currentMapType === 'castle') {
-        const castleObj = mapItems.find(x => x.type === 'castle');
-        const rx = castleObj ? Math.max(0, castleObj.gx - 10) : 13;
-        const ry = castleObj ? Math.max(0, castleObj.gy - 10) : 13;
-        const rSize = castleObj ? Math.min(GRID_SIZE - Math.max(rx, ry), castleObj.size + 20) : 26;
-        lines += `<polygon points="${diamondPoints(rx, ry, rSize)}" fill="rgba(225, 29, 72, 0.08)" stroke="rgba(244, 63, 94, 0.68)" stroke-width="2.5" stroke-dasharray="10,6" />`;
+      // 3. Красная зона вокруг Солнечного замка (если замок на карте и рядом с экраном)
+      const castleObj = mapItems.find(it => it.type === 'castle');
+      if (castleObj) {
+        const rx = Math.max(0, castleObj.x - 10);
+        const ry = Math.max(0, castleObj.y - 10);
+        const rSize = castleObj.size + 20;
+        if (rx + rSize >= bounds.minX && rx <= bounds.maxX && ry + rSize >= bounds.minY && ry <= bounds.maxY) {
+          ctx.save();
+          drawIsoPolygon(ctx, rx, ry, rSize);
+          ctx.fillStyle = 'rgba(225, 29, 72, 0.08)';
+          ctx.fill();
+          ctx.setLineDash([10, 6]);
+          ctx.strokeStyle = 'rgba(244, 63, 94, 0.72)';
+          ctx.lineWidth = 2.5;
+          ctx.stroke();
+          ctx.restore();
+        }
       }
 
-      // 3. Тактические зоны (сектора атаки / союзников / врага)
-      if (mapZones.length > 0) {
-        let zonesHtml = '';
-        mapZones.forEach(z => {
-          const preset = ZONE_PRESETS[z.preset] || ZONE_PRESETS.ally;
-          const center = gridToScreen(z.gx + z.size / 2, z.gy + z.size / 2);
-          const safeLbl = String(z.label || preset.label).replace(/[<>&]/g, '');
-          zonesHtml += `
-            <polygon points="${diamondPoints(z.gx, z.gy, z.size)}" fill="${preset.fill}" stroke="${preset.stroke}" stroke-width="2" stroke-dasharray="8,5" />
-            <rect x="${center.x - Math.min(120, Math.max(54, safeLbl.length * 4.2))}" y="${center.y - 11}" width="${Math.min(240, Math.max(108, safeLbl.length * 8.4))}" height="22" rx="8" fill="rgba(15, 23, 42, 0.84)" stroke="${preset.stroke}" stroke-width="1" />
-            <text x="${center.x}" y="${center.y + 3.5}" text-anchor="middle" fill="${preset.text}" font-family="Inter, sans-serif" font-size="11" font-weight="800">${safeLbl}</text>
-          `;
-        });
-        lines += `<g id="tacticalZonesLayer">${zonesHtml}</g>`;
-      }
+      // 4. Тактические зоны
+      mapZones.forEach(z => {
+        if (z.x + z.size < bounds.minX || z.x > bounds.maxX || z.y + z.size < bounds.minY || z.y > bounds.maxY) return;
+        const preset = ZONE_PRESETS[z.preset] || ZONE_PRESETS.ally;
+        const c = tileToWorld(z.x + z.size / 2, z.y + z.size / 2);
+        const lbl = String(z.label || preset.label);
 
-      // 4. Линии марша от каждой топки к выбранной цели
+        ctx.save();
+        drawIsoPolygon(ctx, z.x, z.y, z.size);
+        ctx.fillStyle = preset.fill;
+        ctx.fill();
+        ctx.setLineDash([8, 5]);
+        ctx.strokeStyle = preset.stroke;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.font = '800 11px Inter, sans-serif';
+        const bw = Math.min(240, Math.max(104, ctx.measureText(lbl).width + 22));
+        drawRoundRectCanvas(ctx, c.wx - bw / 2, c.wy - 11, bw, 22, 8);
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.86)';
+        ctx.fill();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = preset.stroke;
+        ctx.stroke();
+
+        ctx.fillStyle = preset.text;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(lbl, c.wx, c.wy + 0.5);
+        ctx.restore();
+      });
+
+      // 5. Линии марша от топок к выбранной цели
       const lineTargetId = document.getElementById('lineOverlaySelect')?.value || 'none';
       if (lineTargetId !== 'none') {
         const targetObj = mapItems.find(x => x.id === lineTargetId);
         if (targetObj) {
-          const tc = gridToScreen(targetObj.gx + targetObj.size / 2, targetObj.gy + targetObj.size / 2);
-          lines += `<polygon points="${diamondPoints(targetObj.gx, targetObj.gy, targetObj.size)}" fill="rgba(251, 191, 36, 0.20)" stroke="#fbbf24" stroke-width="2.5" />`;
+          ctx.save();
+          drawIsoPolygon(ctx, targetObj.x, targetObj.y, targetObj.size);
+          ctx.fillStyle = 'rgba(251, 191, 36, 0.22)';
+          ctx.fill();
+          ctx.strokeStyle = '#fbbf24';
+          ctx.lineWidth = 2.5;
+          ctx.stroke();
 
+          const tc = tileToWorld(targetObj.x + targetObj.size / 2, targetObj.y + targetObj.size / 2);
+          ctx.setLineDash([6, 5]);
           mapItems.filter(x => x.type === 'city').forEach(city => {
-            const cc = gridToScreen(city.gx + city.size / 2, city.gy + city.size / 2);
+            const cc = tileToWorld(city.x + city.size / 2, city.y + city.size / 2);
             const isSelCity = city.id === selectedItemId;
             const isMy = myPlayerKey && city.playerKey === myPlayerKey;
-            const strokeCol = isSelCity ? '#fbbf24' : (isMy ? '#22c55e' : 'rgba(56, 189, 248, 0.58)');
-            const sw = (isSelCity || isMy) ? '2.6' : '1.5';
-            lines += `<line x1="${cc.x}" y1="${cc.y}" x2="${tc.x}" y2="${tc.y}" stroke="${strokeCol}" stroke-width="${sw}" stroke-dasharray="6,5" />`;
+            ctx.beginPath();
+            ctx.moveTo(cc.wx, cc.wy);
+            ctx.lineTo(tc.wx, tc.wy);
+            ctx.strokeStyle = isSelCity ? '#fbbf24' : (isMy ? '#22c55e' : 'rgba(56, 189, 248, 0.62)');
+            ctx.lineWidth = (isSelCity || isMy) ? 2.6 : 1.5;
+            ctx.stroke();
           });
+          ctx.restore();
         }
       }
 
-      svg.innerHTML = `<g id="gridLinesLayer">${lines}</g><g id="hoverPreviewLayer"></g>`;
-    }
+      // 6. Превью перетаскивания или установки нового объекта
+      if (!isReadOnly) {
+        if (draggingItem && draggingItem.hasMoved) {
+          const dragObj = mapItems.find(x => x.id === draggingItem.id);
+          if (dragObj) {
+            const swapTarget = dragObj.type === 'city'
+              ? findSingleSwapCandidate(draggingItem.curX, draggingItem.curY, dragObj.size, dragObj.id)
+              : null;
 
-    function updateHoverPreview() {
-      const layer = document.getElementById('hoverPreviewLayer');
-      if (!layer || isReadOnly) return;
+            if (swapTarget) {
+              drawIsoPolygon(ctx, swapTarget.x, swapTarget.y, swapTarget.size);
+              ctx.fillStyle = 'rgba(251, 191, 36, 0.45)';
+              ctx.fill();
+              ctx.strokeStyle = '#fde047';
+              ctx.lineWidth = 2.5;
+              ctx.stroke();
+              const sc = tileToWorld(swapTarget.x + swapTarget.size / 2, swapTarget.y + swapTarget.size / 2);
+              ctx.fillStyle = '#ffffff';
+              ctx.font = '800 13px Inter, sans-serif';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText('⇄ ОБМЕН', sc.wx, sc.wy);
+            } else {
+              for (let dx = 0; dx < dragObj.size; dx++) {
+                for (let dy = 0; dy < dragObj.size; dy++) {
+                  const occ = isCellOccupied(draggingItem.curX + dx, draggingItem.curY + dy, dragObj.id);
+                  drawIsoPolygon(ctx, draggingItem.curX + dx, draggingItem.curY + dy, 1);
+                  ctx.fillStyle = occ ? 'rgba(239, 68, 68, 0.58)' : 'rgba(34, 197, 94, 0.52)';
+                  ctx.fill();
+                  ctx.strokeStyle = occ ? '#fca5a5' : '#86efac';
+                  ctx.lineWidth = 1.5;
+                  ctx.stroke();
+                }
+              }
+            }
+          }
+        } else if (hoverCell && activeTool !== 'pan' && activeTool !== 'erase') {
+          if (activeTool === 'zone') {
+            const zSize = Number(document.getElementById('zoneSizeSelect')?.value) || 6;
+            const preset = ZONE_PRESETS[document.getElementById('zonePresetSelect')?.value] || ZONE_PRESETS.ally;
+            const gx = Math.max(0, Math.min(WORLD_GRID - zSize, hoverCell.x));
+            const gy = Math.max(0, Math.min(WORLD_GRID - zSize, hoverCell.y));
+            ctx.save();
+            drawIsoPolygon(ctx, gx, gy, zSize);
+            ctx.fillStyle = preset.fill;
+            ctx.fill();
+            ctx.setLineDash([8, 4]);
+            ctx.strokeStyle = preset.stroke;
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+            ctx.restore();
+          } else {
+            const size = OBJECT_SIZES[activeTool] || 1;
+            const gx = Math.max(0, Math.min(WORLD_GRID - size, hoverCell.x));
+            const gy = Math.max(0, Math.min(WORLD_GRID - size, hoverCell.y));
 
-      // 1. Подсветка при перетаскивании существующего объекта ЛКМ
-      if (draggingItem && draggingItem.hasMoved) {
-        const dragObj = mapItems.find(x => x.id === draggingItem.id);
-        if (!dragObj) { layer.innerHTML = ''; return; }
+            let ignoreId = movingItemId;
+            if (!ignoreId && (activeTool === 'bear1' || activeTool === 'bear2' || activeTool === 'castle')) {
+              const ex = mapItems.find(x => x.type === activeTool);
+              if (ex) ignoreId = ex.id;
+            }
+            if (!ignoreId && activeTool === 'city' && activeCityPlayerKey) {
+              const ex = mapItems.find(x => x.type === 'city' && x.playerKey === activeCityPlayerKey);
+              if (ex) ignoreId = ex.id;
+            }
 
-        const swapTarget = dragObj.type === 'city'
-          ? findSingleSwapCandidate(draggingItem.curGx, draggingItem.curGy, dragObj.size, dragObj.id)
-          : null;
-
-        let html = '';
-        if (swapTarget) {
-          // Янтарная подсветка: можно отпустить для предложения обмена местами
-          html += `<polygon points="${diamondPoints(swapTarget.gx, swapTarget.gy, swapTarget.size)}" fill="rgba(251, 191, 36, 0.45)" stroke="#fde047" stroke-width="2.5" />`;
-          const c = gridToScreen(swapTarget.gx + swapTarget.size / 2, swapTarget.gy + swapTarget.size / 2);
-          html += `<text x="${c.x}" y="${c.y + 4}" text-anchor="middle" fill="#ffffff" font-family="Inter, sans-serif" font-size="13" font-weight="800">⇄ ОБМЕН</text>`;
-        } else {
-          for (let dx = 0; dx < dragObj.size; dx++) {
-            for (let dy = 0; dy < dragObj.size; dy++) {
-              const occ = isCellOccupied(draggingItem.curGx + dx, draggingItem.curGy + dy, dragObj.id);
-              const fill = occ ? 'rgba(239, 68, 68, 0.58)' : 'rgba(34, 197, 94, 0.52)';
-              const stroke = occ ? '#fca5a5' : '#86efac';
-              html += `<polygon points="${diamondPoints(draggingItem.curGx + dx, draggingItem.curGy + dy, 1)}" fill="${fill}" stroke="${stroke}" stroke-width="1.5" />`;
+            for (let dx = 0; dx < size; dx++) {
+              for (let dy = 0; dy < size; dy++) {
+                const occ = isCellOccupied(gx + dx, gy + dy, ignoreId);
+                drawIsoPolygon(ctx, gx + dx, gy + dy, 1);
+                ctx.fillStyle = occ ? 'rgba(239, 68, 68, 0.58)' : 'rgba(34, 197, 94, 0.52)';
+                ctx.fill();
+                ctx.strokeStyle = occ ? '#fca5a5' : '#86efac';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+              }
             }
           }
         }
-        layer.innerHTML = html;
-        return;
       }
 
-      if (!hoverCell || activeTool === 'pan' || activeTool === 'erase') {
-        layer.innerHTML = '';
-        return;
-      }
-
-      // 2. Превью тактической зоны
-      if (activeTool === 'zone') {
-        const zSize = Number(document.getElementById('zoneSizeSelect')?.value) || 6;
-        const preset = ZONE_PRESETS[document.getElementById('zonePresetSelect')?.value] || ZONE_PRESETS.ally;
-        const gx = Math.max(0, Math.min(GRID_SIZE - zSize, hoverCell.gx));
-        const gy = Math.max(0, Math.min(GRID_SIZE - zSize, hoverCell.gy));
-        layer.innerHTML = `<polygon points="${diamondPoints(gx, gy, zSize)}" fill="${preset.fill}" stroke="${preset.stroke}" stroke-width="2.5" stroke-dasharray="8,4" />`;
-        return;
-      }
-
-      // 3. Превью обычной установки постройки / топки
-      const size = OBJECT_SIZES[activeTool] || 1;
-      const gx = Math.max(0, Math.min(GRID_SIZE - size, hoverCell.gx));
-      const gy = Math.max(0, Math.min(GRID_SIZE - size, hoverCell.gy));
-
-      let ignoreId = movingItemId;
-      if (!ignoreId && (activeTool === 'bear1' || activeTool === 'bear2')) {
-        const ex = mapItems.find(x => x.type === activeTool);
-        if (ex) ignoreId = ex.id;
-      }
-      if (!ignoreId && activeTool === 'city' && activeCityPlayerKey) {
-        const ex = mapItems.find(x => x.type === 'city' && x.playerKey === activeCityPlayerKey);
-        if (ex) ignoreId = ex.id;
-      }
-
-      let html = '';
-      for (let dx = 0; dx < size; dx++) {
-        for (let dy = 0; dy < size; dy++) {
-          const occ = isCellOccupied(gx + dx, gy + dy, ignoreId);
-          const fill = occ ? 'rgba(239, 68, 68, 0.58)' : 'rgba(34, 197, 94, 0.52)';
-          const stroke = occ ? '#fca5a5' : '#86efac';
-          html += `<polygon points="${diamondPoints(gx + dx, gy + dy, 1)}" fill="${fill}" stroke="${stroke}" stroke-width="1.5" />`;
-        }
-      }
-      layer.innerHTML = html;
+      ctx.restore();
     }
 
-    // ==================== ОТРИСОВКА ПОСТРОЕК И ТОПОК ====================
+    // ==================== ОТРИСОВКА ВИДИМЫХ ОБЪЕКТОВ И ТОПОК ====================
+    let lastVisibleEntitySignature = '';
+
     function buildFloatingBarHtml(item, safeId) {
       if (isReadOnly) return '';
-      // Кнопка «Сообщение» появляется ТОЛЬКО над топками игроков
+      // Кнопка «Сообщение» — только над топками игроков; «Переместить» (X:Y) и «Удалить» — над любым объектом
       const msgBtn = item.type === 'city'
         ? `<button type="button" onclick="openMapMessageModal('${safeId}')" title="Отправить личное сообщение игроку"
-            class="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[11px] font-bold flex items-center gap-1 transition">
+            class="px-2 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[11px] font-bold flex items-center gap-1 transition">
             <i class="fa-solid fa-envelope"></i><span>Сообщение</span>
           </button>`
         : '';
@@ -1512,6 +1834,10 @@
       return `
         <div class="entity-floating-bar" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()">
           ${msgBtn}
+          <button type="button" onclick="openMoveCoordsModal('${safeId}')" title="Переместить по точным координатам X:Y"
+            class="px-2 py-1 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-[11px] font-bold flex items-center gap-1 transition">
+            <i class="fa-solid fa-location-dot"></i><span>Переместить</span>
+          </button>
           <button type="button" onclick="deleteEntityById('${safeId}')" title="Удалить с карты"
             class="px-2 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-bold flex items-center gap-1 transition">
             <i class="fa-solid fa-trash"></i>
@@ -1520,21 +1846,36 @@
       `;
     }
 
-    function renderEntities() {
+    function renderEntities(force = false) {
       const layer = document.getElementById('entitiesLayer');
-      const lineTargetId = document.getElementById('lineOverlaySelect').value;
+      if (!layer) return;
+
+      const bounds = getViewportTileBounds(12);
+      const lineTargetId = document.getElementById('lineOverlaySelect')?.value || 'none';
       const lineTargetObj = lineTargetId !== 'none' ? mapItems.find(x => x.id === lineTargetId) : null;
 
-      // Проверяем наличие собственного города на текущей карте (для кнопки «📍 Мой город»)
+      // Кнопка «📍 Мой город» видна, если город игрока стоит на карте
       const myCity = myPlayerKey ? mapItems.find(x => x.type === 'city' && x.playerKey === myPlayerKey) : null;
       const myBtn = document.getElementById('findMyCityBtn');
       if (myBtn) myBtn.classList.toggle('hidden', !myCity);
 
-      const sorted = [...mapItems].sort((a, b) => (a.gx + a.gy) - (b.gx + b.gy));
+      // Отбираем только объекты, попадающие в видимую область (плюс выбранный/перетаскиваемый)
+      const visible = mapItems.filter(item => {
+        if (item.id === selectedItemId || (draggingItem && draggingItem.id === item.id)) return true;
+        return (item.x + item.size >= bounds.minX && item.x <= bounds.maxX &&
+                item.y + item.size >= bounds.minY && item.y <= bounds.maxY);
+      });
 
-      layer.innerHTML = sorted.map(item => {
-        const center = gridToScreen(item.gx + item.size / 2, item.gy + item.size / 2);
-        const zIdx = (item.gx + item.gy) * 10 + item.size;
+      const sig = visible.map(i => `${i.id}:${i.x},${i.y}`).join('|') + `#${selectedItemId}#${lineTargetId}`;
+      if (!force && sig === lastVisibleEntitySignature) return;
+      lastVisibleEntitySignature = sig;
+
+      // Сортировка по глубине: северные (больший x+y) рисуются раньше, южные (меньший x+y) поверх
+      visible.sort((a, b) => (b.x + b.y) - (a.x + a.y));
+
+      layer.innerHTML = visible.map(item => {
+        const center = tileToWorld(item.x + item.size / 2, item.y + item.size / 2);
+        const zIdx = Math.max(10, (WORLD_GRID * 2 + 100) - (item.x + item.y));
         const isDraggingThis = !!(draggingItem && draggingItem.id === item.id && draggingItem.hasMoved);
         const isSel = item.id === selectedItemId && !isDraggingThis;
         const safeId = item.id.replace(/'/g, "\\'");
@@ -1542,7 +1883,7 @@
         const roleCls = roleMeta ? roleMeta.cls : '';
         const stateCls = `${isSel ? 'selected' : ''} ${isDraggingThis ? 'dragging' : ''} ${roleCls} ${isReadOnly ? 'read-only' : ''}`;
         const floatingBar = isSel ? buildFloatingBarHtml(item, safeId) : '';
-        const realCoordsStr = formatItemRealCoords(item);
+        const realCoordsStr = formatItemCoords(item);
 
         if (item.type === 'city') {
           const p = findPlayer(item.playerKey);
@@ -1550,8 +1891,8 @@
           const fInfo = parseFurnaceInfo(p ? p.furnaceLevel : item.fallbackFurnace);
           const w = TILE_W * 1.36;
           const h = w;
-          const left = center.x - w / 2;
-          const top = center.y - h * 0.56;
+          const left = center.wx - w / 2;
+          const top = center.wy - h * 0.56;
 
           const isMyCity = !!(myPlayerKey && item.playerKey === myPlayerKey);
           const isMoved = !!movedCitiesMap[item.playerKey];
@@ -1571,7 +1912,7 @@
             : '';
 
           const movedBadgeHtml = (!isReadOnly && isMoved)
-            ? `<div class="moved-badge" title="Позиция изменена в этом сеансе (ожидает оповещения)">🔄</div>`
+            ? `<div class="moved-badge" title="Позиция изменена в этом сеансе">🔄</div>`
             : '';
 
           return `
@@ -1593,14 +1934,14 @@
         if (item.type === 'reserve') {
           const w = TILE_W * 1.38;
           const h = TILE_H * 1.38;
-          const left = center.x - w / 2;
-          const top = center.y - h / 2;
+          const left = center.wx - w / 2;
+          const top = center.wy - h / 2;
           const rLbl = String(item.label || 'Резерв').replace(/[<>&]/g, '');
           return `
             <div onmousedown="onEntityMouseDown(event, '${safeId}')" class="map-entity ${stateCls} flex items-center justify-center"
                  style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="Резерв (2×2) • ${realCoordsStr}">
               ${floatingBar}
-              <div class="reserve-box max-w-[110px]">
+              <div class="reserve-box max-w-[112px]">
                 <div class="text-sm leading-none">🟩</div>
                 <div class="text-[9px] font-extrabold mt-0.5 truncate">${rLbl}</div>
               </div>
@@ -1611,8 +1952,8 @@
         if (item.type === 'bear1' || item.type === 'bear2') {
           const w = TILE_W * 2.35;
           const h = w * 0.88;
-          const left = center.x - w / 2;
-          const top = center.y - h * 0.54;
+          const left = center.wx - w / 2;
+          const top = center.wy - h * 0.54;
           const imgName = item.type === 'bear1' ? 'bear1' : 'bear2';
           return `
             <div onmousedown="onEntityMouseDown(event, '${safeId}')" class="map-entity ${stateCls}"
@@ -1627,8 +1968,8 @@
         if (item.type === 'hq') {
           const w = TILE_W * 2.35;
           const h = w * 0.90;
-          const left = center.x - w / 2;
-          const top = center.y - h * 0.54;
+          const left = center.wx - w / 2;
+          const top = center.wy - h * 0.54;
           return `
             <div onmousedown="onEntityMouseDown(event, '${safeId}')" class="map-entity ${stateCls} flex items-center justify-center"
                  style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="Штаб альянса (3×3) • ${realCoordsStr}">
@@ -1646,8 +1987,8 @@
           const st = STATUE_TYPES[item.subType] || STATUE_TYPES.other;
           const w = TILE_W * 1.36;
           const h = w;
-          const left = center.x - w / 2;
-          const top = center.y - h * 0.56;
+          const left = center.wx - w / 2;
+          const top = center.wy - h * 0.56;
           return `
             <div onmousedown="onEntityMouseDown(event, '${safeId}')" class="map-entity ${stateCls} flex flex-col items-center justify-center"
                  style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="${st.label} (2×2) • ${realCoordsStr}">
@@ -1667,8 +2008,8 @@
         if (item.type === 'banner') {
           const w = TILE_W * 0.85;
           const h = TILE_W * 1.05;
-          const left = center.x - w / 2;
-          const top = center.y - h * 0.70;
+          const left = center.wx - w / 2;
+          const top = center.wy - h * 0.70;
           return `
             <div onmousedown="onEntityMouseDown(event, '${safeId}')" class="map-entity ${stateCls} flex flex-col items-center justify-end"
                  style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="Стяг альянса (1×1) • ${realCoordsStr}">
@@ -1682,8 +2023,8 @@
         if (item.type === 'obstacle') {
           const w = TILE_W * 0.85;
           const h = TILE_H * 0.95;
-          const left = center.x - w / 2;
-          const top = center.y - h * 0.55;
+          const left = center.wx - w / 2;
+          const top = center.wy - h * 0.55;
           return `
             <div onmousedown="onEntityMouseDown(event, '${safeId}')" class="map-entity ${stateCls} flex items-center justify-center"
                  style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="Преграда (1×1) • ${realCoordsStr}">
@@ -1696,8 +2037,8 @@
         if (item.type === 'castle') {
           const w = TILE_W * 4.8;
           const h = TILE_H * 4.8;
-          const left = center.x - w / 2;
-          const top = center.y - h * 0.54;
+          const left = center.wx - w / 2;
+          const top = center.wy - h * 0.54;
           return `
             <div onmousedown="onEntityMouseDown(event, '${safeId}')" class="map-entity ${stateCls} flex items-center justify-center"
                  style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="Солнечный замок (6×6) • ${realCoordsStr}">
@@ -1715,8 +2056,8 @@
         if (item.type === 'turret') {
           const w = TILE_W * 1.5;
           const h = w * 0.95;
-          const left = center.x - w / 2;
-          const top = center.y - h * 0.56;
+          const left = center.wx - w / 2;
+          const top = center.wy - h * 0.56;
           const tLabel = getTurretDisplayName(item);
           return `
             <div onmousedown="onEntityMouseDown(event, '${safeId}')" class="map-entity ${stateCls} flex items-center justify-center"
@@ -1734,16 +2075,17 @@
         if (item.type === 'fort') {
           const w = TILE_W * 3.1;
           const h = TILE_H * 3.1;
-          const left = center.x - w / 2;
-          const top = center.y - h * 0.54;
+          const left = center.wx - w / 2;
+          const top = center.wy - h * 0.54;
+          const fLbl = String(item.label || 'ФОРТ / ЦИТАДЕЛЬ').replace(/[<>&]/g, '');
           return `
             <div onmousedown="onEntityMouseDown(event, '${safeId}')" class="map-entity ${stateCls} flex items-center justify-center"
-                 style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="Форт / Цитадель (4×4) • ${realCoordsStr}">
+                 style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="${fLbl} (4×4) • ${realCoordsStr}">
               ${floatingBar}
               <img src="assets/fort.png" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-full h-full object-contain pointer-events-none select-none" draggable="false" />
               <div style="display:none;" class="px-5 py-3.5 rounded-3xl bg-purple-950/95 border-2 border-purple-400 flex-col items-center justify-center text-center shadow-2xl">
                 <div class="text-3xl leading-none">🏯</div>
-                <div class="text-xs font-extrabold text-purple-200 mt-1 whitespace-nowrap">ФОРТ / ЦИТАДЕЛЬ</div>
+                <div class="text-xs font-extrabold text-purple-200 mt-1 whitespace-nowrap">${fLbl}</div>
                 <div class="text-[10px] font-mono text-purple-300 mt-0.5">${realCoordsStr}</div>
               </div>
             </div>
@@ -1753,16 +2095,18 @@
         if (item.type === 'target') {
           const w = TILE_W * 2.3;
           const h = TILE_H * 2.3;
-          const left = center.x - w / 2;
-          const top = center.y - h * 0.54;
+          const left = center.wx - w / 2;
+          const top = center.wy - h * 0.54;
+          const tLbl = String(item.label || 'КОМПЛЕКС / ОБЪЕКТ').replace(/[<>&]/g, '');
           return `
             <div onmousedown="onEntityMouseDown(event, '${safeId}')" class="map-entity ${stateCls} flex items-center justify-center"
-                 style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="Объект / Цель (3×3) • ${realCoordsStr}">
+                 style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="${tLbl} (3×3) • ${realCoordsStr}">
               ${floatingBar}
               <img src="assets/target.png" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-full h-full object-contain pointer-events-none select-none" draggable="false" />
               <div style="display:none;" class="px-3.5 py-2.5 rounded-2xl bg-sky-950/95 border-2 border-sky-400 flex-col items-center justify-center text-center shadow-xl">
                 <div class="text-2xl leading-none">🎯</div>
-                <div class="text-[10px] font-extrabold text-sky-200 mt-1 whitespace-nowrap">ОБЪЕКТ / ЦЕЛЬ</div>
+                <div class="text-[10px] font-extrabold text-sky-200 mt-1 whitespace-nowrap">${tLbl}</div>
+                <div class="text-[9px] font-mono text-sky-300 mt-0.5">${realCoordsStr}</div>
               </div>
             </div>
           `;
@@ -1774,47 +2118,23 @@
     // ==================== КАМЕРА И НАВИГАЦИЯ ====================
     function applyCamera() {
       const world = document.getElementById('mapWorld');
-      world.style.transform = `translate(${cam.x}px, ${cam.y}px) scale(${cam.scale})`;
-    }
-
-    function centerCamera() {
-      const vp = document.getElementById('mapViewport');
-      let targetX = GRID_SIZE / 2;
-      let targetY = GRID_SIZE / 2;
-
-      if (mapItems.length > 0) {
-        const anchorObj = mapItems.find(x => ['castle', 'hq', 'fort', 'target', 'bear1'].includes(x.type)) || mapItems[0];
-        targetX = anchorObj.gx + anchorObj.size / 2;
-        targetY = anchorObj.gy + anchorObj.size / 2;
-      }
-
-      const mid = gridToScreen(targetX, targetY);
-      cam.scale = 0.78;
-      cam.x = vp.clientWidth / 2 - mid.x * cam.scale;
-      cam.y = vp.clientHeight / 2 - mid.y * cam.scale;
-      applyCamera();
+      if (world) world.style.transform = `translate(${cam.x}px, ${cam.y}px) scale(${cam.scale})`;
+      scheduleMapRender();
+      renderEntities(false);
     }
 
     function focusOnItem(item) {
-      const vp = document.getElementById('mapViewport');
-      const c = gridToScreen(item.gx + item.size / 2, item.gy + item.size / 2);
-      cam.x = vp.clientWidth / 2 - c.x * cam.scale;
-      cam.y = vp.clientHeight / 2 - c.y * cam.scale;
-      applyCamera();
+      flyToCoords(item.x + item.size / 2 - 0.5, item.y + item.size / 2 - 0.5, Math.max(cam.scale, 0.78));
     }
 
     function focusMyCity() {
       if (!myPlayerKey) return;
       const myCity = mapItems.find(x => x.type === 'city' && x.playerKey === myPlayerKey);
-      if (!myCity) {
-        showToast('Вашего города пока нет на этой карте');
-        return;
-      }
-      cam.scale = Math.max(cam.scale, 0.95);
-      focusOnItem(myCity);
+      if (!myCity) return showToast('Вашего города пока нет на карте');
+      flyToCoords(myCity.x + 0.5, myCity.y + 0.5, Math.max(cam.scale, 0.92));
       selectedItemId = myCity.id;
-      buildBaseGridSvg();
-      renderEntities();
+      renderEntities(true);
+      scheduleMapRender();
       showSelectedCard(myCity);
     }
 
@@ -1823,13 +2143,13 @@
       const ax = anchorX !== null ? anchorX : vp.clientWidth / 2;
       const ay = anchorY !== null ? anchorY : vp.clientHeight / 2;
       const oldScale = cam.scale;
-      const nextScale = Math.max(0.35, Math.min(2.1, oldScale * factor));
+      const nextScale = Math.max(0.28, Math.min(2.1, oldScale * factor));
       cam.x = ax - (ax - cam.x) * (nextScale / oldScale);
       cam.y = ay - (ay - cam.y) * (nextScale / oldScale);
       cam.scale = nextScale;
       applyCamera();
     }
-// ==================== ИНСТРУМЕНТЫ И ОБЪЕКТЫ КАРТЫ ====================
+    // ==================== ИНСТРУМЕНТЫ И ОБЪЕКТЫ КАРТЫ ====================
     function setTool(tool, playerKey = null, moveId = null) {
       if (isReadOnly && tool !== 'pan') return;
       cancelPendingSwap();
@@ -1844,14 +2164,27 @@
       const statueBox = document.getElementById('statueSelectorBox');
       if (statueBox) statueBox.classList.toggle('hidden', tool !== 'statue' || !!moveId);
 
-      const reserveBox = document.getElementById('reserveSelectorBox');
-      if (reserveBox) reserveBox.classList.toggle('hidden', tool !== 'reserve' || !!moveId);
+      const customBox = document.getElementById('customLabelBox');
+      const customInput = document.getElementById('customLabelInput');
+      const needsCustomLabel = !moveId && ['reserve', 'fort', 'target', 'turret'].includes(tool);
+      if (customBox) {
+        customBox.classList.toggle('hidden', !needsCustomLabel);
+        if (needsCustomLabel && customInput) {
+          const defLabels = {
+            reserve: 'Резерв',
+            fort: 'Форт',
+            target: 'Комплекс',
+            turret: 'Орудийная башня'
+          };
+          customInput.value = defLabels[tool] || '';
+        }
+      }
 
       const zoneBox = document.getElementById('zoneSelectorBox');
       if (zoneBox) zoneBox.classList.toggle('hidden', tool !== 'zone');
 
       updateToolSubHint();
-      updateHoverPreview();
+      scheduleMapRender();
       renderPlayersSidebar();
     }
 
@@ -1873,9 +2206,10 @@
         const sub = document.getElementById('statueTypeSelect')?.value || 'champ_silver';
         const st = STATUE_TYPES[sub] || STATUE_TYPES.other;
         hintTxt.textContent = `Установка статуи: ${st.label} (2×2) — кликните по зелёным клеткам`;
-      } else if (activeTool === 'reserve') {
-        const lbl = document.getElementById('reserveLabelInput')?.value.trim() || 'Резерв';
-        hintTxt.textContent = `Слот резерва «${lbl}» (2×2) — кликните по свободным клеткам`;
+      } else if (['reserve', 'fort', 'target', 'turret'].includes(activeTool)) {
+        const lbl = document.getElementById('customLabelInput')?.value.trim() || activeTool;
+        const sz = OBJECT_SIZES[activeTool] || 2;
+        hintTxt.textContent = `Установка «${lbl}» (${sz}×${sz}) — кликните по свободным клеткам`;
       } else if (activeTool === 'zone') {
         const sz = document.getElementById('zoneSizeSelect')?.value || 6;
         const lbl = document.getElementById('zoneLabelInput')?.value.trim() || 'Зона';
@@ -1884,10 +2218,12 @@
         hintTxt.textContent = 'Режим удаления: кликните по объекту или тактической зоне';
       } else {
         const names = {
-          bear1: '1-я ловушка (3×3)', bear2: '2-я ловушка (3×3)', hq: 'Штаб альянса (3×3)',
-          banner: 'Стяг альянса (1×1)', obstacle: 'Преграда (1×1)',
-          castle: 'Солнечный замок (6×6)', turret: 'Орудийная башня (2×2)',
-          fort: 'Форт / Цитадель (4×4)', target: 'Объект / Цель (3×3)'
+          bear1: '1-я ловушка (3×3)',
+          bear2: '2-я ловушка (3×3)',
+          hq: 'Штаб альянса (3×3)',
+          banner: 'Стяг альянса (1×1)',
+          obstacle: 'Преграда (1×1)',
+          castle: 'Солнечный замок (6×6)'
         };
         hintTxt.textContent = `Установка: ${names[activeTool] || activeTool} — кликните по карте`;
       }
@@ -1902,12 +2238,12 @@
       const item = mapItems.find(x => x.id === itemId);
       if (!item) return;
 
-      // В режиме просмотра для обычных бойцов — только выбор и просмотр карточки
+      // Для обычных бойцов — только выбор и просмотр карточки
       if (isReadOnly) {
         e.stopPropagation();
         selectedItemId = itemId;
-        buildBaseGridSvg();
-        renderEntities();
+        renderEntities(true);
+        scheduleMapRender();
         showSelectedCard(item);
         return;
       }
@@ -1928,10 +2264,10 @@
         id: itemId,
         startMx: e.clientX,
         startMy: e.clientY,
-        origGx: item.gx,
-        origGy: item.gy,
-        curGx: item.gx,
-        curGy: item.gy,
+        origX: item.x,
+        origY: item.y,
+        curX: item.x,
+        curY: item.y,
         hasMoved: false
       };
       selectedItemId = itemId;
@@ -1948,11 +2284,19 @@
       mapItems = mapItems.filter(x => x.id !== itemId);
       if (selectedItemId === itemId) deselectEntity();
       refreshLineOverlayOptions();
-      buildBaseGridSvg();
-      renderEntities();
+      renderEntities(true);
+      scheduleMapRender();
       renderPlayersSidebar();
       scheduleCloudSave();
       showToast('Объект убран с карты');
+    }
+
+    function getNearestLandmarksFor(cityItem, limit = 5) {
+      return getMapLandmarks()
+        .map(lm => ({ lm, d: calcDistanceToTarget(cityItem, lm) }))
+        .filter(x => x.d)
+        .sort((a, b) => a.d.euclid - b.d.euclid)
+        .slice(0, limit);
     }
 
     function showSelectedCard(item) {
@@ -1963,7 +2307,7 @@
       const roleWrap = document.getElementById('selCardRoleWrap');
       const actionsWrap = document.getElementById('selCardActions');
 
-      const realStr = formatItemRealCoords(item);
+      const realStr = formatItemCoords(item);
 
       if (item.type === 'city') {
         const p = findPlayer(item.playerKey);
@@ -1985,11 +2329,10 @@
           roleWrap.classList.add('hidden');
         }
 
-        const landmarks = getMapLandmarks();
-        const distLines = landmarks.map(lm => {
-          const d = calcDistanceToTarget(item, lm);
-          return d ? `<div>${getObjectDisplayName(lm)}: <b class="text-amber-300">Л${d.line} • ~${formatMarchSec(d.estSec)}</b></div>` : '';
-        }).join('');
+        const nearest = getNearestLandmarksFor(item, 6);
+        const distLines = nearest.map(({ lm, d }) =>
+          `<div>${getObjectDisplayName(lm)}: <b class="text-amber-300">Л${d.line} • ~${formatMarchSec(d.estSec)}</b></div>`
+        ).join('');
 
         const roleInfo = item.role && CITY_ROLES[item.role]
           ? `<div class="text-amber-300 font-bold">Роль: ${CITY_ROLES[item.role].icon} ${CITY_ROLES[item.role].label}</div>`
@@ -2000,7 +2343,7 @@
             <div>Координаты: <b class="text-white">${realStr}</b></div>
             ${roleInfo}
           </div>
-          <div class="space-y-0.5 max-h-28 overflow-y-auto">${distLines || '<span class="text-slate-500">Нет ключевых объектов на карте</span>'}</div>
+          <div class="space-y-0.5 max-h-28 overflow-y-auto thin-scroll">${distLines || '<span class="text-slate-500">Нет ключевых объектов на карте</span>'}</div>
         `;
       } else {
         if (roleWrap) roleWrap.classList.add('hidden');
@@ -2008,7 +2351,7 @@
         sub.textContent = `Размер: ${item.size}×${item.size} • ${realStr}`;
         dist.textContent = isReadOnly
           ? `Позиция объекта на карте: ${realStr}`
-          : 'Зажмите ЛКМ для переноса или нажмите корзину над объектом для удаления.';
+          : 'Зажмите ЛКМ для переноса или нажмите «Переместить» для ввода точных координат X:Y.';
       }
 
       if (actionsWrap) actionsWrap.classList.toggle('hidden', isReadOnly);
@@ -2018,8 +2361,8 @@
     function deselectEntity() {
       selectedItemId = null;
       document.getElementById('selectedInfoCard').classList.add('hidden');
-      buildBaseGridSvg();
-      renderEntities();
+      renderEntities(true);
+      scheduleMapRender();
     }
 
     function setSelectedCityRole(role) {
@@ -2028,17 +2371,9 @@
       if (!item) return;
       pushUndoState();
       item.role = role || undefined;
-      renderEntities();
+      renderEntities(true);
       showSelectedCard(item);
       scheduleCloudSave();
-    }
-
-    function startMoveSelected() {
-      if (isReadOnly) return;
-      const item = mapItems.find(x => x.id === selectedItemId);
-      if (!item) return;
-      document.getElementById('selectedInfoCard').classList.add('hidden');
-      setTool(item.type, item.playerKey || null, item.id);
     }
 
     function removeSelectedEntity() {
@@ -2049,40 +2384,40 @@
     function placeAtHover() {
       if (isReadOnly || !hoverCell || activeTool === 'pan' || activeTool === 'erase') return;
 
-      // Установка тактической зоны (не проверяет коллизии со зданиями)
+      // Установка тактической зоны (не проверяет коллизии)
       if (activeTool === 'zone') {
         const zSize = Number(document.getElementById('zoneSizeSelect')?.value) || 6;
         const preset = document.getElementById('zonePresetSelect')?.value || 'ally';
         const label = document.getElementById('zoneLabelInput')?.value.trim() || ZONE_PRESETS[preset].label;
-        const gx = Math.max(0, Math.min(GRID_SIZE - zSize, hoverCell.gx));
-        const gy = Math.max(0, Math.min(GRID_SIZE - zSize, hoverCell.gy));
+        const x = Math.max(0, Math.min(WORLD_GRID - zSize, hoverCell.x));
+        const y = Math.max(0, Math.min(WORLD_GRID - zSize, hoverCell.y));
 
         pushUndoState();
         mapZones.push({
           id: 'zone_' + Date.now() + '_' + Math.floor(Math.random() * 999),
-          gx, gy, size: zSize, preset, label
+          x, y, size: zSize, preset, label
         });
-        buildBaseGridSvg();
+        scheduleMapRender();
         scheduleCloudSave();
         showToast(`Тактическая зона «${label}» добавлена`);
         return;
       }
 
       const size = OBJECT_SIZES[activeTool] || 1;
-      const gx = Math.max(0, Math.min(GRID_SIZE - size, hoverCell.gx));
-      const gy = Math.max(0, Math.min(GRID_SIZE - size, hoverCell.gy));
+      const x = Math.max(0, Math.min(WORLD_GRID - size, hoverCell.x));
+      const y = Math.max(0, Math.min(WORLD_GRID - size, hoverCell.y));
 
       let ignoreId = movingItemId;
-      if (!ignoreId && (activeTool === 'bear1' || activeTool === 'bear2')) {
-        const ex = mapItems.find(x => x.type === activeTool);
+      if (!ignoreId && (activeTool === 'bear1' || activeTool === 'bear2' || activeTool === 'castle')) {
+        const ex = mapItems.find(it => it.type === activeTool);
         if (ex) ignoreId = ex.id;
       }
       if (!ignoreId && activeTool === 'city' && activeCityPlayerKey) {
-        const ex = mapItems.find(x => x.type === 'city' && x.playerKey === activeCityPlayerKey);
+        const ex = mapItems.find(it => it.type === 'city' && it.playerKey === activeCityPlayerKey);
         if (ex) ignoreId = ex.id;
       }
 
-      if (!canPlaceFootprint(gx, gy, size, ignoreId)) {
+      if (!canPlaceFootprint(x, y, size, ignoreId)) {
         showToast('Преграда: клетки уже заняты!');
         return;
       }
@@ -2090,28 +2425,26 @@
       pushUndoState();
 
       if (ignoreId) {
-        const target = mapItems.find(x => x.id === ignoreId);
+        const target = mapItems.find(it => it.id === ignoreId);
         if (target) {
-          const oldGx = target.gx, oldGy = target.gy;
-          target.gx = gx;
-          target.gy = gy;
-          if (target.type === 'city') recordCityMove(target, oldGx, oldGy);
+          const oldX = target.x, oldY = target.y;
+          target.x = x;
+          target.y = y;
+          if (target.type === 'city') recordCityMove(target, oldX, oldY);
         }
       } else {
         const p = activeTool === 'city' ? findPlayer(activeCityPlayerKey) : null;
         const newItem = {
           id: 'obj_' + Date.now() + '_' + Math.floor(Math.random() * 999),
           type: activeTool,
-          gx, gy, size
+          x, y, size
         };
         if (activeTool === 'statue') {
           newItem.subType = document.getElementById('statueTypeSelect')?.value || 'champ_silver';
         }
-        if (activeTool === 'reserve') {
-          newItem.label = document.getElementById('reserveLabelInput')?.value.trim() || 'Резерв';
-        }
-        if (activeTool === 'turret') {
-          newItem.label = 'Орудийная башня';
+        if (['reserve', 'fort', 'target', 'turret'].includes(activeTool)) {
+          const lbl = document.getElementById('customLabelInput')?.value.trim();
+          if (lbl) newItem.label = lbl;
         }
         if (activeTool === 'city') {
           newItem.playerKey = activeCityPlayerKey;
@@ -2122,24 +2455,139 @@
         mapItems.push(newItem);
       }
 
-      if (movingItemId || ['city', 'bear1', 'bear2', 'hq', 'statue', 'castle', 'fort', 'reserve'].includes(activeTool)) {
+      if (movingItemId || ['city', 'bear1', 'bear2', 'hq', 'statue', 'castle', 'fort', 'target', 'reserve'].includes(activeTool)) {
         cancelActiveTool();
       }
 
       refreshLineOverlayOptions();
-      buildBaseGridSvg();
-      renderEntities();
+      renderEntities(true);
+      scheduleMapRender();
       renderPlayersSidebar();
       scheduleCloudSave();
     }
 
+    // ==================== ПЕРЕМЕЩЕНИЕ ОБЪЕКТА ПО ТОЧНЫМ КООРДИНАТАМ X:Y ====================
+    function openMoveCoordsModal(itemId) {
+      if (isReadOnly) return;
+      const item = mapItems.find(it => it.id === itemId);
+      if (!item) return;
+
+      moveCoordsItemId = itemId;
+      const maxAllowed = WORLD_GRID - item.size;
+
+      document.getElementById('moveCoordsTitle').textContent = `📍 Переместить: ${getObjectDisplayName(item)}`;
+      document.getElementById('moveCoordsSub').textContent = `Размер ${item.size}×${item.size} • Допустимый диапазон: 0..${maxAllowed}`;
+
+      const xInp = document.getElementById('moveCoordsX');
+      const yInp = document.getElementById('moveCoordsY');
+      xInp.max = maxAllowed;
+      yInp.max = maxAllowed;
+      xInp.value = item.x;
+      yInp.value = item.y;
+
+      const labelWrap = document.getElementById('moveCoordsLabelWrap');
+      const labelInp = document.getElementById('moveCoordsLabel');
+      const canEditLabel = ['fort', 'target', 'reserve', 'turret'].includes(item.type);
+      labelWrap.classList.toggle('hidden', !canEditLabel);
+      if (canEditLabel) {
+        labelInp.value = item.label || getObjectDisplayName(item);
+      }
+
+      const errBox = document.getElementById('moveCoordsError');
+      errBox.classList.add('hidden');
+      errBox.textContent = '';
+
+      document.getElementById('moveCoordsModal').classList.remove('hidden');
+      xInp.focus();
+      xInp.select();
+    }
+
+    function closeMoveCoordsModal() {
+      document.getElementById('moveCoordsModal').classList.add('hidden');
+      moveCoordsItemId = null;
+    }
+
+    function submitMoveCoords() {
+      if (isReadOnly || !moveCoordsItemId) return;
+      const item = mapItems.find(it => it.id === moveCoordsItemId);
+      if (!item) return closeMoveCoordsModal();
+
+      const errBox = document.getElementById('moveCoordsError');
+      const maxAllowed = WORLD_GRID - item.size;
+      const nx = Math.round(Number(document.getElementById('moveCoordsX').value));
+      const ny = Math.round(Number(document.getElementById('moveCoordsY').value));
+
+      if (Number.isNaN(nx) || Number.isNaN(ny) || nx < 0 || ny < 0 || nx > maxAllowed || ny > maxAllowed) {
+        errBox.textContent = `Координаты должны быть в диапазоне от 0 до ${maxAllowed}.`;
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      const canEditLabel = ['fort', 'target', 'reserve', 'turret'].includes(item.type);
+      const newLabel = canEditLabel ? document.getElementById('moveCoordsLabel').value.trim() : null;
+
+      // Проверяем свободна ли целевая область
+      if (!canPlaceFootprint(nx, ny, item.size, item.id)) {
+        const swapTarget = item.type === 'city'
+          ? findSingleSwapCandidate(nx, ny, item.size, item.id)
+          : null;
+
+        if (swapTarget) {
+          const origX = item.x, origY = item.y;
+          closeMoveCoordsModal();
+          flyToCoords(swapTarget.x + 0.5, swapTarget.y + 0.5, Math.max(cam.scale, 0.78));
+          showPendingSwap(item, swapTarget, origX, origY);
+          return;
+        }
+
+        // Находим, какой именно объект мешает
+        let blockerName = 'другим объектом';
+        outer: for (let dx = 0; dx < item.size; dx++) {
+          for (let dy = 0; dy < item.size; dy++) {
+            const hit = mapItems.find(it =>
+              it.id !== item.id &&
+              (nx + dx) >= it.x && (nx + dx) < it.x + it.size &&
+              (ny + dy) >= it.y && (ny + dy) < it.y + it.size
+            );
+            if (hit) {
+              blockerName = `«${getObjectDisplayName(hit)}» (${formatItemCoords(hit)})`;
+              break outer;
+            }
+          }
+        }
+        errBox.textContent = `Клетки X:${nx} Y:${ny} уже заняты объектом ${blockerName}.`;
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      pushUndoState();
+      const oldX = item.x, oldY = item.y;
+      item.x = nx;
+      item.y = ny;
+      if (canEditLabel && newLabel) item.label = newLabel;
+      if (item.type === 'city' && (oldX !== nx || oldY !== ny)) {
+        recordCityMove(item, oldX, oldY);
+      }
+
+      closeMoveCoordsModal();
+      selectedItemId = item.id;
+      refreshLineOverlayOptions();
+      flyToCoords(item.x + item.size / 2 - 0.5, item.y + item.size / 2 - 0.5, Math.max(cam.scale, 0.78));
+      renderEntities(true);
+      scheduleMapRender();
+      renderPlayersSidebar();
+      showSelectedCard(item);
+      scheduleCloudSave();
+      showToast(`${getObjectDisplayName(item)} → X:${nx} Y:${ny}`);
+    }
+
     // ==================== ПОДТВЕРЖДЕНИЕ ОБМЕНА ДВУХ ТОПОК (SWAP) ====================
-    function showPendingSwap(sourceItem, targetItem, origGx, origGy) {
+    function showPendingSwap(sourceItem, targetItem, origX, origY) {
       pendingSwap = {
         sourceId: sourceItem.id,
         targetId: targetItem.id,
-        origGx,
-        origGy
+        origX,
+        origY
       };
       const nameA = getObjectDisplayName(sourceItem);
       const nameB = getObjectDisplayName(targetItem);
@@ -2151,26 +2599,26 @@
       if (!pendingSwap || isReadOnly) return;
       const src = mapItems.find(x => x.id === pendingSwap.sourceId);
       const tgt = mapItems.find(x => x.id === pendingSwap.targetId);
-      const origGx = pendingSwap.origGx;
-      const origGy = pendingSwap.origGy;
+      const origX = pendingSwap.origX;
+      const origY = pendingSwap.origY;
 
       pendingSwap = null;
       document.getElementById('swapConfirmBanner').classList.add('hidden');
       if (!src || !tgt) return;
 
       pushUndoState();
-      const tgtGx = tgt.gx, tgtGy = tgt.gy;
-      src.gx = tgtGx;
-      src.gy = tgtGy;
-      tgt.gx = origGx;
-      tgt.gy = origGy;
+      const tgtX = tgt.x, tgtY = tgt.y;
+      src.x = tgtX;
+      src.y = tgtY;
+      tgt.x = origX;
+      tgt.y = origY;
 
-      recordCityMove(src, origGx, origGy);
-      recordCityMove(tgt, tgtGx, tgtGy);
+      recordCityMove(src, origX, origY);
+      recordCityMove(tgt, tgtX, tgtY);
 
       selectedItemId = src.id;
-      buildBaseGridSvg();
-      renderEntities();
+      renderEntities(true);
+      scheduleMapRender();
       renderPlayersSidebar();
       showSelectedCard(src);
       scheduleCloudSave();
@@ -2184,17 +2632,13 @@
     }
 
     // ==================== ОТСЛЕЖИВАНИЕ ПЕРЕЕЗДОВ И ПАКЕТНАЯ РАССЫЛКА ====================
-    function recordCityMove(cityItem, oldGx, oldGy) {
+    function recordCityMove(cityItem, oldX, oldY) {
       if (!cityItem || cityItem.type !== 'city' || !cityItem.playerKey) return;
-      const newR = gridToReal(cityItem.gx, cityItem.gy, cityItem.size || 2);
-      const oldR = (oldGx !== null && oldGy !== null) ? gridToReal(oldGx, oldGy, cityItem.size || 2) : null;
-
       const existing = movedCitiesMap[cityItem.playerKey];
-      const baseOldX = existing ? existing.oldX : (oldR ? oldR.x : null);
-      const baseOldY = existing ? existing.oldY : (oldR ? oldR.y : null);
+      const baseOldX = existing ? existing.oldX : oldX;
+      const baseOldY = existing ? existing.oldY : oldY;
 
-      // Если вернули обратно на исходную клетку — снимаем отметку переезда
-      if (baseOldX !== null && baseOldX === newR.x && baseOldY === newR.y) {
+      if (baseOldX !== null && baseOldX === cityItem.x && baseOldY === cityItem.y) {
         delete movedCitiesMap[cityItem.playerKey];
       } else {
         movedCitiesMap[cityItem.playerKey] = {
@@ -2203,8 +2647,8 @@
           nick: getObjectDisplayName(cityItem),
           oldX: baseOldX,
           oldY: baseOldY,
-          newX: newR.x,
-          newY: newR.y
+          newX: cityItem.x,
+          newY: cityItem.y
         };
       }
       updateBatchNotifyBadge();
@@ -2229,16 +2673,15 @@
         container.innerHTML = list.map(m => {
           const item = mapItems.find(x => x.id === m.itemId);
           const fromTxt = m.oldX !== null ? `X:${m.oldX} Y:${m.oldY} → ` : 'Новая точка: ';
-          const lm = getMapLandmarks()[0];
-          const d = (item && lm) ? calcDistanceToTarget(item, lm) : null;
-          const hint = d ? ` • ${getObjectDisplayName(lm)} (Л${d.line}, ~${formatMarchSec(d.estSec)})` : '';
+          const nearest = item ? getNearestLandmarksFor(item, 1)[0] : null;
+          const hint = nearest ? ` • ${getObjectDisplayName(nearest.lm)} (Л${nearest.d.line}, ~${formatMarchSec(nearest.d.estSec)})` : '';
           return `
             <div class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between gap-2">
               <div class="min-w-0">
                 <div class="font-bold text-white truncate">${m.nick}</div>
                 <div class="text-[11px] font-mono text-amber-300">${fromTxt}<b>X:${m.newX} Y:${m.newY}</b>${hint}</div>
               </div>
-              <button type="button" onclick="delete movedCitiesMap['${m.playerKey.replace(/'/g, "\\'")}']; updateBatchNotifyBadge(); openBatchNotifyModal(); renderEntities();"
+              <button type="button" onclick="delete movedCitiesMap['${m.playerKey.replace(/'/g, "\\'")}']; updateBatchNotifyBadge(); openBatchNotifyModal(); renderEntities(true);"
                 class="text-slate-500 hover:text-rose-400 px-1.5" title="Исключить из рассылки"><i class="fa-solid fa-xmark"></i></button>
             </div>
           `;
@@ -2254,29 +2697,22 @@
     function clearMovedSessionList() {
       movedCitiesMap = {};
       updateBatchNotifyBadge();
-      renderEntities();
+      renderEntities(true);
       openBatchNotifyModal();
     }
 
     function buildRelocateMessageFor(m) {
       const item = mapItems.find(x => x.id === m.itemId);
-      const mapLabel = MAP_TYPE_LABELS[currentMapType] || 'Улей альянса';
-      const landmarks = getMapLandmarks().slice(0, 2);
-      const hints = item ? landmarks.map(lm => {
-        const d = calcDistanceToTarget(item, lm);
-        return d ? `${getObjectDisplayName(lm)}: Л${d.line} (~${formatMarchSec(d.estSec)})` : '';
-      }).filter(Boolean) : [];
-      return `Просим переместить ваш город согласно плану «${mapLabel}» на координаты X:${m.newX} Y:${m.newY}${hints.length ? ' (' + hints.join(', ') + ')' : ''}.`;
+      const nearest = item ? getNearestLandmarksFor(item, 2) : [];
+      const hints = nearest.map(({ lm, d }) => `${getObjectDisplayName(lm)}: Л${d.line} (~${formatMarchSec(d.estSec)})`);
+      return `Просим переместить ваш город согласно утверждённому плану на координаты X:${m.newX} Y:${m.newY}${hints.length ? ' (' + hints.join(', ') + ')' : ''}.`;
     }
 
     function copyBatchNotifyList() {
       const list = Object.values(movedCitiesMap);
       if (list.length === 0) return showToast('Список переездов пуст');
-      const mapLabel = MAP_TYPE_LABELS[currentMapType] || 'Улей альянса';
-      const lines = [`📍 План переездов (${mapLabel}):`];
-      list.forEach(m => {
-        lines.push(`• ${m.nick} → X:${m.newX} Y:${m.newY}`);
-      });
+      const lines = ['📍 План переездов альянса:'];
+      list.forEach(m => lines.push(`• ${m.nick} → X:${m.newX} Y:${m.newY}`));
       navigator.clipboard.writeText(lines.join('\n'));
       showToast('Список переездов скопирован для чата!');
     }
@@ -2310,10 +2746,10 @@
       }
 
       btn.disabled = false;
-      btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-1"></i>Отправить всем на портал';
+      btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-1"></i>Отправить всем';
       movedCitiesMap = {};
       updateBatchNotifyBadge();
-      renderEntities();
+      renderEntities(true);
       closeBatchNotifyModal();
       showToast(`Личные уведомления отправлены: ${okCount} из ${list.length}`);
     }
@@ -2326,12 +2762,8 @@
 
       const p = findPlayer(item.playerKey);
       const nick = p ? p.nick : (item.fallbackNick || 'Игрок');
-      const r = gridToReal(item.gx, item.gy, item.size || 2);
-      const landmarks = getMapLandmarks().slice(0, 2);
-      const hints = landmarks.map(lm => {
-        const d = calcDistanceToTarget(item, lm);
-        return d ? `${getObjectDisplayName(lm)}: Л${d.line} (~${formatMarchSec(d.estSec)})` : '';
-      }).filter(Boolean);
+      const nearest = getNearestLandmarksFor(item, 2);
+      const hints = nearest.map(({ lm, d }) => `${getObjectDisplayName(lm)}: Л${d.line} (~${formatMarchSec(d.estSec)})`);
 
       mapMsgContext = {
         targetId: p ? (p.playerId || '') : '',
@@ -2339,11 +2771,10 @@
         playerKey: item.playerKey
       };
 
-      const mapLabel = MAP_TYPE_LABELS[currentMapType] || 'Улей альянса';
       document.getElementById('mapMsgTitle').textContent = `✉️ Личное сообщение: ${nick}`;
       document.getElementById('mapMsgSub').textContent = 'Отправится исключительно этому игроку (всплывёт при входе)';
       document.getElementById('mapMsgText').value =
-        `Просим переместить ваш город на позицию согласно утверждённому плану «${mapLabel}» — координаты X:${r.x} Y:${r.y}${hints.length ? ' (' + hints.join(', ') + ')' : ''}.`;
+        `Просим переместить ваш город на позицию согласно утверждённому плану — координаты X:${item.x} Y:${item.y}${hints.length ? ' (' + hints.join(', ') + ')' : ''}.`;
 
       document.getElementById('mapMessageModal').classList.remove('hidden');
       document.getElementById('mapMsgText').focus();
@@ -2385,13 +2816,14 @@
         }).then(r => r.json());
 
         if (res.ok) {
+          const sentNick = mapMsgContext.targetNick;
           if (mapMsgContext.playerKey && movedCitiesMap[mapMsgContext.playerKey]) {
             delete movedCitiesMap[mapMsgContext.playerKey];
             updateBatchNotifyBadge();
-            renderEntities();
+            renderEntities(true);
           }
           closeMapMessageModal();
-          showToast(`Личное сообщение отправлено игроку ${mapMsgContext ? mapMsgContext.targetNick : ''}!`);
+          showToast(`Личное сообщение отправлено игроку ${sentNick}!`);
         } else {
           alert(res.error || 'Ошибка отправки сообщения');
         }
@@ -2402,59 +2834,6 @@
       }
     }
 
-    // ==================== НАСТРОЙКА ЯКОРЯ РЕАЛЬНЫХ КООРДИНАТ X:Y ====================
-    function openAnchorModal() {
-      if (isReadOnly) return;
-      const sel = document.getElementById('anchorRefItemSelect');
-      const refs = mapItems.filter(x => x.type !== 'obstacle');
-      if (refs.length === 0) return showToast('Сначала добавьте хотя бы один объект на карту');
-
-      sel.innerHTML = refs.map(it =>
-        `<option value="${it.id}">${getObjectDisplayName(it)} (${formatItemRealCoords(it)})</option>`
-      ).join('');
-
-      onAnchorRefSelectChange();
-      document.getElementById('anchorModal').classList.remove('hidden');
-    }
-
-    function onAnchorRefSelectChange() {
-      const id = document.getElementById('anchorRefItemSelect').value;
-      const item = mapItems.find(x => x.id === id);
-      if (!item) return;
-      const r = gridToReal(item.gx, item.gy, item.size || 1);
-      document.getElementById('anchorRefRealX').value = r.x;
-      document.getElementById('anchorRefRealY').value = r.y;
-      document.getElementById('anchorPreviewOrigin').textContent = `X:${mapAnchor.maxX} Y:${mapAnchor.maxY}`;
-    }
-
-    function closeAnchorModal() {
-      document.getElementById('anchorModal').classList.add('hidden');
-    }
-
-    function applyAnchorSettings() {
-      const id = document.getElementById('anchorRefItemSelect').value;
-      const item = mapItems.find(x => x.id === id);
-      const rx = Number(document.getElementById('anchorRefRealX').value);
-      const ry = Number(document.getElementById('anchorRefRealY').value);
-      if (!item || Number.isNaN(rx) || Number.isNaN(ry)) return alert('Введите корректные числа X и Y');
-
-      pushUndoState();
-      const sz = item.size || 1;
-      mapAnchor = {
-        maxX: item.gy + rx + sz - 1,
-        maxY: item.gx + ry + sz - 1
-      };
-      closeAnchorModal();
-      renderEntities();
-      renderPlayersSidebar();
-      if (selectedItemId) {
-        const selObj = mapItems.find(x => x.id === selectedItemId);
-        if (selObj) showSelectedCard(selObj);
-      }
-      scheduleCloudSave();
-      showToast(`Координаты привязаны: ${getObjectDisplayName(item)} = X:${rx} Y:${ry}`);
-    }
-
     // ==================== АВТОРАССТАНОВКА УЛЬЯ ПО СПИРАЛИ ====================
     function openAutoPlaceModal() {
       if (isReadOnly) return;
@@ -2462,7 +2841,7 @@
       if (landmarks.length === 0) return showToast('На карте нет ключевого объекта (ловушки, замка или форта)');
 
       document.getElementById('autoPlaceTargetSelect').innerHTML = landmarks.map(lm =>
-        `<option value="${lm.id}">${getObjectDisplayName(lm)} (${formatItemRealCoords(lm)})</option>`
+        `<option value="${lm.id}">${getObjectDisplayName(lm)} (${formatItemCoords(lm)})</option>`
       ).join('');
       document.getElementById('autoPlaceModal').classList.remove('hidden');
     }
@@ -2501,19 +2880,24 @@
         return showToast('Нет доступных игроков для расстановки');
       }
 
-      // Собираем все потенциальные 2×2 позиции и сортируем от ближайших к цели
-      // Сначала проверяем чётную сетку относительно краёв цели (для максимально плотной стыковки без зазоров)
-      const tcx = target.gx + target.size / 2;
-      const tcy = target.gy + target.size / 2;
-      const parX = target.gx % 2;
-      const parY = target.gy % 2;
+      // Ищем слоты 2×2 в локальном квадрате радиусом ±26 клеток вокруг цели (работает мгновенно даже на карте 1200×1200)
+      const radius = 26;
+      const minX = Math.max(0, target.x - radius);
+      const maxX = Math.min(WORLD_GRID - 2, target.x + target.size + radius);
+      const minY = Math.max(0, target.y - radius);
+      const maxY = Math.min(WORLD_GRID - 2, target.y + target.size + radius);
+
+      const tcx = target.x + target.size / 2;
+      const tcy = target.y + target.size / 2;
+      const parX = target.x % 2;
+      const parY = target.y % 2;
 
       const slots = [];
-      for (let gx = 0; gx <= GRID_SIZE - 2; gx++) {
-        for (let gy = 0; gy <= GRID_SIZE - 2; gy++) {
-          const dist = Math.hypot((gx + 1) - tcx, (gy + 1) - tcy);
-          const aligned = (gx % 2 === parX && gy % 2 === parY) ? 0 : 1;
-          slots.push({ gx, gy, dist, aligned });
+      for (let x = minX; x <= maxX; x++) {
+        for (let y = minY; y <= maxY; y++) {
+          const dist = Math.hypot((x + 1) - tcx, (y + 1) - tcy);
+          const aligned = (x % 2 === parX && y % 2 === parY) ? 0 : 1;
+          slots.push({ x, y, dist, aligned });
         }
       }
       slots.sort((a, b) => (a.aligned - b.aligned) || (a.dist - b.dist));
@@ -2523,7 +2907,7 @@
         const pKey = getPlayerKey(p);
         let placedSlot = null;
         for (const s of slots) {
-          if (canPlaceFootprint(s.gx, s.gy, 2)) {
+          if (canPlaceFootprint(s.x, s.y, 2)) {
             placedSlot = s;
             break;
           }
@@ -2533,8 +2917,8 @@
         const cityObj = {
           id: 'obj_' + Date.now() + '_' + placedNow + '_' + Math.floor(Math.random() * 999),
           type: 'city',
-          gx: placedSlot.gx,
-          gy: placedSlot.gy,
+          x: placedSlot.x,
+          y: placedSlot.y,
           size: 2,
           playerKey: pKey,
           fallbackNick: p.nick,
@@ -2546,8 +2930,9 @@
       }
 
       closeAutoPlaceModal();
-      buildBaseGridSvg();
-      renderEntities();
+      flyToCoords(tcx - 0.5, tcy - 0.5, Math.max(cam.scale, 0.72));
+      renderEntities(true);
+      scheduleMapRender();
       renderPlayersSidebar();
       scheduleCloudSave();
       showToast(`Авторасстановка: размещено ${placedNow} топок вокруг «${getObjectDisplayName(target)}»`);
@@ -2591,7 +2976,7 @@
       const rows = computeBearLinesList(trapType);
 
       if (!rows) {
-        box.innerHTML = `<div class="text-rose-400 text-center py-4">Выбранная ловушка не установлена на текущей карте.</div>`;
+        box.innerHTML = `<div class="text-rose-400 text-center py-4">Выбранная ловушка не установлена на карте.</div>`;
         btn.disabled = true;
         return;
       }
@@ -2845,7 +3230,7 @@
         }
 
         const rightBadge = placedItem
-          ? `<span class="text-[10px] font-mono text-emerald-400 font-bold">✓ ${formatItemRealCoords(placedItem)}</span>`
+          ? `<span class="text-[10px] font-mono text-emerald-400 font-bold">✓ ${formatItemCoords(placedItem)}</span>`
           : (isReadOnly
               ? `<span class="text-[10px] text-slate-500">—</span>`
               : `<span class="px-2 py-0.5 rounded-lg bg-sky-600/30 text-sky-300 text-[10px] font-bold">+ Поставить</span>`);
@@ -2879,8 +3264,8 @@
       if (existing) {
         selectedItemId = existing.id;
         focusOnItem(existing);
-        buildBaseGridSvg();
-        renderEntities();
+        renderEntities(true);
+        scheduleMapRender();
         showSelectedCard(existing);
       } else if (!isReadOnly) {
         deselectEntity();
@@ -2889,11 +3274,9 @@
         showToast('Этого игрока пока нет на карте');
       }
     }
-// ==================== ОБЛАЧНОЕ СОХРАНЕНИЕ, ЗАГРУЗКА И ПЕРЕКЛЮЧЕНИЕ КАРТ ====================
+    // ==================== ОБЛАЧНОЕ СОХРАНЕНИЕ И ЗАГРУЗКА ЕДИНОЙ КАРТЫ 1200×1200 ====================
     function getMapConfigKey() {
-      return currentMapType === 'hive'
-        ? `map_${currentAlliance}`
-        : `map_${currentAlliance}_${currentMapType}`;
+      return `worldmap_${currentAlliance}`;
     }
 
     function setCloudStatus(state, text) {
@@ -2914,29 +3297,29 @@
       }
     }
 
-    function applyLoadedMapPayload(rawConfig) {
-      const def = getDefaultStateForMapType(currentMapType);
-      if (!rawConfig) {
+    function applyLoadedWorldPayload(rawConfig) {
+      const def = getDefaultWorldState();
+      if (!rawConfig || typeof rawConfig !== 'object') {
         mapItems = def.items;
         mapZones = def.zones;
-        mapAnchor = def.anchor;
+        mapBookmarks = def.bookmarks;
         return;
       }
-      if (Array.isArray(rawConfig)) {
-        mapItems = rawConfig;
-        mapZones = [];
-        mapAnchor = def.anchor;
-        return;
-      }
-      mapItems = Array.isArray(rawConfig.items) ? rawConfig.items : def.items;
-      mapZones = Array.isArray(rawConfig.zones) ? rawConfig.zones : [];
-      mapAnchor = (rawConfig.anchor && typeof rawConfig.anchor.maxX === 'number' && typeof rawConfig.anchor.maxY === 'number')
-        ? rawConfig.anchor
-        : def.anchor;
+
+      mapItems = Array.isArray(rawConfig.items)
+        ? rawConfig.items.filter(it => typeof it.x === 'number' && typeof it.y === 'number')
+        : def.items;
+
+      mapZones = Array.isArray(rawConfig.zones)
+        ? rawConfig.zones.filter(z => typeof z.x === 'number' && typeof z.y === 'number')
+        : [];
+
+      mapBookmarks = (Array.isArray(rawConfig.bookmarks) && rawConfig.bookmarks.length > 0)
+        ? rawConfig.bookmarks
+        : def.bookmarks;
     }
 
     function ensureReadOnlyPlayersFallback() {
-      // Если обычный боец не получает полный allPlayers с сервера, собираем список из топок на карте
       if (allPlayers.length > 0) return;
       const fromMap = [];
       const seen = new Set();
@@ -2954,27 +3337,12 @@
       allPlayers = fromMap;
     }
 
-    async function switchMapType(type) {
-      currentMapType = type;
-      ['hive', 'castle', 'fort', 'custom'].forEach(t => {
-        const btn = document.getElementById('mapType_' + t);
-        if (btn) btn.classList.toggle('active', t === type);
-      });
-      undoStack = [];
-      updateUndoButton();
-      movedCitiesMap = {};
-      updateBatchNotifyBadge();
-      cancelPendingSwap();
-      deselectEntity();
-      cancelActiveTool();
-      await loadCloudMap();
-    }
-
     async function switchAlliance(alliance) {
       if (currentUser && !currentUser.isOwner && alliance !== currentUser.alliance) return;
       currentAlliance = alliance;
       document.getElementById('mFilterMain').classList.toggle('active', alliance === 'Основа');
       document.getElementById('mFilterAcad').classList.toggle('active', alliance === 'Академия');
+
       undoStack = [];
       updateUndoButton();
       movedCitiesMap = {};
@@ -2991,17 +3359,22 @@
 
       const cachedLocal = localStorage.getItem('harmony_' + key);
       if (cachedLocal) {
-        try { applyLoadedMapPayload(JSON.parse(cachedLocal)); } catch (e) { applyLoadedMapPayload(null); }
+        try { applyLoadedWorldPayload(JSON.parse(cachedLocal)); } catch (e) { applyLoadedWorldPayload(null); }
       } else {
-        applyLoadedMapPayload(null);
+        applyLoadedWorldPayload(null);
       }
 
       if (isReadOnly) ensureReadOnlyPlayersFallback();
+      if (!mapBookmarks.some(b => b.id === activeBookmarkId)) {
+        activeBookmarkId = mapBookmarks[0]?.id || '';
+      }
+
+      renderBookmarksBar();
       refreshLineOverlayOptions();
-      buildBaseGridSvg();
-      renderEntities();
       renderPlayersSidebar();
-      centerCamera();
+      focusActiveBookmark();
+      renderEntities(true);
+      scheduleMapRender();
 
       try {
         const res = await fetch(API_URL, {
@@ -3011,39 +3384,50 @@
         }).then(r => r.json());
 
         if (res.ok && res.config && Array.isArray(res.config.items)) {
-          applyLoadedMapPayload(res.config);
-          localStorage.setItem('harmony_' + key, JSON.stringify({ items: mapItems, zones: mapZones, anchor: mapAnchor }));
+          applyLoadedWorldPayload(res.config);
+          localStorage.setItem('harmony_' + key, JSON.stringify({
+            items: mapItems,
+            zones: mapZones,
+            bookmarks: mapBookmarks
+          }));
           if (isReadOnly) ensureReadOnlyPlayersFallback();
+          if (!mapBookmarks.some(b => b.id === activeBookmarkId)) {
+            activeBookmarkId = mapBookmarks[0]?.id || '';
+          }
+          renderBookmarksBar();
           refreshLineOverlayOptions();
-          buildBaseGridSvg();
-          renderEntities();
           renderPlayersSidebar();
           setCloudStatus('saved', res.updatedAt ? `Облако (${res.updatedAt.slice(11, 16)})` : 'Синхронизировано');
         } else {
-          setCloudStatus('saved', 'Шаблон готов');
+          setCloudStatus('saved', 'Шаблон штата');
         }
       } catch (e) {
         setCloudStatus('error', 'Локальный режим');
       }
 
-      // В режиме просмотра автоматически наводим камеру на город текущего бойца
+      // В режиме просмотра автоматически фокусируем камеру на городе текущего бойца
       if (isReadOnly && myPlayerKey) {
         const myCity = mapItems.find(x => x.type === 'city' && x.playerKey === myPlayerKey);
         if (myCity) {
-          cam.scale = 0.92;
-          focusOnItem(myCity);
+          flyToCoords(myCity.x + 0.5, myCity.y + 0.5, 0.92);
         } else {
-          centerCamera();
+          focusActiveBookmark();
         }
       } else {
-        centerCamera();
+        focusActiveBookmark();
       }
+      renderEntities(true);
+      scheduleMapRender();
     }
 
     function scheduleCloudSave() {
       if (isReadOnly) return;
       const key = getMapConfigKey();
-      const payloadObj = { items: mapItems, zones: mapZones, anchor: mapAnchor };
+      const payloadObj = {
+        items: mapItems,
+        zones: mapZones,
+        bookmarks: mapBookmarks
+      };
       localStorage.setItem('harmony_' + key, JSON.stringify(payloadObj));
       setCloudStatus('saving', 'Сохранение...');
 
@@ -3070,25 +3454,26 @@
 
     function clearMapConfirm() {
       if (isReadOnly) return;
-      const label = MAP_TYPE_LABELS[currentMapType] || 'текущей карты';
-      if (!confirm(`Сбросить карту «${label}» к исходному шаблону с реальными координатами? Все расставленные топки и зоны на этой вкладке будут очищены.`)) return;
+      if (!confirm('Сбросить карту штата к исходному шаблону (Улей + Солнечный замок и башни в реальных координатах)? Все расставленные топки, зоны и пользовательские области будут очищены.')) return;
 
       pushUndoState();
-      const def = getDefaultStateForMapType(currentMapType);
+      const def = getDefaultWorldState();
       mapItems = def.items;
       mapZones = def.zones;
-      mapAnchor = def.anchor;
+      mapBookmarks = def.bookmarks;
+      activeBookmarkId = 'bm_hive';
       movedCitiesMap = {};
       updateBatchNotifyBadge();
       cancelPendingSwap();
       deselectEntity();
+      renderBookmarksBar();
       refreshLineOverlayOptions();
-      buildBaseGridSvg();
-      renderEntities();
       renderPlayersSidebar();
-      centerCamera();
+      focusActiveBookmark();
+      renderEntities(true);
+      scheduleMapRender();
       scheduleCloudSave();
-      showToast('Карта сброшена к шаблону с реальными координатами');
+      showToast('Карта сброшена к исходному шаблону штата');
     }
 
     function toggleMapTheme() {
@@ -3098,72 +3483,17 @@
       vp.classList.toggle('theme-tundra', mapTheme === 'tundra');
       vp.classList.toggle('theme-dark', mapTheme === 'dark');
       btn.textContent = mapTheme === 'tundra' ? '❄️ Тундра' : '🌑 Тёмная';
-      buildBaseGridSvg();
+      scheduleMapRender();
     }
 
-    // ==================== ЭКСПОРТ ГОТОВОЙ КАРТЫ В PNG (1-в-1 КАК НА САЙТЕ) ====================
+    // ==================== ЭКСПОРТ ВИДИМОЙ ОБЛАСТИ КАРТЫ В PNG (1-в-1, ЧЁТКОСТЬ 2×) ====================
     function exportMapPng() {
-      if (mapItems.length === 0 && mapZones.length === 0) return showToast('Карта пуста!');
+      const vp = document.getElementById('mapViewport');
+      if (!vp) return;
 
-      const isTundra = mapTheme === 'tundra';
-      const lineTargetId = document.getElementById('lineOverlaySelect')?.value || 'none';
-      const lineTargetObj = lineTargetId !== 'none' ? mapItems.find(x => x.id === lineTargetId) : null;
-
-      let minGx = GRID_SIZE, minGy = GRID_SIZE, maxGx = 0, maxGy = 0;
-      mapItems.forEach(it => {
-        minGx = Math.min(minGx, it.gx);
-        minGy = Math.min(minGy, it.gy);
-        maxGx = Math.max(maxGx, it.gx + it.size);
-        maxGy = Math.max(maxGy, it.gy + it.size);
-      });
-      mapZones.forEach(z => {
-        minGx = Math.min(minGx, z.gx);
-        minGy = Math.min(minGy, z.gy);
-        maxGx = Math.max(maxGx, z.gx + z.size);
-        maxGy = Math.max(maxGy, z.gy + z.size);
-      });
-
-      if (showTerritory) {
-        getTerritoryCellsSet().forEach(key => {
-          const [cx, cy] = key.split(',').map(Number);
-          minGx = Math.min(minGx, cx);
-          minGy = Math.min(minGy, cy);
-          maxGx = Math.max(maxGx, cx + 1);
-          maxGy = Math.max(maxGy, cy + 1);
-        });
-      }
-
-      if (currentMapType === 'castle') {
-        const castleObj = mapItems.find(x => x.type === 'castle');
-        const rx = castleObj ? Math.max(0, castleObj.gx - 10) : 13;
-        const ry = castleObj ? Math.max(0, castleObj.gy - 10) : 13;
-        const rSize = castleObj ? Math.min(GRID_SIZE - Math.max(rx, ry), castleObj.size + 20) : 26;
-        minGx = Math.min(minGx, rx);
-        minGy = Math.min(minGy, ry);
-        maxGx = Math.max(maxGx, rx + rSize);
-        maxGy = Math.max(maxGy, ry + rSize);
-      }
-
-      minGx = Math.max(0, minGx - 2);
-      minGy = Math.max(0, minGy - 2);
-      maxGx = Math.min(GRID_SIZE, maxGx + 2);
-      maxGy = Math.min(GRID_SIZE, maxGy + 2);
-
-      const corners = [
-        gridToScreen(minGx, minGy),
-        gridToScreen(maxGx, minGy),
-        gridToScreen(maxGx, maxGy),
-        gridToScreen(minGx, maxGy)
-      ];
-      const pad = 115;
-      const minX = Math.min(...corners.map(c => c.x)) - pad;
-      const maxX = Math.max(...corners.map(c => c.x)) + pad;
-      const minY = Math.min(...corners.map(c => c.y)) - pad;
-      const maxY = Math.max(...corners.map(c => c.y)) + pad;
-
-      const cssW = Math.ceil(maxX - minX);
-      const cssH = Math.ceil(maxY - minY);
-      const dpr = Math.min(2, 3800 / Math.max(cssW, cssH));
+      const cssW = Math.max(800, vp.clientWidth);
+      const cssH = Math.max(600, vp.clientHeight);
+      const dpr = Math.min(2, 3200 / Math.max(cssW, cssH));
 
       const canvas = document.createElement('canvas');
       canvas.width = Math.round(cssW * dpr);
@@ -3171,29 +3501,10 @@
       const ctx = canvas.getContext('2d');
       ctx.scale(dpr, dpr);
 
-      const roundRectPath = (x, y, w, h, r) => {
-        const rr = Math.min(r, w / 2, h / 2);
-        ctx.beginPath();
-        ctx.moveTo(x + rr, y);
-        ctx.arcTo(x + w, y, x + w, y + h, rr);
-        ctx.arcTo(x + w, y + h, x, y + h, rr);
-        ctx.arcTo(x, y + h, x, y, rr);
-        ctx.arcTo(x, y, x + w, y, rr);
-        ctx.closePath();
-      };
-
-      const isoPolyPath = (gx, gy, sz) => {
-        const p1 = gridToScreen(gx, gy);
-        const p2 = gridToScreen(gx + sz, gy);
-        const p3 = gridToScreen(gx + sz, gy + sz);
-        const p4 = gridToScreen(gx, gy + sz);
-        ctx.beginPath();
-        ctx.moveTo(p1.x, p1.y);
-        ctx.lineTo(p2.x, p2.y);
-        ctx.lineTo(p3.x, p3.y);
-        ctx.lineTo(p4.x, p4.y);
-        ctx.closePath();
-      };
+      const isTundra = mapTheme === 'tundra';
+      const bounds = getViewportTileBounds(6);
+      const lineTargetId = document.getElementById('lineOverlaySelect')?.value || 'none';
+      const lineTargetObj = lineTargetId !== 'none' ? mapItems.find(x => x.id === lineTargetId) : null;
 
       const drawStyledBuildingCard = (cx, cy, { w, h, r, bgStart, bgEnd, borderColor, icon, iconSize, titleLines, titleColor, subText, subColor, dashed = false }) => {
         const x = cx - w / 2;
@@ -3207,7 +3518,7 @@
         grad.addColorStop(0, bgStart);
         grad.addColorStop(1, bgEnd);
 
-        roundRectPath(x, y, w, h, r);
+        drawRoundRectCanvas(ctx, x, y, w, h, r);
         ctx.fillStyle = grad;
         ctx.fill();
         ctx.shadowColor = 'transparent';
@@ -3240,7 +3551,7 @@
         ctx.restore();
       };
 
-      // 1. Фон
+      // 1. Фон (точно как на сайте)
       const bgGrad = ctx.createRadialGradient(cssW / 2, cssH / 2, 40, cssW / 2, cssH / 2, Math.max(cssW, cssH) * 0.7);
       if (isTundra) {
         bgGrad.addColorStop(0, '#c8d6ea');
@@ -3255,54 +3566,60 @@
       ctx.fillRect(0, 0, cssW, cssH);
 
       ctx.save();
-      ctx.translate(-minX, -minY);
+      ctx.translate(cam.x, cam.y);
+      ctx.scale(cam.scale, cam.scale);
 
-      // 2. Сетка
-      const gp1 = gridToScreen(minGx, minGy);
-      const gp2 = gridToScreen(maxGx, minGy);
-      const gp3 = gridToScreen(maxGx, maxGy);
-      const gp4 = gridToScreen(minGx, maxGy);
-      ctx.beginPath();
-      ctx.moveTo(gp1.x, gp1.y); ctx.lineTo(gp2.x, gp2.y); ctx.lineTo(gp3.x, gp3.y); ctx.lineTo(gp4.x, gp4.y);
-      ctx.closePath();
-      ctx.fillStyle = isTundra ? 'rgba(255, 255, 255, 0.22)' : 'rgba(15, 23, 42, 0.45)';
-      ctx.fill();
+      // 2. Видимая часть сетки
+      if (bounds.minX < bounds.maxX && bounds.minY < bounds.maxY) {
+        const gp1 = tileToWorld(bounds.minX, bounds.minY);
+        const gp2 = tileToWorld(bounds.maxX, bounds.minY);
+        const gp3 = tileToWorld(bounds.maxX, bounds.maxY);
+        const gp4 = tileToWorld(bounds.minX, bounds.maxY);
+        ctx.beginPath();
+        ctx.moveTo(gp1.wx, gp1.wy);
+        ctx.lineTo(gp2.wx, gp2.wy);
+        ctx.lineTo(gp3.wx, gp3.wy);
+        ctx.lineTo(gp4.wx, gp4.wy);
+        ctx.closePath();
+        ctx.fillStyle = isTundra ? 'rgba(255, 255, 255, 0.20)' : 'rgba(15, 23, 42, 0.44)';
+        ctx.fill();
 
-      const strokeMain = isTundra ? 'rgba(30, 58, 108, 0.16)' : 'rgba(56, 189, 248, 0.13)';
-      const strokeBold = isTundra ? 'rgba(30, 58, 108, 0.34)' : 'rgba(56, 189, 248, 0.30)';
+        const strokeMain = isTundra ? 'rgba(30, 58, 108, 0.16)' : 'rgba(56, 189, 248, 0.13)';
+        const strokeBold = isTundra ? 'rgba(30, 58, 108, 0.36)' : 'rgba(56, 189, 248, 0.32)';
+        const step = cam.scale < 0.36 ? 5 : 1;
 
-      for (let i = minGx; i <= maxGx; i++) {
-        const isMajor = (i % 6 === 0) || i === minGx || i === maxGx;
-        const a = gridToScreen(i, minGy), b = gridToScreen(i, maxGy);
-        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
-        ctx.strokeStyle = isMajor ? strokeBold : strokeMain;
-        ctx.lineWidth = isMajor ? 1.3 : 0.8;
-        ctx.stroke();
+        for (let ix = Math.floor(bounds.minX / step) * step; ix <= bounds.maxX; ix += step) {
+          const isMajor = (ix % 10 === 0);
+          const a = tileToWorld(ix, bounds.minY), b = tileToWorld(ix, bounds.maxY);
+          ctx.beginPath(); ctx.moveTo(a.wx, a.wy); ctx.lineTo(b.wx, b.wy);
+          ctx.strokeStyle = isMajor ? strokeBold : strokeMain;
+          ctx.lineWidth = (isMajor ? 1.4 : 0.8) / Math.max(0.5, cam.scale);
+          ctx.stroke();
+        }
+        for (let iy = Math.floor(bounds.minY / step) * step; iy <= bounds.maxY; iy += step) {
+          const isMajor = (iy % 10 === 0);
+          const a = tileToWorld(bounds.minX, iy), b = tileToWorld(bounds.maxX, iy);
+          ctx.beginPath(); ctx.moveTo(a.wx, a.wy); ctx.lineTo(b.wx, b.wy);
+          ctx.strokeStyle = isMajor ? strokeBold : strokeMain;
+          ctx.lineWidth = (isMajor ? 1.4 : 0.8) / Math.max(0.5, cam.scale);
+          ctx.stroke();
+        }
       }
-      for (let j = minGy; j <= maxGy; j++) {
-        const isMajor = (j % 6 === 0) || j === minGy || j === maxGy;
-        const a = gridToScreen(minGx, j), b = gridToScreen(maxGx, j);
-        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
-        ctx.strokeStyle = isMajor ? strokeBold : strokeMain;
-        ctx.lineWidth = isMajor ? 1.3 : 0.8;
-        ctx.stroke();
-      }
 
-      // 3. Территория альянса (если включена)
+      // 3. Территория (если включена)
       if (showTerritory) {
-        const covered = getTerritoryCellsSet();
+        const covered = getTerritoryCellsSet(bounds);
         ctx.fillStyle = isTundra ? 'rgba(14, 165, 233, 0.22)' : 'rgba(56, 189, 248, 0.18)';
         ctx.strokeStyle = isTundra ? 'rgba(2, 132, 199, 0.88)' : 'rgba(56, 189, 248, 0.88)';
         ctx.lineWidth = 2.2;
-
         covered.forEach(key => {
           const [cx, cy] = key.split(',').map(Number);
-          isoPolyPath(cx, cy, 1);
+          if (cx < bounds.minX - 1 || cx > bounds.maxX + 1 || cy < bounds.minY - 1 || cy > bounds.maxY + 1) return;
+          drawIsoPolygon(ctx, cx, cy, 1);
           ctx.fill();
-
           const drawEdge = (ax, ay, bx, by) => {
-            const p1 = gridToScreen(ax, ay), p2 = gridToScreen(bx, by);
-            ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+            const p1 = tileToWorld(ax, ay), p2 = tileToWorld(bx, by);
+            ctx.beginPath(); ctx.moveTo(p1.wx, p1.wy); ctx.lineTo(p2.wx, p2.wy); ctx.stroke();
           };
           if (!covered.has(`${cx},${cy - 1}`)) drawEdge(cx, cy, cx + 1, cy);
           if (!covered.has(`${cx + 1},${cy}`)) drawEdge(cx + 1, cy, cx + 1, cy + 1);
@@ -3311,31 +3628,34 @@
         });
       }
 
-      // 4. Красная зона (Замок)
-      if (currentMapType === 'castle') {
-        const castleObj = mapItems.find(x => x.type === 'castle');
-        const rx = castleObj ? Math.max(0, castleObj.gx - 10) : 13;
-        const ry = castleObj ? Math.max(0, castleObj.gy - 10) : 13;
-        const rSize = castleObj ? Math.min(GRID_SIZE - Math.max(rx, ry), castleObj.size + 20) : 26;
-        ctx.save();
-        isoPolyPath(rx, ry, rSize);
-        ctx.fillStyle = 'rgba(225, 29, 72, 0.09)';
-        ctx.fill();
-        ctx.setLineDash([10, 6]);
-        ctx.strokeStyle = 'rgba(244, 63, 94, 0.72)';
-        ctx.lineWidth = 2.5;
-        ctx.stroke();
-        ctx.restore();
+      // 4. Красная зона вокруг Замка
+      const castleObj = mapItems.find(it => it.type === 'castle');
+      if (castleObj) {
+        const rx = Math.max(0, castleObj.x - 10);
+        const ry = Math.max(0, castleObj.y - 10);
+        const rSize = castleObj.size + 20;
+        if (rx + rSize >= bounds.minX && rx <= bounds.maxX && ry + rSize >= bounds.minY && ry <= bounds.maxY) {
+          ctx.save();
+          drawIsoPolygon(ctx, rx, ry, rSize);
+          ctx.fillStyle = 'rgba(225, 29, 72, 0.09)';
+          ctx.fill();
+          ctx.setLineDash([10, 6]);
+          ctx.strokeStyle = 'rgba(244, 63, 94, 0.72)';
+          ctx.lineWidth = 2.5;
+          ctx.stroke();
+          ctx.restore();
+        }
       }
 
       // 5. Тактические зоны
       mapZones.forEach(z => {
+        if (z.x + z.size < bounds.minX || z.x > bounds.maxX || z.y + z.size < bounds.minY || z.y > bounds.maxY) return;
         const preset = ZONE_PRESETS[z.preset] || ZONE_PRESETS.ally;
-        const c = gridToScreen(z.gx + z.size / 2, z.gy + z.size / 2);
+        const c = tileToWorld(z.x + z.size / 2, z.y + z.size / 2);
         const lbl = String(z.label || preset.label);
 
         ctx.save();
-        isoPolyPath(z.gx, z.gy, z.size);
+        drawIsoPolygon(ctx, z.x, z.y, z.size);
         ctx.fillStyle = preset.fill;
         ctx.fill();
         ctx.setLineDash([8, 5]);
@@ -3345,8 +3665,8 @@
         ctx.setLineDash([]);
 
         ctx.font = '800 11px Inter, sans-serif';
-        const bw = Math.min(240, Math.max(108, ctx.measureText(lbl).width + 22));
-        roundRectPath(c.x - bw / 2, c.y - 11, bw, 22, 8);
+        const bw = Math.min(240, Math.max(104, ctx.measureText(lbl).width + 22));
+        drawRoundRectCanvas(ctx, c.wx - bw / 2, c.wy - 11, bw, 22, 8);
         ctx.fillStyle = 'rgba(15, 23, 42, 0.86)';
         ctx.fill();
         ctx.lineWidth = 1;
@@ -3356,27 +3676,27 @@
         ctx.fillStyle = preset.text;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(lbl, c.x, c.y + 0.5);
+        ctx.fillText(lbl, c.wx, c.wy + 0.5);
         ctx.restore();
       });
 
       // 6. Линии марша
       if (lineTargetObj) {
         ctx.save();
-        isoPolyPath(lineTargetObj.gx, lineTargetObj.gy, lineTargetObj.size);
+        drawIsoPolygon(ctx, lineTargetObj.x, lineTargetObj.y, lineTargetObj.size);
         ctx.fillStyle = 'rgba(251, 191, 36, 0.22)';
         ctx.fill();
         ctx.strokeStyle = '#fbbf24';
         ctx.lineWidth = 2.5;
         ctx.stroke();
 
-        const tc = gridToScreen(lineTargetObj.gx + lineTargetObj.size / 2, lineTargetObj.gy + lineTargetObj.size / 2);
+        const tc = tileToWorld(lineTargetObj.x + lineTargetObj.size / 2, lineTargetObj.y + lineTargetObj.size / 2);
         ctx.setLineDash([6, 5]);
         mapItems.filter(x => x.type === 'city').forEach(city => {
-          const cc = gridToScreen(city.gx + city.size / 2, city.gy + city.size / 2);
+          const cc = tileToWorld(city.x + city.size / 2, city.y + city.size / 2);
           ctx.beginPath();
-          ctx.moveTo(cc.x, cc.y);
-          ctx.lineTo(tc.x, tc.y);
+          ctx.moveTo(cc.wx, cc.wy);
+          ctx.lineTo(tc.wx, tc.wy);
           ctx.strokeStyle = 'rgba(56, 189, 248, 0.65)';
           ctx.lineWidth = 1.6;
           ctx.stroke();
@@ -3384,22 +3704,25 @@
         ctx.restore();
       }
 
-      // 7. Объекты и топки
-      const sorted = [...mapItems].sort((a, b) => (a.gx + a.gy) - (b.gx + b.gy));
-      sorted.forEach(item => {
-        const c = gridToScreen(item.gx + item.size / 2, item.gy + item.size / 2);
-        const realStr = formatItemRealCoords(item);
+      // 7. Видимые объекты и топки (сортировка с севера на юг)
+      const visible = mapItems
+        .filter(it => it.x + it.size >= bounds.minX && it.x <= bounds.maxX && it.y + it.size >= bounds.minY && it.y <= bounds.maxY)
+        .sort((a, b) => (b.x + b.y) - (a.x + a.y));
+
+      visible.forEach(item => {
+        const c = tileToWorld(item.x + item.size / 2, item.y + item.size / 2);
+        const realStr = formatItemCoords(item);
 
         if (item.type === 'bear1' || item.type === 'bear2') {
           const img = IMG_CACHE[item.type];
           const w = TILE_W * 2.35, h = w * 0.88;
           if (img && img.complete && img.naturalWidth) {
-            ctx.drawImage(img, c.x - w / 2, c.y - h * 0.54, w, h);
+            ctx.drawImage(img, c.wx - w / 2, c.wy - h * 0.54, w, h);
           }
         } else if (item.type === 'city') {
           const img = IMG_CACHE.topka;
           const w = TILE_W * 1.36, h = w;
-          const x = c.x - w / 2, y = c.y - h * 0.56;
+          const x = c.wx - w / 2, y = c.wy - h * 0.56;
           const roleMeta = item.role ? CITY_ROLES[item.role] : null;
 
           if (roleMeta) {
@@ -3455,10 +3778,10 @@
               ctx.font = '800 8.5px "JetBrains Mono", monospace';
               const bw = Math.max(54, ctx.measureText(badgeTxt).width + 12);
               const bh = 16;
-              const bx = c.x - bw / 2;
+              const bx = c.wx - bw / 2;
               const by = y - 6;
 
-              roundRectPath(bx, by, bw, bh, 6);
+              drawRoundRectCanvas(ctx, bx, by, bw, bh, 6);
               ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
               ctx.fill();
               ctx.lineWidth = 1;
@@ -3468,11 +3791,11 @@
               ctx.fillStyle = '#38bdf8';
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
-              ctx.fillText(badgeTxt, c.x, by + bh / 2 + 0.5);
+              ctx.fillText(badgeTxt, c.wx, by + bh / 2 + 0.5);
             }
           }
         } else if (item.type === 'reserve') {
-          drawStyledBuildingCard(c.x, c.y, {
+          drawStyledBuildingCard(c.wx, c.wy, {
             w: 96, h: 48, r: 14,
             bgStart: 'rgba(15, 23, 42, 0.82)', bgEnd: 'rgba(6, 78, 59, 0.72)',
             borderColor: '#34d399', icon: '🟩', iconSize: 15,
@@ -3483,9 +3806,9 @@
           const img = IMG_CACHE.hq;
           const w = TILE_W * 2.35, h = w * 0.90;
           if (img && img.complete && img.naturalWidth) {
-            ctx.drawImage(img, c.x - w / 2, c.y - h * 0.54, w, h);
+            ctx.drawImage(img, c.wx - w / 2, c.wy - h * 0.54, w, h);
           } else {
-            drawStyledBuildingCard(c.x, c.y, {
+            drawStyledBuildingCard(c.wx, c.wy, {
               w: 122, h: 60, r: 16,
               bgStart: 'rgba(49, 46, 129, 0.95)', bgEnd: 'rgba(30, 27, 75, 0.95)',
               borderColor: '#fbbf24', icon: '🏰', iconSize: 22,
@@ -3497,9 +3820,9 @@
           const img = IMG_CACHE[st.sprite];
           const w = TILE_W * 1.36, h = w;
           if (img && img.complete && img.naturalWidth) {
-            ctx.drawImage(img, c.x - w / 2, c.y - h * 0.56, w, h);
+            ctx.drawImage(img, c.wx - w / 2, c.wy - h * 0.56, w, h);
           } else {
-            drawStyledBuildingCard(c.x, c.y, {
+            drawStyledBuildingCard(c.wx, c.wy, {
               w: 96, h: 52, r: 14,
               bgStart: 'rgba(120, 53, 15, 0.95)', bgEnd: 'rgba(69, 26, 3, 0.95)',
               borderColor: '#fbbf24', icon: st.icon, iconSize: 18,
@@ -3510,10 +3833,10 @@
           const img = IMG_CACHE.banner;
           const w = TILE_W * 0.85, h = TILE_W * 1.05;
           if (img && img.complete && img.naturalWidth) {
-            ctx.drawImage(img, c.x - w / 2, c.y - h * 0.70, w, h);
+            ctx.drawImage(img, c.wx - w / 2, c.wy - h * 0.70, w, h);
           } else {
             ctx.beginPath();
-            ctx.arc(c.x, c.y - 6, 16, 0, Math.PI * 2);
+            ctx.arc(c.wx, c.wy - 6, 16, 0, Math.PI * 2);
             ctx.fillStyle = '#e11d48';
             ctx.fill();
             ctx.lineWidth = 2;
@@ -3522,10 +3845,10 @@
             ctx.font = '14px sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText('🚩', c.x, c.y - 5);
+            ctx.fillText('🚩', c.wx, c.wy - 5);
           }
         } else if (item.type === 'obstacle') {
-          roundRectPath(c.x - 16, c.y - 16, 32, 32, 10);
+          drawRoundRectCanvas(ctx, c.wx - 16, c.wy - 16, 32, 32, 10);
           ctx.fillStyle = 'rgba(51, 65, 85, 0.92)';
           ctx.fill();
           ctx.lineWidth = 1.5;
@@ -3534,14 +3857,14 @@
           ctx.font = '14px sans-serif';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillText('⛰️', c.x, c.y + 1);
+          ctx.fillText('⛰️', c.wx, c.wy + 1);
         } else if (item.type === 'castle') {
           const img = IMG_CACHE.castle;
           const w = TILE_W * 4.8, h = TILE_H * 4.8;
           if (img && img.complete && img.naturalWidth) {
-            ctx.drawImage(img, c.x - w / 2, c.y - h * 0.54, w, h);
+            ctx.drawImage(img, c.wx - w / 2, c.wy - h * 0.54, w, h);
           } else {
-            drawStyledBuildingCard(c.x, c.y, {
+            drawStyledBuildingCard(c.wx, c.wy, {
               w: 186, h: 98, r: 22,
               bgStart: 'rgba(120, 53, 15, 0.96)', bgEnd: 'rgba(76, 5, 25, 0.96)',
               borderColor: '#fbbf24', icon: '👑', iconSize: 32,
@@ -3553,13 +3876,13 @@
           const img = IMG_CACHE.turret;
           const w = TILE_W * 1.5, h = w * 0.95;
           if (img && img.complete && img.naturalWidth) {
-            ctx.drawImage(img, c.x - w / 2, c.y - h * 0.56, w, h);
+            ctx.drawImage(img, c.wx - w / 2, c.wy - h * 0.56, w, h);
           } else {
             const tName = getTurretDisplayName(item);
             const parts = tName.includes('орудийная башня')
               ? [tName.replace(' башня', ''), 'башня']
               : [tName];
-            drawStyledBuildingCard(c.x, c.y, {
+            drawStyledBuildingCard(c.wx, c.wy, {
               w: 128, h: 62, r: 16,
               bgStart: 'rgba(76, 5, 25, 0.96)', bgEnd: 'rgba(136, 19, 55, 0.94)',
               borderColor: '#fb7185', icon: '🗼', iconSize: 18,
@@ -3570,13 +3893,13 @@
           const img = IMG_CACHE.fort;
           const w = TILE_W * 3.1, h = TILE_H * 3.1;
           if (img && img.complete && img.naturalWidth) {
-            ctx.drawImage(img, c.x - w / 2, c.y - h * 0.54, w, h);
+            ctx.drawImage(img, c.wx - w / 2, c.wy - h * 0.54, w, h);
           } else {
-            drawStyledBuildingCard(c.x, c.y, {
+            drawStyledBuildingCard(c.wx, c.wy, {
               w: 164, h: 86, r: 20,
               bgStart: 'rgba(59, 7, 100, 0.96)', bgEnd: 'rgba(30, 27, 75, 0.96)',
               borderColor: '#c084fc', icon: '🏯', iconSize: 28,
-              titleLines: ['ФОРТ / ЦИТАДЕЛЬ'], titleColor: '#e9d5ff',
+              titleLines: [String(item.label || 'ФОРТ / ЦИТАДЕЛЬ').toUpperCase().slice(0, 20)], titleColor: '#e9d5ff',
               subText: realStr, subColor: '#d8b4fe'
             });
           }
@@ -3584,13 +3907,14 @@
           const img = IMG_CACHE.target;
           const w = TILE_W * 2.3, h = TILE_H * 2.3;
           if (img && img.complete && img.naturalWidth) {
-            ctx.drawImage(img, c.x - w / 2, c.y - h * 0.54, w, h);
+            ctx.drawImage(img, c.wx - w / 2, c.wy - h * 0.54, w, h);
           } else {
-            drawStyledBuildingCard(c.x, c.y, {
-              w: 136, h: 68, r: 16,
+            drawStyledBuildingCard(c.wx, c.wy, {
+              w: 146, h: 72, r: 16,
               bgStart: 'rgba(12, 74, 110, 0.96)', bgEnd: 'rgba(15, 23, 42, 0.96)',
               borderColor: '#38bdf8', icon: '🎯', iconSize: 22,
-              titleLines: ['ОБЪЕКТ / ЦЕЛЬ'], titleColor: '#bae6fd'
+              titleLines: [String(item.label || 'КОМПЛЕКС').toUpperCase().slice(0, 18)], titleColor: '#bae6fd',
+              subText: realStr, subColor: '#7dd3fc'
             });
           }
         }
@@ -3598,15 +3922,17 @@
 
       ctx.restore();
 
-      // 8. Заголовок PNG
-      const mapTitleText = (MAP_TYPE_LABELS[currentMapType] || 'КАРТА БАЗЫ').toUpperCase();
+      // 8. Шапка PNG с названием альянса и координатами области
+      const center = getViewportCenterTile();
+      const activeBm = mapBookmarks.find(b => b.id === activeBookmarkId);
+      const areaLabel = activeBm ? `${activeBm.name.toUpperCase()} (X:${center.x} Y:${center.y})` : `ОБЛАСТЬ X:${center.x} Y:${center.y}`;
       const headerText = lineTargetObj
-        ? `АЛЬЯНС «ГАРМОНИЯ» (${currentAlliance}) — ${mapTitleText} • До: ${getObjectDisplayName(lineTargetObj)}`
-        : `АЛЬЯНС «ГАРМОНИЯ» (${currentAlliance}) — ${mapTitleText}`;
+        ? `АЛЬЯНС «ГАРМОНИЯ» (${currentAlliance}) — ${areaLabel} • До: ${getObjectDisplayName(lineTargetObj)}`
+        : `АЛЬЯНС «ГАРМОНИЯ» (${currentAlliance}) — ${areaLabel}`;
 
       ctx.font = '800 13px Inter, sans-serif';
       const headW = Math.min(cssW - 32, ctx.measureText(headerText).width + 32);
-      roundRectPath(16, 16, headW, 38, 12);
+      drawRoundRectCanvas(ctx, 16, 16, headW, 38, 12);
       ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
       ctx.fill();
       ctx.lineWidth = 1.5;
@@ -3620,10 +3946,10 @@
 
       try {
         const link = document.createElement('a');
-        link.download = `karta_${currentAlliance}_${currentMapType}.png`;
+        link.download = `karta_${currentAlliance}_X${center.x}_Y${center.y}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
-        showToast('Карта сохранена в PNG!');
+        showToast('Видимая область сохранена в PNG!');
       } catch (err) {
         alert('Экспорт PNG работает при открытии сайта через GitHub Pages.');
       }
@@ -3640,28 +3966,28 @@
     function initMapInteractions() {
       const vp = document.getElementById('mapViewport');
 
+      window.addEventListener('resize', resizeMapCanvas);
+
       vp.addEventListener('contextmenu', e => {
         e.preventDefault();
         if (activeTool !== 'pan') cancelActiveTool();
       });
 
       vp.addEventListener('mousedown', e => {
-        if (e.target.closest('#selectedInfoCard, #modeHintBanner, #swapConfirmBanner, .entity-floating-bar, button, select')) return;
+        if (e.target.closest('#selectedInfoCard, #modeHintBanner, #swapConfirmBanner, .entity-floating-bar, button, select, input')) return;
 
         if (e.button === 2 || e.button === 1 || (e.button === 0 && (activeTool === 'pan' || isReadOnly))) {
           isPanning = true;
           panStart = { mx: e.clientX, my: e.clientY, cx: cam.x, cy: cam.y, moved: false };
         } else if (e.button === 0 && activeTool === 'erase' && !isReadOnly) {
-          // Клик по тактической зоне в режиме удаления
           const rect = vp.getBoundingClientRect();
-          const wx = (e.clientX - rect.left - cam.x) / cam.scale;
-          const wy = (e.clientY - rect.top - cam.y) / cam.scale;
-          const f = screenToGridFloat(wx, wy);
-          const z = findZoneAtCell(Math.floor(f.gx), Math.floor(f.gy));
+          const wPt = screenToWorld(e.clientX - rect.left, e.clientY - rect.top);
+          const t = worldToTileFloat(wPt.wx, wPt.wy);
+          const z = findZoneAtCell(Math.floor(t.x), Math.floor(t.y));
           if (z) {
             pushUndoState();
             mapZones = mapZones.filter(item => item.id !== z.id);
-            buildBaseGridSvg();
+            scheduleMapRender();
             scheduleCloudSave();
             showToast(`Зона «${z.label}» удалена`);
           }
@@ -3683,28 +4009,26 @@
           if (dist > 5) draggingItem.hasMoved = true;
 
           if (draggingItem.hasMoved) {
-            const wx = (e.clientX - rect.left - cam.x) / cam.scale;
-            const wy = (e.clientY - rect.top - cam.y) / cam.scale;
-            const f = screenToGridFloat(wx, wy);
-            const gx = Math.max(0, Math.min(GRID_SIZE - item.size, Math.floor(f.gx - (item.size - 1) / 2)));
-            const gy = Math.max(0, Math.min(GRID_SIZE - item.size, Math.floor(f.gy - (item.size - 1) / 2)));
+            const wPt = screenToWorld(e.clientX - rect.left, e.clientY - rect.top);
+            const t = worldToTileFloat(wPt.wx, wPt.wy);
+            const nx = Math.max(0, Math.min(WORLD_GRID - item.size, Math.floor(t.x - (item.size - 1) / 2)));
+            const ny = Math.max(0, Math.min(WORLD_GRID - item.size, Math.floor(t.y - (item.size - 1) / 2)));
 
-            const r = gridToReal(gx, gy, item.size);
-            document.getElementById('coordDisplay').textContent = `Перенос: X:${r.x} Y:${r.y}`;
+            document.getElementById('coordDisplay').textContent = `Перенос: X:${nx} Y:${ny}`;
 
-            if (!wasMoved || gx !== draggingItem.curGx || gy !== draggingItem.curGy) {
-              draggingItem.curGx = gx;
-              draggingItem.curGy = gy;
-              item.gx = gx;
-              item.gy = gy;
-              renderEntities();
-              updateHoverPreview();
+            if (!wasMoved || nx !== draggingItem.curX || ny !== draggingItem.curY) {
+              draggingItem.curX = nx;
+              draggingItem.curY = ny;
+              item.x = nx;
+              item.y = ny;
+              renderEntities(true);
+              scheduleMapRender();
             }
           }
           return;
         }
 
-        // 2. Панорамирование карты
+        // 2. Панорамирование карты 1200×1200
         if (isPanning) {
           if (Math.hypot(e.clientX - panStart.mx, e.clientY - panStart.my) > 4) panStart.moved = true;
           cam.x = panStart.cx + (e.clientX - panStart.mx);
@@ -3715,29 +4039,26 @@
 
         if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) return;
 
-        const wx = (e.clientX - rect.left - cam.x) / cam.scale;
-        const wy = (e.clientY - rect.top - cam.y) / cam.scale;
-        const f = screenToGridFloat(wx, wy);
+        const wPt = screenToWorld(e.clientX - rect.left, e.clientY - rect.top);
+        const t = worldToTileFloat(wPt.wx, wPt.wy);
 
         const size = activeTool === 'zone'
           ? (Number(document.getElementById('zoneSizeSelect')?.value) || 6)
           : (OBJECT_SIZES[activeTool] || 1);
-        const gx = Math.floor(f.gx - (size - 1) / 2);
-        const gy = Math.floor(f.gy - (size - 1) / 2);
+        const hx = Math.floor(t.x - (size - 1) / 2);
+        const hy = Math.floor(t.y - (size - 1) / 2);
 
-        if (f.gx >= 0 && f.gy >= 0 && f.gx < GRID_SIZE && f.gy < GRID_SIZE) {
-          const realPos = gridToReal(Math.floor(f.gx), Math.floor(f.gy), 1);
-          document.getElementById('coordDisplay').textContent = `X:${realPos.x} Y:${realPos.y}`;
+        if (t.x >= 0 && t.y >= 0 && t.x < WORLD_GRID && t.y < WORLD_GRID) {
+          document.getElementById('coordDisplay').textContent = `X:${Math.floor(t.x)} Y:${Math.floor(t.y)}`;
         }
 
-        if (!hoverCell || hoverCell.gx !== gx || hoverCell.gy !== gy) {
-          hoverCell = { gx, gy };
-          updateHoverPreview();
+        if (!hoverCell || hoverCell.x !== hx || hoverCell.y !== hy) {
+          hoverCell = { x: hx, y: hy };
+          if (activeTool !== 'pan' && activeTool !== 'erase') scheduleMapRender();
         }
       });
 
       window.addEventListener('mouseup', () => {
-        // Завершение переноса ЛКМ + предложение обмена Swap при наложении двух топок
         if (draggingItem) {
           const drag = draggingItem;
           draggingItem = null;
@@ -3745,39 +4066,37 @@
 
           if (item) {
             if (drag.hasMoved) {
-              if (canPlaceFootprint(drag.curGx, drag.curGy, item.size, item.id)) {
-                // Сохраняем состояние ДО переноса в Undo
-                item.gx = drag.origGx;
-                item.gy = drag.origGy;
+              if (canPlaceFootprint(drag.curX, drag.curY, item.size, item.id)) {
+                item.x = drag.origX;
+                item.y = drag.origY;
                 pushUndoState();
-                item.gx = drag.curGx;
-                item.gy = drag.curGy;
+                item.x = drag.curX;
+                item.y = drag.curY;
 
-                if (item.type === 'city') recordCityMove(item, drag.origGx, drag.origGy);
+                if (item.type === 'city') recordCityMove(item, drag.origX, drag.origY);
+                refreshLineOverlayOptions();
                 scheduleCloudSave();
                 renderPlayersSidebar();
               } else {
                 const swapTarget = item.type === 'city'
-                  ? findSingleSwapCandidate(drag.curGx, drag.curGy, item.size, item.id)
+                  ? findSingleSwapCandidate(drag.curX, drag.curY, item.size, item.id)
                   : null;
 
-                // Возвращаем топку обратно, ничего не ломая без подтверждения
-                item.gx = drag.origGx;
-                item.gy = drag.origGy;
+                item.x = drag.origX;
+                item.y = drag.origY;
 
                 if (swapTarget) {
-                  showPendingSwap(item, swapTarget, drag.origGx, drag.origGy);
+                  showPendingSwap(item, swapTarget, drag.origX, drag.origY);
                 } else {
                   showToast('Клетки заняты — объект возвращён на место!');
                 }
               }
             }
             selectedItemId = item.id;
-            buildBaseGridSvg();
-            renderEntities();
+            renderEntities(true);
+            scheduleMapRender();
             showSelectedCard(item);
           }
-          updateHoverPreview();
           return;
         }
 
@@ -3804,9 +4123,10 @@
           return;
         }
         if (e.key === 'Escape') {
+          closeMoveCoordsModal();
+          closeBookmarkModal();
           closeMapMessageModal();
           closeBatchNotifyModal();
-          closeAnchorModal();
           closeAutoPlaceModal();
           closeSyncBearModal();
           cancelPendingSwap();
@@ -3841,7 +4161,6 @@
         badge.className = 'text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/40';
       }
 
-      // Настраиваем интерфейс под роль: Офицер (редактирование) или Боец (просмотр)
       document.getElementById('backNavLink').href = isReadOnly ? 'index.html' : 'raids.html';
       document.getElementById('backNavText').textContent = isReadOnly ? 'Моя карточка' : 'Штаб Рейдов';
       document.getElementById('readOnlyNoticeBadge').classList.toggle('hidden', !isReadOnly);
@@ -3874,8 +4193,7 @@
       preloadSprite('target', 'assets/target.png');
 
       initHeroFilterOptions();
-      buildBaseGridSvg();
-      centerCamera();
+      resizeMapCanvas();
       initMapInteractions();
 
       const code = getPasscode();
@@ -3906,4 +4224,4 @@
     });
   </script>
 </body>
-</html>            
+</html>
