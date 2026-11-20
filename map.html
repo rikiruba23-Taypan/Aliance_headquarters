@@ -94,7 +94,7 @@
       border-radius: 9999px;
       font-family: 'JetBrains Mono', monospace;
       font-weight: 800;
-      font-size: 11px;
+      font-size: 10px;
       line-height: 1;
       pointer-events: none;
     }
@@ -117,7 +117,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 10px;
+      font-size: 9px;
       font-weight: 700;
       color: #ffffff;
       text-shadow: 0 1px 2px rgba(0,0,0,0.9);
@@ -129,15 +129,17 @@
     }
     .line-badge {
       position: absolute;
-      top: 4px;
-      right: 12px;
+      top: -6px;
+      left: 50%;
+      transform: translateX(-50%);
       padding: 1px 5px;
       border-radius: 6px;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
+      font-size: 8.5px;
       font-weight: 800;
-      background: rgba(15, 23, 42, 0.88);
-      border: 1px solid rgba(56, 189, 248, 0.7);
+      white-space: nowrap;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(56, 189, 248, 0.75);
       color: #38bdf8;
       pointer-events: none;
     }
@@ -287,21 +289,36 @@
             <option value="hasGov">🛡️ Есть Губернатор</option>
           </select>
         </div>
-        <div class="grid grid-cols-2 gap-1.5">
-          <select id="sortPlayersSelect" onchange="renderPlayersSidebar()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-slate-200">
-            <option value="furnace">Сорт: Печь ↓</option>
-            <option value="rally">Сорт: Сбор ↓</option>
-            <option value="march">Сорт: Марш ↓</option>
-            <option value="tier">Сорт: Тир войск ↓</option>
-            <option value="topEq">Сорт: ТОП-шмот ↓</option>
-            <option value="governor">Сорт: Губернатор ↓</option>
-            <option value="hero">Сорт: Герой ↓</option>
-            <option value="nick">Сорт: Ник А–Я</option>
-          </select>
-          <select id="heroFilterSelect" onchange="onHeroFilterChange()" class="bg-slate-900 border border-amber-500/40 rounded-lg px-2 py-1 text-[11px] text-amber-300 font-semibold">
-            <option value="">🦸 Герой: любой</option>
-          </select>
+        <select id="sortPlayersSelect" onchange="renderPlayersSidebar()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-slate-200">
+          <option value="furnace">Сорт: Печь ↓</option>
+          <option value="rally">Сорт: Сбор ↓</option>
+          <option value="march">Сорт: Марш ↓</option>
+          <option value="tier">Сорт: Тир войск ↓</option>
+          <option value="topEq">Сорт: ТОП-шмот ↓</option>
+          <option value="governor">Сорт: Губернатор ↓</option>
+          <option value="hero">Сорт: Герой ↓</option>
+          <option value="nick">Сорт: Ник А–Я</option>
+        </select>
+
+        <!-- Фильтр героев с живым поиском -->
+        <div id="heroPickerWrapper" class="relative">
+          <input type="hidden" id="heroFilterSelect" value="" />
+          <div class="relative flex items-center">
+            <i class="fa-solid fa-magnifying-glass absolute left-2.5 text-amber-400/70 text-[10px] pointer-events-none"></i>
+            <input id="heroSearchBox" type="text" autocomplete="off"
+              onfocus="this.select(); openHeroDropdown();"
+              onclick="openHeroDropdown()"
+              oninput="onHeroSearchInput(this.value)"
+              placeholder="🦸 Поиск героя (имя или G1..G17)..."
+              class="w-full bg-slate-900 border border-amber-500/40 focus:border-amber-400 rounded-lg pl-7 pr-7 py-1 text-[11px] text-amber-200 placeholder-slate-400 font-semibold focus:outline-none" />
+            <button id="heroClearBtn" type="button" onclick="clearHeroFilter(event)" title="Сбросить героя"
+              class="hidden absolute right-1.5 text-slate-400 hover:text-rose-400 px-1 text-xs">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div id="heroDropdownList" class="hidden absolute left-0 right-0 top-full mt-1 z-50 max-h-52 overflow-y-auto bg-slate-950 border border-amber-500/50 rounded-xl shadow-2xl divide-y divide-slate-800/70"></div>
         </div>
+
         <label id="onlyWithHeroWrap" class="hidden flex items-center gap-1.5 text-[11px] text-amber-200 cursor-pointer select-none pt-0.5">
           <input id="onlyWithHeroCheck" type="checkbox" onchange="renderPlayersSidebar()" class="accent-amber-500 w-3.5 h-3.5 rounded" />
           <span>Показать только тех, у кого настроен герой</span>
@@ -400,9 +417,9 @@
     const API_URL = 'https://script.google.com/macros/s/AKfycbwsX-LADURoQu_MsQ2XJVsSPsHAgMebI4_QDXmpPpi3OcpW3ScwPep9ukQBFJfDMrjQ7g/exec';
 
     // Геометрия изометрической квадратной сетки (как в Whiteout Survival)
-    const GRID_SIZE = 50;
-    const TILE_W = 64;
-    const TILE_H = 38;
+    const GRID_SIZE = 60;
+    const TILE_W = 84;
+    const TILE_H = 60;
     const WORLD_PAD = 180;
     const WORLD_W = GRID_SIZE * TILE_W + WORLD_PAD * 2;
     const WORLD_H = GRID_SIZE * TILE_H + WORLD_PAD * 2;
@@ -757,10 +774,94 @@
     }
 
     function initHeroFilterOptions() {
-      const sel = document.getElementById('heroFilterSelect');
-      if (!sel) return;
-      sel.innerHTML = '<option value="">🦸 Герой: любой</option>' +
-        MAP_HEROES.map(h => `<option value="${h.key}">${h.name} (G${h.gen})</option>`).join('');
+      renderHeroDropdown('');
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#heroPickerWrapper')) {
+          closeHeroDropdown();
+        }
+      });
+    }
+
+    function openHeroDropdown() {
+      const inp = document.getElementById('heroSearchBox');
+      const curKey = document.getElementById('heroFilterSelect').value;
+      const selectedObj = MAP_HEROES.find(h => h.key === curKey);
+      const isShowingSelected = selectedObj && inp.value === `${selectedObj.name} (G${selectedObj.gen})`;
+      renderHeroDropdown(isShowingSelected ? '' : inp.value);
+      document.getElementById('heroDropdownList').classList.remove('hidden');
+    }
+
+    function closeHeroDropdown() {
+      const list = document.getElementById('heroDropdownList');
+      if (list) list.classList.add('hidden');
+      const curKey = document.getElementById('heroFilterSelect').value;
+      const inp = document.getElementById('heroSearchBox');
+      if (!inp) return;
+      if (curKey) {
+        const h = MAP_HEROES.find(x => x.key === curKey);
+        inp.value = h ? `${h.name} (G${h.gen})` : '';
+      } else {
+        inp.value = '';
+      }
+    }
+
+    function onHeroSearchInput(val) {
+      const trimmed = val.trim();
+      if (!trimmed && document.getElementById('heroFilterSelect').value) {
+        document.getElementById('heroFilterSelect').value = '';
+        document.getElementById('heroClearBtn').classList.add('hidden');
+        onHeroFilterChange();
+      }
+      renderHeroDropdown(trimmed);
+      document.getElementById('heroDropdownList').classList.remove('hidden');
+    }
+
+    function renderHeroDropdown(query) {
+      const listEl = document.getElementById('heroDropdownList');
+      if (!listEl) return;
+      const q = (query || '').trim().toLowerCase();
+      const curKey = document.getElementById('heroFilterSelect').value;
+
+      const matched = MAP_HEROES.filter(h =>
+        !q || h.name.toLowerCase().includes(q) || (`g${h.gen}`).includes(q)
+      );
+
+      if (matched.length === 0) {
+        listEl.innerHTML = `<div class="px-3 py-2 text-[11px] text-slate-500 text-center">Герой не найден</div>`;
+        return;
+      }
+
+      listEl.innerHTML = matched.map(h => {
+        const isSel = h.key === curKey;
+        const safeKey = h.key.replace(/'/g, "\\'");
+        return `
+          <button type="button" onclick="selectHeroFilter('${safeKey}')"
+            class="w-full text-left px-3 py-1.5 text-[11px] flex items-center justify-between transition ${
+              isSel ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-slate-200 hover:bg-slate-800'
+            }">
+            <span>${h.name}</span>
+            <span class="font-mono text-[10px] text-slate-400">Gen ${h.gen}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectHeroFilter(heroKey) {
+      const h = MAP_HEROES.find(x => x.key === heroKey);
+      document.getElementById('heroFilterSelect').value = heroKey;
+      document.getElementById('heroSearchBox').value = h ? `${h.name} (G${h.gen})` : '';
+      document.getElementById('heroClearBtn').classList.remove('hidden');
+      document.getElementById('heroDropdownList').classList.add('hidden');
+      onHeroFilterChange();
+    }
+
+    function clearHeroFilter(e) {
+      if (e) e.stopPropagation();
+      document.getElementById('heroFilterSelect').value = '';
+      document.getElementById('heroSearchBox').value = '';
+      document.getElementById('heroClearBtn').classList.add('hidden');
+      document.getElementById('heroDropdownList').classList.add('hidden');
+      onHeroFilterChange();
     }
 
     function onHeroFilterChange() {
@@ -924,10 +1025,10 @@
           const p = findPlayer(item.playerKey);
           const nick = p ? p.nick : (item.fallbackNick || 'Игрок');
           const fInfo = parseFurnaceInfo(p ? p.furnaceLevel : item.fallbackFurnace);
-          const w = TILE_W * 2.08;
+          const w = TILE_W * 1.36;
           const h = w;
           const left = center.x - w / 2;
-          const top = center.y - h * 0.62;
+          const top = center.y - h * 0.56;
 
           let lineBadgeHtml = '';
           if (lineTargetObj) {
@@ -949,10 +1050,10 @@
         }
 
         if (item.type === 'bear1' || item.type === 'bear2') {
-          const w = TILE_W * 3.05;
+          const w = TILE_W * 2.35;
           const h = w * 0.88;
           const left = center.x - w / 2;
-          const top = center.y - h * 0.56;
+          const top = center.y - h * 0.54;
           const imgName = item.type === 'bear1' ? 'bear1' : 'bear2';
           return `
             <div onmousedown="onEntityMouseDown(event, '${safeId}')" class="map-entity ${stateCls}"
@@ -965,10 +1066,10 @@
         }
 
         if (item.type === 'hq') {
-          const w = TILE_W * 3.05;
+          const w = TILE_W * 2.35;
           const h = w * 0.90;
           const left = center.x - w / 2;
-          const top = center.y - h * 0.56;
+          const top = center.y - h * 0.54;
           return `
             <div onmousedown="onEntityMouseDown(event, '${safeId}')" class="map-entity ${stateCls} flex items-center justify-center"
                  style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="Штаб альянса (Зажмите ЛКМ для переноса)">
@@ -984,10 +1085,10 @@
 
         if (item.type === 'statue') {
           const st = STATUE_TYPES[item.subType] || STATUE_TYPES.other;
-          const w = TILE_W * 1.95;
+          const w = TILE_W * 1.36;
           const h = w;
           const left = center.x - w / 2;
-          const top = center.y - h * 0.60;
+          const top = center.y - h * 0.56;
           return `
             <div onmousedown="onEntityMouseDown(event, '${safeId}')" class="map-entity ${stateCls} flex flex-col items-center justify-center"
                  style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="${st.label} (Зажмите ЛКМ для переноса)">
@@ -1005,10 +1106,10 @@
         }
 
         if (item.type === 'banner') {
-          const w = TILE_W * 1.15;
-          const h = TILE_W * 1.35;
+          const w = TILE_W * 0.85;
+          const h = TILE_W * 1.05;
           const left = center.x - w / 2;
-          const top = center.y - h * 0.72;
+          const top = center.y - h * 0.70;
           return `
             <div onmousedown="onEntityMouseDown(event, '${safeId}')" class="map-entity ${stateCls} flex flex-col items-center justify-end"
                  style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="Стяг альянса (Зажмите ЛКМ для переноса)">
@@ -1020,8 +1121,8 @@
         }
 
         if (item.type === 'obstacle') {
-          const w = TILE_W * 0.95;
-          const h = TILE_H * 1.1;
+          const w = TILE_W * 0.85;
+          const h = TILE_H * 0.95;
           const left = center.x - w / 2;
           const top = center.y - h * 0.55;
           return `
@@ -1034,8 +1135,8 @@
         }
 
         if (item.type === 'castle') {
-          const w = TILE_W * 5.8;
-          const h = TILE_H * 5.8;
+          const w = TILE_W * 4.8;
+          const h = TILE_H * 4.8;
           const left = center.x - w / 2;
           const top = center.y - h * 0.54;
           return `
@@ -1053,10 +1154,10 @@
         }
 
         if (item.type === 'turret') {
-          const w = TILE_W * 2.15;
+          const w = TILE_W * 1.5;
           const h = w * 0.95;
           const left = center.x - w / 2;
-          const top = center.y - h * 0.58;
+          const top = center.y - h * 0.56;
           const tLabel = getTurretDisplayName(item);
           return `
             <div onmousedown="onEntityMouseDown(event, '${safeId}')" class="map-entity ${stateCls} flex items-center justify-center"
@@ -1072,10 +1173,10 @@
         }
 
         if (item.type === 'fort') {
-          const w = TILE_W * 3.9;
-          const h = TILE_H * 3.9;
+          const w = TILE_W * 3.1;
+          const h = TILE_H * 3.1;
           const left = center.x - w / 2;
-          const top = center.y - h * 0.55;
+          const top = center.y - h * 0.54;
           return `
             <div onmousedown="onEntityMouseDown(event, '${safeId}')" class="map-entity ${stateCls} flex items-center justify-center"
                  style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="Форт / Цитадель (4×4)">
@@ -1091,10 +1192,10 @@
         }
 
         if (item.type === 'target') {
-          const w = TILE_W * 2.9;
-          const h = TILE_H * 2.9;
+          const w = TILE_W * 2.3;
+          const h = TILE_H * 2.3;
           const left = center.x - w / 2;
-          const top = center.y - h * 0.55;
+          const top = center.y - h * 0.54;
           return `
             <div onmousedown="onEntityMouseDown(event, '${safeId}')" class="map-entity ${stateCls} flex items-center justify-center"
                  style="left:${left}px; top:${top}px; width:${w}px; height:${h}px; z-index:${zIdx};" title="Объект / Цель (3×3)">
@@ -1740,14 +1841,14 @@
         const c = gridToScreen(item.gx + item.size / 2, item.gy + item.size / 2);
         if (item.type === 'bear1' || item.type === 'bear2') {
           const img = IMG_CACHE[item.type];
-          const w = TILE_W * 3.05, h = w * 0.88;
+          const w = TILE_W * 2.35, h = w * 0.88;
           if (img && img.complete && img.naturalWidth) {
-            ctx.drawImage(img, c.x - w / 2, c.y - h * 0.56, w, h);
+            ctx.drawImage(img, c.x - w / 2, c.y - h * 0.54, w, h);
           }
         } else if (item.type === 'city') {
           const img = IMG_CACHE.topka;
-          const w = TILE_W * 2.08, h = w;
-          const x = c.x - w / 2, y = c.y - h * 0.62;
+          const w = TILE_W * 1.36, h = w;
+          const x = c.x - w / 2, y = c.y - h * 0.56;
           if (img && img.complete && img.naturalWidth) {
             ctx.drawImage(img, x, y, w, h);
           }
@@ -1766,21 +1867,21 @@
             ctx.strokeStyle = '#fde047';
             ctx.stroke();
           }
-          ctx.font = '800 12px Inter, sans-serif';
+          ctx.font = '800 10px Inter, sans-serif';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillStyle = fInfo.isCrystal ? '#ffffff' : '#0f172a';
           ctx.fillText(fInfo.num, cx, cy);
 
           // Ник игрока
-          ctx.font = '700 10px Inter, sans-serif';
+          ctx.font = '700 9px Inter, sans-serif';
           ctx.fillStyle = '#ffffff';
           ctx.fillText(nick.slice(0, 14), x + w * 0.51, y + h * 0.905);
         } else if (item.type === 'hq') {
           const img = IMG_CACHE.hq;
-          const w = TILE_W * 3.05, h = w * 0.90;
+          const w = TILE_W * 2.35, h = w * 0.90;
           if (img && img.complete && img.naturalWidth) {
-            ctx.drawImage(img, c.x - w / 2, c.y - h * 0.56, w, h);
+            ctx.drawImage(img, c.x - w / 2, c.y - h * 0.54, w, h);
           } else {
             ctx.fillStyle = 'rgba(49, 46, 129, 0.92)';
             ctx.strokeStyle = '#fbbf24';
@@ -1796,9 +1897,9 @@
         } else if (item.type === 'statue') {
           const st = STATUE_TYPES[item.subType] || STATUE_TYPES.other;
           const img = IMG_CACHE[st.sprite];
-          const w = TILE_W * 1.95, h = w;
+          const w = TILE_W * 1.36, h = w;
           if (img && img.complete && img.naturalWidth) {
-            ctx.drawImage(img, c.x - w / 2, c.y - h * 0.60, w, h);
+            ctx.drawImage(img, c.x - w / 2, c.y - h * 0.56, w, h);
           } else {
             ctx.fillStyle = 'rgba(120, 53, 15, 0.92)';
             ctx.strokeStyle = '#fbbf24';
@@ -1813,9 +1914,9 @@
           }
         } else if (item.type === 'banner') {
           const img = IMG_CACHE.banner;
-          const w = TILE_W * 1.15, h = TILE_W * 1.35;
+          const w = TILE_W * 0.85, h = TILE_W * 1.05;
           if (img && img.complete && img.naturalWidth) {
-            ctx.drawImage(img, c.x - w / 2, c.y - h * 0.72, w, h);
+            ctx.drawImage(img, c.x - w / 2, c.y - h * 0.70, w, h);
           } else {
             ctx.beginPath();
             ctx.arc(c.x, c.y - 6, 15, 0, Math.PI * 2);
@@ -1838,10 +1939,10 @@
         } else if (['castle', 'turret', 'fort', 'target'].includes(item.type)) {
           const img = IMG_CACHE[item.type];
           const sizesMap = {
-            castle: { w: TILE_W * 5.8, h: TILE_H * 5.8, bw: 160, bh: 54, bg: 'rgba(136, 19, 55, 0.92)', br: '#fbbf24', txt: '👑 СОЛНЕЧНЫЙ ЗАМОК' },
-            turret: { w: TILE_W * 2.15, h: TILE_W * 2.0, bw: 170, bh: 34, bg: 'rgba(136, 19, 55, 0.92)', br: '#fb7185', txt: `🗼 ${getTurretDisplayName(item)}` },
-            fort:   { w: TILE_W * 3.9, h: TILE_H * 3.9, bw: 136, bh: 44, bg: 'rgba(59, 7, 100, 0.92)',  br: '#c084fc', txt: '🏯 ФОРТ' },
-            target: { w: TILE_W * 2.9, h: TILE_H * 2.9, bw: 112, bh: 38, bg: 'rgba(12, 74, 110, 0.92)', br: '#38bdf8', txt: '🎯 ОБЪЕКТ' }
+            castle: { w: TILE_W * 4.8, h: TILE_H * 4.8, bw: 160, bh: 54, bg: 'rgba(136, 19, 55, 0.92)', br: '#fbbf24', txt: '👑 СОЛНЕЧНЫЙ ЗАМОК' },
+            turret: { w: TILE_W * 1.5, h: TILE_W * 1.42, bw: 170, bh: 34, bg: 'rgba(136, 19, 55, 0.92)', br: '#fb7185', txt: `🗼 ${getTurretDisplayName(item)}` },
+            fort:   { w: TILE_W * 3.1, h: TILE_H * 3.1, bw: 136, bh: 44, bg: 'rgba(59, 7, 100, 0.92)',  br: '#c084fc', txt: '🏯 ФОРТ' },
+            target: { w: TILE_W * 2.3, h: TILE_H * 2.3, bw: 112, bh: 38, bg: 'rgba(12, 74, 110, 0.92)', br: '#38bdf8', txt: '🎯 ОБЪЕКТ' }
           };
           const cfg = sizesMap[item.type];
           if (img && img.complete && img.naturalWidth) {
