@@ -1171,9 +1171,58 @@
       };
     }
 
-    // ==================== КОЛЛИЗИИ И РАСЧЁТ ДИСТАНЦИИ / МАРША ====================
-    function isCellOccupied(x, y, ignoreId = null) {
+    // ==================== КОЛЛИЗИИ, ЗАПРЕТНАЯ ЗОНА ЗАМКА И РАСЧЁТ МАРША ====================
+    function getCastleNoMoveZone() {
+      const castleObj = mapItems.find(it => it.type === 'castle');
+      if (!castleObj) return null;
+
+      const cCenterX = castleObj.x + castleObj.size / 2;
+      const cCenterY = castleObj.y + castleObj.size / 2;
+      const nearTurrets = mapItems.filter(it =>
+        it.type === 'turret' &&
+        Math.abs((it.x + it.size / 2) - cCenterX) <= 20 &&
+        Math.abs((it.y + it.size / 2) - cCenterY) <= 20
+      );
+
+      let minX = castleObj.x - 3;
+      let minY = castleObj.y - 3;
+      let maxX = castleObj.x + castleObj.size + 3;
+      let maxY = castleObj.y + castleObj.size + 3;
+
+      if (nearTurrets.length >= 2) {
+        minX = Math.min(castleObj.x, ...nearTurrets.map(t => t.x));
+        minY = Math.min(castleObj.y, ...nearTurrets.map(t => t.y));
+        maxX = Math.max(castleObj.x + castleObj.size, ...nearTurrets.map(t => t.x + t.size));
+        maxY = Math.max(castleObj.y + castleObj.size, ...nearTurrets.map(t => t.y + t.size));
+      }
+
+      minX = Math.max(0, minX);
+      minY = Math.max(0, minY);
+      maxX = Math.min(WORLD_GRID, maxX);
+      maxY = Math.min(WORLD_GRID, maxY);
+
+      return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+    }
+
+    function isCellInCastleNoMoveZone(x, y, itemType = null) {
+      if (itemType === 'castle' || itemType === 'turret') return false;
+      const z = getCastleNoMoveZone();
+      if (!z) return false;
+      return x >= z.x && x < z.x + z.w && y >= z.y && y < z.y + z.h;
+    }
+
+    function hasFootprintInCastleNoMoveZone(x, y, size, itemType = null) {
+      for (let dx = 0; dx < size; dx++) {
+        for (let dy = 0; dy < size; dy++) {
+          if (isCellInCastleNoMoveZone(x + dx, y + dy, itemType)) return true;
+        }
+      }
+      return false;
+    }
+
+    function isCellOccupied(x, y, ignoreId = null, itemType = null) {
       if (x < 0 || y < 0 || x >= WORLD_GRID || y >= WORLD_GRID) return true;
+      if (isCellInCastleNoMoveZone(x, y, itemType)) return true;
       for (const item of mapItems) {
         if (ignoreId && item.id === ignoreId) continue;
         if (x >= item.x && x < item.x + item.size && y >= item.y && y < item.y + item.size) {
@@ -1183,11 +1232,11 @@
       return false;
     }
 
-    function canPlaceFootprint(x, y, size, ignoreId = null) {
+    function canPlaceFootprint(x, y, size, ignoreId = null, itemType = null) {
       if (x < 0 || y < 0 || x + size > WORLD_GRID || y + size > WORLD_GRID) return false;
       for (let dx = 0; dx < size; dx++) {
         for (let dy = 0; dy < size; dy++) {
-          if (isCellOccupied(x + dx, y + dy, ignoreId)) return false;
+          if (isCellOccupied(x + dx, y + dy, ignoreId, itemType)) return false;
         }
       }
       return true;
@@ -1199,6 +1248,7 @@
         for (let dy = 0; dy < size; dy++) {
           const cx = x + dx, cy = y + dy;
           if (cx < 0 || cy < 0 || cx >= WORLD_GRID || cy >= WORLD_GRID) return null;
+          if (isCellInCastleNoMoveZone(cx, cy, 'city')) return null;
           for (const item of mapItems) {
             if (item.id === ignoreId) continue;
             if (cx >= item.x && cx < item.x + item.size && cy >= item.y && cy < item.y + item.size) {
@@ -1524,17 +1574,79 @@
       });
     }
 
-    function drawIsoPolygon(ctx, x, y, size) {
+    function drawIsoPolygon(ctx, x, y, w, h = w) {
       const p1 = tileToWorld(x, y);
-      const p2 = tileToWorld(x + size, y);
-      const p3 = tileToWorld(x + size, y + size);
-      const p4 = tileToWorld(x, y + size);
+      const p2 = tileToWorld(x + w, y);
+      const p3 = tileToWorld(x + w, y + h);
+      const p4 = tileToWorld(x, y + h);
       ctx.beginPath();
       ctx.moveTo(p1.wx, p1.wy);
       ctx.lineTo(p2.wx, p2.wy);
       ctx.lineTo(p3.wx, p3.wy);
       ctx.lineTo(p4.wx, p4.wy);
       ctx.closePath();
+    }
+
+    function drawCastleNoMoveZone(ctx, bounds) {
+      const z = getCastleNoMoveZone();
+      if (!z) return;
+      if (z.x + z.w < bounds.minX || z.x > bounds.maxX || z.y + z.h < bounds.minY || z.y > bounds.maxY) return;
+
+      const isTundra = mapTheme === 'tundra';
+      ctx.save();
+      drawIsoPolygon(ctx, z.x, z.y, z.w, z.h);
+
+      // Тёмная запретная область (ромбом от башни до башни)
+      ctx.fillStyle = isTundra ? 'rgba(15, 23, 42, 0.46)' : 'rgba(127, 29, 29, 0.30)';
+      ctx.fill();
+
+      // Диагональная предупреждающая штриховка внутри ромба
+      ctx.save();
+      ctx.clip();
+      ctx.strokeStyle = isTundra ? 'rgba(244, 63, 94, 0.28)' : 'rgba(248, 113, 113, 0.24)';
+      ctx.lineWidth = 1.5;
+      const pTop = tileToWorld(z.x + z.w, z.y + z.h);
+      const pBot = tileToWorld(z.x, z.y);
+      const pLeft = tileToWorld(z.x, z.y + z.h);
+      const pRight = tileToWorld(z.x + z.w, z.y);
+      const minWx = pLeft.wx - 20;
+      const maxWx = pRight.wx + 20;
+      const minWy = pTop.wy - 20;
+      const maxWy = pBot.wy + 20;
+      const spanY = maxWy - minWy;
+      const step = 22;
+
+      ctx.beginPath();
+      for (let sx = minWx - spanY; sx <= maxWx + spanY; sx += step) {
+        ctx.moveTo(sx, minWy);
+        ctx.lineTo(sx + spanY, maxWy);
+      }
+      ctx.stroke();
+      ctx.restore();
+
+      // Чёткая граница ромба
+      drawIsoPolygon(ctx, z.x, z.y, z.w, z.h);
+      ctx.strokeStyle = isTundra ? 'rgba(225, 29, 72, 0.90)' : 'rgba(251, 113, 133, 0.90)';
+      ctx.lineWidth = 2.6;
+      ctx.stroke();
+
+      // Подпись внутри северо-западного края ромба
+      const edgeInner = tileToWorld(z.x + z.w * 0.5, z.y + z.h - 0.85);
+      const lbl = '⛔ НЕЛЬЗЯ ПЕРЕМЕЩАТЬСЯ';
+      ctx.font = '800 10px Inter, sans-serif';
+      const bw = ctx.measureText(lbl).width + 18;
+      drawRoundRectCanvas(ctx, edgeInner.wx - bw / 2, edgeInner.wy - 10, bw, 20, 7);
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.90)';
+      ctx.fill();
+      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = 'rgba(244, 63, 94, 0.82)';
+      ctx.stroke();
+      ctx.fillStyle = '#fecdd3';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(lbl, edgeInner.wx, edgeInner.wy + 0.5);
+
+      ctx.restore();
     }
 
     function drawRoundRectCanvas(ctx, x, y, w, h, r) {
@@ -1671,6 +1783,9 @@
         }
       }
 
+      // 3.1. Запретная зона ромбом от башни до башни вокруг Замка
+      drawCastleNoMoveZone(ctx, bounds);
+
       // 4. Тактические зоны
       mapZones.forEach(z => {
         if (z.x + z.size < bounds.minX || z.x > bounds.maxX || z.y + z.size < bounds.minY || z.y > bounds.maxY) return;
@@ -1759,7 +1874,7 @@
             } else {
               for (let dx = 0; dx < dragObj.size; dx++) {
                 for (let dy = 0; dy < dragObj.size; dy++) {
-                  const occ = isCellOccupied(draggingItem.curX + dx, draggingItem.curY + dy, dragObj.id);
+                  const occ = isCellOccupied(draggingItem.curX + dx, draggingItem.curY + dy, dragObj.id, dragObj.type);
                   drawIsoPolygon(ctx, draggingItem.curX + dx, draggingItem.curY + dy, 1);
                   ctx.fillStyle = occ ? 'rgba(239, 68, 68, 0.58)' : 'rgba(34, 197, 94, 0.52)';
                   ctx.fill();
@@ -1802,7 +1917,7 @@
 
             for (let dx = 0; dx < size; dx++) {
               for (let dy = 0; dy < size; dy++) {
-                const occ = isCellOccupied(gx + dx, gy + dy, ignoreId);
+                const occ = isCellOccupied(gx + dx, gy + dy, ignoreId, activeTool);
                 drawIsoPolygon(ctx, gx + dx, gy + dy, 1);
                 ctx.fillStyle = occ ? 'rgba(239, 68, 68, 0.58)' : 'rgba(34, 197, 94, 0.52)';
                 ctx.fill();
@@ -2417,8 +2532,9 @@
         if (ex) ignoreId = ex.id;
       }
 
-      if (!canPlaceFootprint(x, y, size, ignoreId)) {
-        showToast('Преграда: клетки уже заняты!');
+      if (!canPlaceFootprint(x, y, size, ignoreId, activeTool)) {
+        const hitForbidden = hasFootprintInCastleNoMoveZone(x, y, size, activeTool);
+        showToast(hitForbidden ? '⛔ Запретная зона у Замка: сюда нельзя перемещаться!' : 'Преграда: клетки уже заняты!');
         return;
       }
 
@@ -2526,8 +2642,14 @@
       const canEditLabel = ['fort', 'target', 'reserve', 'turret'].includes(item.type);
       const newLabel = canEditLabel ? document.getElementById('moveCoordsLabel').value.trim() : null;
 
-      // Проверяем свободна ли целевая область
-      if (!canPlaceFootprint(nx, ny, item.size, item.id)) {
+      // Проверяем свободна ли целевая область (с учётом запретного ромба у Замка)
+      if (!canPlaceFootprint(nx, ny, item.size, item.id, item.type)) {
+        if (hasFootprintInCastleNoMoveZone(nx, ny, item.size, item.type)) {
+          errBox.textContent = `⛔ Клетки X:${nx} Y:${ny} попадают в запретную зону вокруг Солнечного замка (ромб от башни до башни) — перемещение туда невозможно.`;
+          errBox.classList.remove('hidden');
+          return;
+        }
+
         const swapTarget = item.type === 'city'
           ? findSingleSwapCandidate(nx, ny, item.size, item.id)
           : null;
@@ -2907,7 +3029,7 @@
         const pKey = getPlayerKey(p);
         let placedSlot = null;
         for (const s of slots) {
-          if (canPlaceFootprint(s.x, s.y, 2)) {
+          if (canPlaceFootprint(s.x, s.y, 2, null, 'city')) {
             placedSlot = s;
             break;
           }
@@ -3647,6 +3769,9 @@
         }
       }
 
+      // 4.1. Запретная зона ромбом от башни до башни вокруг Замка
+      drawCastleNoMoveZone(ctx, bounds);
+
       // 5. Тактические зоны
       mapZones.forEach(z => {
         if (z.x + z.size < bounds.minX || z.x > bounds.maxX || z.y + z.size < bounds.minY || z.y > bounds.maxY) return;
@@ -4014,7 +4139,10 @@
             const nx = Math.max(0, Math.min(WORLD_GRID - item.size, Math.floor(t.x - (item.size - 1) / 2)));
             const ny = Math.max(0, Math.min(WORLD_GRID - item.size, Math.floor(t.y - (item.size - 1) / 2)));
 
-            document.getElementById('coordDisplay').textContent = `Перенос: X:${nx} Y:${ny}`;
+            const dragForbidden = hasFootprintInCastleNoMoveZone(nx, ny, item.size, item.type);
+            document.getElementById('coordDisplay').textContent = dragForbidden
+              ? `⛔ Запретная зона: X:${nx} Y:${ny}`
+              : `Перенос: X:${nx} Y:${ny}`;
 
             if (!wasMoved || nx !== draggingItem.curX || ny !== draggingItem.curY) {
               draggingItem.curX = nx;
@@ -4049,7 +4177,9 @@
         const hy = Math.floor(t.y - (size - 1) / 2);
 
         if (t.x >= 0 && t.y >= 0 && t.x < WORLD_GRID && t.y < WORLD_GRID) {
-          document.getElementById('coordDisplay').textContent = `X:${Math.floor(t.x)} Y:${Math.floor(t.y)}`;
+          const tx = Math.floor(t.x), ty = Math.floor(t.y);
+          const forbiddenMark = isCellInCastleNoMoveZone(tx, ty) ? ' • ⛔ Запретная зона' : '';
+          document.getElementById('coordDisplay').textContent = `X:${tx} Y:${ty}${forbiddenMark}`;
         }
 
         if (!hoverCell || hoverCell.x !== hx || hoverCell.y !== hy) {
@@ -4066,7 +4196,7 @@
 
           if (item) {
             if (drag.hasMoved) {
-              if (canPlaceFootprint(drag.curX, drag.curY, item.size, item.id)) {
+              if (canPlaceFootprint(drag.curX, drag.curY, item.size, item.id, item.type)) {
                 item.x = drag.origX;
                 item.y = drag.origY;
                 pushUndoState();
@@ -4078,7 +4208,8 @@
                 scheduleCloudSave();
                 renderPlayersSidebar();
               } else {
-                const swapTarget = item.type === 'city'
+                const hitForbidden = hasFootprintInCastleNoMoveZone(drag.curX, drag.curY, item.size, item.type);
+                const swapTarget = (!hitForbidden && item.type === 'city')
                   ? findSingleSwapCandidate(drag.curX, drag.curY, item.size, item.id)
                   : null;
 
@@ -4088,7 +4219,9 @@
                 if (swapTarget) {
                   showPendingSwap(item, swapTarget, drag.origX, drag.origY);
                 } else {
-                  showToast('Клетки заняты — объект возвращён на место!');
+                  showToast(hitForbidden
+                    ? '⛔ Нельзя переместить в запретную зону у Замка — объект возвращён!'
+                    : 'Клетки заняты — объект возвращён на место!');
                 }
               }
             }
