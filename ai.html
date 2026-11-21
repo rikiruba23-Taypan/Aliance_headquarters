@@ -2,7 +2,7 @@
 <html lang="ru" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, interactive-widget=resizes-content" />
   <title>Альянс «Гармония» — ИИ-Советник (Белая мгла)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,178 +22,758 @@
   </script>
   <style>
     * { box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; background-color: #060a12; color: #f1f5f9; }
-    .thin-scroll::-webkit-scrollbar { width: 5px; }
-    .thin-scroll::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.45); border-radius: 99px; }
+    html, body {
+      height: 100%;
+      height: 100dvh;
+      margin: 0;
+      padding: 0;
+      overscroll-behavior: none;
+      font-family: 'Inter', sans-serif;
+      background-color: #060a12;
+      color: #f1f5f9;
+    }
+
+    /* Атмосферный фон: морозное северное сияние + лёгкий жар топки снизу */
+    .frost-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .frost-bg::before {
+      content: '';
+      position: absolute;
+      top: -18%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 900px;
+      height: 420px;
+      background: radial-gradient(ellipse at center, rgba(56, 189, 248, 0.12) 0%, rgba(99, 102, 241, 0.06) 45%, transparent 72%);
+      filter: blur(28px);
+      animation: auroraPulse 12s ease-in-out infinite alternate;
+    }
+    .frost-bg::after {
+      content: '';
+      position: absolute;
+      bottom: -22%;
+      right: -10%;
+      width: 560px;
+      height: 360px;
+      background: radial-gradient(ellipse at center, rgba(245, 158, 11, 0.07) 0%, rgba(234, 88, 12, 0.03) 45%, transparent 70%);
+      filter: blur(36px);
+    }
+
+    @keyframes auroraPulse {
+      0% { transform: translateX(-52%) scale(1); opacity: 0.75; }
+      100% { transform: translateX(-48%) scale(1.08); opacity: 1; }
+    }
+
+    /* Скроллбары */
+    .thin-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+    .thin-scroll::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.4); border-radius: 99px; }
+    .thin-scroll::-webkit-scrollbar-track { background: transparent; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Анимация появления новых сообщений */
+    @keyframes msgSlideIn {
+      from { opacity: 0; transform: translateY(10px) scale(0.985); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .msg-animate {
+      animation: msgSlideIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    /* Живые точки ожидания */
+    @keyframes dotBounce {
+      0%, 80%, 100% { transform: scale(0.65); opacity: 0.35; }
+      40% { transform: scale(1.1); opacity: 1; }
+    }
+    .typing-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 9999px;
+      background: #38bdf8;
+      display: inline-block;
+      animation: dotBounce 1.3s infinite ease-in-out both;
+    }
+    .typing-dot:nth-child(2) { animation-delay: 0.16s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.32s; }
+
+    /* Стили форматирования ответов ИИ */
     .msg-prose strong { color: #fde68a; font-weight: 700; }
-    .msg-prose ul { list-style: disc; padding-left: 1.25rem; margin: 0.35rem 0; }
-    .msg-prose li { margin: 0.2rem 0; }
+    .ratio-chip {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+      font-weight: 700;
+      color: #7dd3fc;
+      background: rgba(14, 165, 233, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.32);
+      border-radius: 6px;
+      padding: 0 5px;
+      margin: 0 1px;
+    }
+    .pct-hl {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      color: #6ee7b7;
+    }
+    .star-hl {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: #fcd34d;
+    }
+    .ai-heading-inline {
+      color: #f8fafc;
+      font-weight: 700;
+    }
+
+    /* Эффект ледяного свечения для карточек */
+    .tactical-card {
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.88), rgba(11, 17, 30, 0.94));
+      border: 1px solid rgba(51, 65, 85, 0.65);
+      transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .tactical-card:hover {
+      border-color: rgba(56, 189, 248, 0.55);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px -8px rgba(14, 165, 233, 0.25);
+    }
+
+    /* Поле ввода с мягким ореолом при фокусе */
+    .input-shell:focus-within {
+      border-color: rgba(56, 189, 248, 0.75);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12), 0 8px 24px -8px rgba(14, 165, 233, 0.25);
+    }
+
+    /* Мягкое затухание справа у ленты быстрых кнопок */
+    .fade-mask-x {
+      mask-image: linear-gradient(to right, black 92%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, black 92%, transparent 100%);
+    }
   </style>
 </head>
-<body class="h-screen flex flex-col bg-slate-950 text-slate-100">
+<body class="h-[100dvh] flex flex-col bg-slate-950 text-slate-100 overflow-hidden relative">
+
+  <!-- Атмосферный фон -->
+  <div class="frost-bg" aria-hidden="true"></div>
 
   <!-- ШАПКА -->
-  <header class="shrink-0 bg-slate-925/95 backdrop-blur-md border-b border-slate-800 px-4 py-2.5 flex flex-wrap items-center justify-between gap-2">
-    <div class="flex items-center gap-3">
-      <a href="index.html" class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold text-sky-300 flex items-center gap-1.5 transition">
-        <i class="fa-solid fa-arrow-left"></i><span>На портал</span>
-      </a>
-      <div>
-        <div class="flex items-center gap-2">
-          <span class="font-extrabold text-sm text-white">🤖 ИИ-СОВЕТНИК</span>
-          <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30">Белая мгла</span>
+  <header class="relative z-20 shrink-0 bg-slate-925/85 backdrop-blur-xl border-b border-slate-800/90 px-3 sm:px-4 py-2.5">
+    <div class="max-w-4xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
+        <a href="index.html" class="shrink-0 px-2.5 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 text-xs font-bold text-sky-300 flex items-center gap-1.5 transition active:scale-95">
+          <i class="fa-solid fa-arrow-left"></i><span class="hidden xs:inline sm:inline">На портал</span>
+        </a>
+        <div class="min-w-0">
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span class="relative flex h-2 w-2 shrink-0" title="ИИ-штаб онлайн">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-70"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+            </span>
+            <span class="font-extrabold text-xs sm:text-sm text-white tracking-tight">🤖 ИИ-СОВЕТНИК</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/30">Белая мгла</span>
+            <span id="genBadge" class="hidden text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-200 border border-indigo-400/35"></span>
+          </div>
+          <div class="flex items-center gap-2 flex-wrap mt-0.5">
+            <span id="userInfoLine" class="text-[10px] sm:text-[11px] text-slate-400 truncate">Авторизация...</span>
+            <a id="profileStatusPill" href="index.html" class="hidden text-[10px] font-mono px-2 py-0.5 rounded-lg border transition hover:brightness-110"></a>
+          </div>
         </div>
-        <div id="userInfoLine" class="text-[10px] text-slate-400">Авторизация...</div>
       </div>
-    </div>
 
-    <div class="flex items-center gap-2 text-xs">
-      <div id="limitBadge" class="px-3 py-1 rounded-xl bg-slate-900 border border-slate-700 font-mono text-[11px] text-amber-300">
-        Лимит: —
+      <div class="flex items-center gap-1.5 sm:gap-2 text-xs shrink-0">
+        <div id="limitBadge" class="px-2.5 sm:px-3 py-1 rounded-xl bg-slate-900/90 border border-slate-700/80 font-mono text-[10px] sm:text-[11px] text-amber-300">
+          Лимит: —
+        </div>
+        <button type="button" onclick="openClearModal()" class="px-2.5 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-rose-300 text-xs font-semibold transition active:scale-95" title="Очистить историю чата">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
       </div>
-      <button type="button" onclick="clearChat()" class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-rose-300 text-xs font-semibold transition" title="Очистить историю чата">
-        <i class="fa-solid fa-trash-can"></i>
-      </button>
     </div>
   </header>
 
   <!-- ОБЛАСТЬ ЧАТА -->
-  <main class="flex-1 min-h-0 flex flex-col max-w-4xl w-full mx-auto px-3 sm:px-4 py-3">
-    <!-- Быстрые тактические шаблоны -->
-    <div class="shrink-0 flex flex-wrap gap-1.5 pb-3">
-      <button type="button" onclick="usePrompt('У противника в гарнизоне соотношение 50/20/30 (пехота/копейщики/стрелки). Каким соотношением и какими героями лучше бить сбором?')"
-        class="px-2.5 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-sky-500/50 text-[11px] text-sky-200 transition">
-        ⚔️ Контр 50/20/30
-      </button>
-      <button type="button" onclick="usePrompt('Какое оптимальное соотношение войск и каких героев ставить в гарнизон Солнечного замка?')"
-        class="px-2.5 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-amber-500/50 text-[11px] text-amber-200 transition">
-        🏰 Гарнизон Замка
-      </button>
-      <button type="button" onclick="usePrompt('Какое лучшее соотношение войск и герои для максимального урона на Охоте на медведя?')"
-        class="px-2.5 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/50 text-[11px] text-emerald-200 transition">
-        🐻 Охота на медведя
-      </button>
-      <button type="button" onclick="usePrompt('Объясни коротко механику первых навыков героев-присоединяющихся в сборе и в гарнизоне.')"
-        class="px-2.5 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-purple-500/50 text-[11px] text-purple-200 transition">
-        🦸 Герои в сбор/гарнизон
+  <main class="relative z-10 flex-1 min-h-0 flex flex-col max-w-4xl w-full mx-auto px-3 sm:px-4 pt-2.5 pb-2.5">
+
+    <!-- Быстрые тактические шаблоны (одна строка со свайпом на мобильных) -->
+    <div class="shrink-0 pb-2.5">
+      <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar fade-mask-x pr-6 py-0.5">
+        <button type="button" onclick="quickAsk('Собери мне лучший отряд на Ловушку на медведя (лидер + присоединяющиеся и пропорции) строго на основе моих героев в профиле.')"
+          class="shrink-0 px-2.5 py-1.5 rounded-xl bg-emerald-950/50 hover:bg-emerald-900/60 border border-emerald-500/30 hover:border-emerald-400/60 text-[11px] font-medium text-emerald-200 transition active:scale-95">
+          🐻 Мой отряд на Медведя
+        </button>
+        <button type="button" onclick="quickAsk('Разбери моих текущих героев из профиля: кто самый сильный по классам, кем идти лидером сбора и кого качать в первую очередь?')"
+          class="shrink-0 px-2.5 py-1.5 rounded-xl bg-indigo-950/50 hover:bg-indigo-900/60 border border-indigo-500/30 hover:border-indigo-400/60 text-[11px] font-medium text-indigo-200 transition active:scale-95">
+          🦸 Разбор моих героев
+        </button>
+        <button type="button" onclick="quickAsk('Оцени моё текущее ТОП снаряжение из профиля и скажи, какие слоты качать дальше по приоритету для каждого класса.')"
+          class="shrink-0 px-2.5 py-1.5 rounded-xl bg-amber-950/45 hover:bg-amber-900/55 border border-amber-500/30 hover:border-amber-400/60 text-[11px] font-medium text-amber-200 transition active:scale-95">
+          🛡️ Моё снаряжение
+        </button>
+        <button type="button" onclick="insertCounterTemplate()"
+          class="shrink-0 px-2.5 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-sky-500/50 text-[11px] font-medium text-sky-200 transition active:scale-95">
+          ⚔️ Контр __/__/__
+        </button>
+        <button type="button" onclick="quickAsk('Какое оптимальное соотношение войск и каких героев ставить в гарнизон Солнечного замка в текущем поколении?')"
+          class="shrink-0 px-2.5 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-amber-500/50 text-[11px] font-medium text-slate-200 transition active:scale-95">
+          🏰 Гарнизон Замка
+        </button>
+        <button type="button" onclick="quickAsk('Напомни коротко правильную тактику и пропорции войск на Безумного Джо, чтобы альянс получил максимум очков.')"
+          class="shrink-0 px-2.5 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-rose-500/50 text-[11px] font-medium text-rose-200 transition active:scale-95">
+          🔥 Безумный Джо
+        </button>
+        <button type="button" onclick="quickAsk('Напомни правила 1-го слота для присоединяющихся в атаку, в гарнизон и на Медведя в нашем поколении.')"
+          class="shrink-0 px-2.5 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-purple-500/50 text-[11px] font-medium text-purple-200 transition active:scale-95">
+          📋 Присоединяющиеся
+        </button>
+      </div>
+    </div>
+
+    <!-- Контейнер сообщений + плавающая кнопка «Вниз» -->
+    <div class="relative flex-1 min-h-0 flex flex-col">
+      <div id="chatMessages" onscroll="handleChatScroll()" class="flex-1 overflow-y-auto thin-scroll space-y-3.5 pr-1 pb-3"></div>
+
+      <!-- Плавающая кнопка «Вниз» -->
+      <button id="scrollDownBtn" type="button" onclick="scrollToBottom(true)"
+        class="hidden absolute bottom-3 right-2 sm:right-3 z-10 w-9 h-9 rounded-full bg-slate-900/95 hover:bg-sky-600 border border-slate-700 hover:border-sky-400 text-sky-300 hover:text-white shadow-lg shadow-black/50 backdrop-blur-md flex items-center justify-center transition active:scale-90"
+        title="К последнему сообщению">
+        <i class="fa-solid fa-arrow-down text-xs"></i>
       </button>
     </div>
 
-    <!-- Сообщения -->
-    <div id="chatMessages" class="flex-1 overflow-y-auto thin-scroll space-y-3 pr-1 pb-2"></div>
-
     <!-- Поле ввода -->
-    <form onsubmit="event.preventDefault(); sendMessage();" class="shrink-0 pt-2 border-t border-slate-800/80">
-      <div class="flex items-end gap-2 bg-slate-900 border border-slate-700 focus-within:border-sky-500 rounded-2xl p-2 transition">
-        <textarea id="chatInput" rows="2" placeholder="Спросите про соотношение войск, героев, Замок или Медведя... (Enter — отправить)"
+    <form onsubmit="event.preventDefault(); sendMessage();" class="shrink-0 pt-2 border-t border-slate-800/70">
+      <div class="input-shell flex items-end gap-2 bg-slate-900/90 backdrop-blur-md border border-slate-700/90 rounded-2xl p-2 transition">
+        <textarea id="chatInput" rows="1" maxlength="1500"
+          placeholder="Спросите про ваш отряд, контр-соотношение, Замок или Медведя..."
+          oninput="handleInputResize()"
           onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); sendMessage(); }"
-          class="flex-1 bg-transparent text-xs sm:text-sm text-white placeholder-slate-500 px-2 py-1 focus:outline-none resize-none max-h-32"></textarea>
-        <button id="sendBtn" type="submit"
-          class="shrink-0 px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 disabled:opacity-40 text-xs font-extrabold text-white shadow transition flex items-center gap-1.5">
-          <i class="fa-solid fa-paper-plane"></i><span class="hidden sm:inline">Отправить</span>
-        </button>
+          class="flex-1 bg-transparent text-xs sm:text-sm text-white placeholder-slate-500 px-2 py-1.5 focus:outline-none resize-none leading-relaxed max-h-36 thin-scroll"></textarea>
+
+        <div class="flex items-center gap-2 shrink-0">
+          <span id="charCounter" class="hidden font-mono text-[10px] text-slate-400 select-none pb-2">0/1500</span>
+          <button id="sendBtn" type="submit"
+            class="px-3.5 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-extrabold text-white shadow-md shadow-sky-900/40 transition active:scale-95 flex items-center gap-1.5">
+            <i class="fa-solid fa-paper-plane"></i><span class="hidden sm:inline">Отправить</span>
+          </button>
+        </div>
+      </div>
+      <div class="hidden sm:flex items-center justify-between px-2 pt-1 text-[10px] text-slate-500">
+        <span>Enter — отправить • Shift + Enter — новая строка</span>
+        <span>Советник учитывает вашу карточку и поколение сервера</span>
       </div>
     </form>
   </main>
 
+  <!-- МОДАЛЬНОЕ ОКНО ПОДТВЕРЖДЕНИЯ ОЧИСТКИ -->
+  <div id="clearModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4" onclick="if(event.target===this) closeClearModal()">
+    <div class="w-full max-w-sm rounded-2xl bg-slate-900 border border-slate-700/90 shadow-2xl p-5 space-y-4">
+      <div class="flex items-start gap-3">
+        <div class="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center shrink-0">
+          <i class="fa-solid fa-trash-can"></i>
+        </div>
+        <div>
+          <h3 class="font-bold text-sm text-white">Очистить историю диалога?</h3>
+          <p class="text-xs text-slate-400 mt-1 leading-relaxed">Текущая переписка на этой странице будет удалена, и советник начнёт с чистого контекста.</p>
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-2">
+        <button type="button" onclick="closeClearModal()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition">
+          Отмена
+        </button>
+        <button type="button" onclick="confirmClearChat()" class="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-xs font-bold text-white shadow transition">
+          Очистить
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ВСПЛЫВАЮЩЕЕ УВЕДОМЛЕНИЕ (TOAST) -->
+  <div id="toast" class="pointer-events-none fixed bottom-20 left-1/2 -translate-x-1/2 z-50 opacity-0 translate-y-2 transition-all duration-200 px-3.5 py-2 rounded-xl bg-slate-900/95 border border-sky-500/40 text-xs font-semibold text-sky-200 shadow-xl backdrop-blur-md flex items-center gap-2">
+    <i class="fa-solid fa-circle-check text-emerald-400"></i>
+    <span id="toastText">Готово</span>
+  </div>
+
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbwsX-LADURoQu_MsQ2XJVsSPsHAgMebI4_QDXmpPpi3OcpW3ScwPep9ukQBFJfDMrjQ7g/exec';
     let currentUser = null;
+    let currentCard = null;
+    let detectedServerGen = sessionStorage.getItem('harmony_detected_gen') || '';
     let chatHistory = [];
     let isSending = false;
+    let loaderTimer = null;
+    let toastTimer = null;
+
+    const LOADING_PHRASES = [
+      'Читаю профиль и карточку героев...',
+      'Сверяю актуальное поколение сервера...',
+      'Просчитываю тактику и соотношения...',
+      'Формирую боевые рекомендации...'
+    ];
 
     function getPasscode() {
       return sessionStorage.getItem('harmony_passcode') || localStorage.getItem('harmony_passcode') || '';
     }
 
+    function nowTimeStr() {
+      const d = new Date();
+      return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    }
+
     function escapeHtml(str) {
-      return String(str || '').replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>');
+      return String(str || '')
+        .replace(/&/g, '&')
+        .replace(/</g, '<')
+        .replace(/>/g, '>')
+        .replace(/"/g, '"');
+    }
+
+    function countConfiguredHeroes(card) {
+      if (!card || !card.heroesData || typeof card.heroesData !== 'object') return 0;
+      return Object.keys(card.heroesData).filter(k => !k.startsWith('_') && card.heroesData[k] && card.heroesData[k].configured).length;
+    }
+
+    function highlightInline(escapedText) {
+      return escapedText
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\b(\d{1,2}\/\d{1,2}\/\d{1,2})\b/g, '<span class="ratio-chip">$1</span>')
+        .replace(/(\d★(?:\+\d)?)/g, '<span class="star-hl">$1</span>')
+        .replace(/(\d{1,3}(?:[-–]\d{1,3})?%)/g, '<span class="pct-hl">$1</span>');
+    }
+
+    function formatLeadingHeading(escapedContent) {
+      const match = escapedContent.match(/^([^:]{2,48}:)\s*(.*)$/);
+      if (match) {
+        return `<span class="ai-heading-inline">${highlightInline(match[1])}</span> ${highlightInline(match[2])}`;
+      }
+      return highlightInline(escapedContent);
     }
 
     function formatAiText(text) {
-      let html = escapeHtml(text);
-      html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-      html = html.replace(/^\s*[\*\-]\s+(.+)$/gm, '<li>$1</li>');
-      html = html.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
-      html = html.replace(/\n/g, '<br>');
-      return html;
+      const lines = String(text || '').replace(/\r\n/g, '\n').split('\n');
+      const blocks = [];
+
+      for (let i = 0; i < lines.length; i++) {
+        const rawLine = lines[i];
+        const trimmed = rawLine.trim();
+
+        if (!trimmed) {
+          blocks.push('<div class="h-2"></div>');
+          continue;
+        }
+
+        // Нумерованный пункт: 1) ...
+        const numMatch = trimmed.match(/^(\d+)\)\s+(.+)$/);
+        if (numMatch) {
+          const num = escapeHtml(numMatch[1]);
+          const body = formatLeadingHeading(escapeHtml(numMatch[2]));
+          blocks.push(`
+            <div class="flex items-start gap-2 my-1">
+              <span class="shrink-0 mt-0.5 w-5 h-5 rounded-md bg-sky-500/15 border border-sky-400/30 text-sky-300 font-mono text-[11px] font-bold flex items-center justify-center">${num}</span>
+              <div class="flex-1 min-w-0">${body}</div>
+            </div>
+          `);
+          continue;
+        }
+
+        // Маркированный пункт: • / - / *
+        const bulletMatch = trimmed.match(/^[•\-\*]\s+(.+)$/);
+        if (bulletMatch) {
+          const body = formatLeadingHeading(escapeHtml(bulletMatch[1]));
+          blocks.push(`
+            <div class="flex items-start gap-2 pl-1 my-1">
+              <span class="shrink-0 mt-2 w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_6px_rgba(56,189,248,0.8)]"></span>
+              <div class="flex-1 min-w-0">${body}</div>
+            </div>
+          `);
+          continue;
+        }
+
+        // Короткий подзаголовок, заканчивающийся двоеточием
+        if (trimmed.endsWith(':') && trimmed.length <= 65) {
+          blocks.push(`<div class="font-bold text-sky-200 mt-2 mb-0.5">${highlightInline(escapeHtml(trimmed))}</div>`);
+          continue;
+        }
+
+        // Обычная строка
+        blocks.push(`<div class="my-0.5">${formatLeadingHeading(escapeHtml(trimmed))}</div>`);
+      }
+
+      return blocks.join('');
     }
 
-    function renderChat() {
-      const box = document.getElementById('chatMessages');
-      if (chatHistory.length === 0) {
-        box.innerHTML = `
-          <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 text-xs text-slate-300 space-y-1.5">
-            <div class="font-bold text-white text-sm">👋 Привет! Я тактический ИИ-советник по «Белой мгле. Выживание».</div>
-            <p class="text-slate-400">Напишите соотношение войск противника, вопрос по героям, сбору, гарнизону или событиям — подскажу оптимальный вариант.</p>
-          </div>
-        `;
+    function showToast(message) {
+      const el = document.getElementById('toast');
+      const txt = document.getElementById('toastText');
+      txt.textContent = message;
+      el.classList.remove('opacity-0', 'translate-y-2');
+      el.classList.add('opacity-100', 'translate-y-0');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        el.classList.add('opacity-0', 'translate-y-2');
+        el.classList.remove('opacity-100', 'translate-y-0');
+      }, 2200);
+    }
+
+    function updateGenBadge(genVal) {
+      if (!genVal) return;
+      detectedServerGen = String(genVal);
+      sessionStorage.setItem('harmony_detected_gen', detectedServerGen);
+      const el = document.getElementById('genBadge');
+      el.textContent = `Сервер: G${detectedServerGen}`;
+      el.classList.remove('hidden');
+    }
+
+    function updateProfileStatus() {
+      const pill = document.getElementById('profileStatusPill');
+      if (!currentCard) {
+        pill.classList.add('hidden');
         return;
       }
 
-      box.innerHTML = chatHistory.map(m => {
+      const heroesCount = countConfiguredHeroes(currentCard);
+      const furnace = currentCard.furnaceLevel ? `Печь ${currentCard.furnaceLevel}` : 'Печь —';
+      const tier = currentCard.troopTier ? ` • ${currentCard.troopTier}` : '';
+
+      if (heroesCount < 3) {
+        pill.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i>${escapeHtml(furnace)} • Героев: ${heroesCount} (заполнить)`;
+        pill.className = 'inline-flex items-center text-[10px] font-mono px-2 py-0.5 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/40 transition hover:bg-amber-500/25';
+        pill.title = 'Перейти на портал и отметить ваших героев для персональных советов';
+      } else {
+        pill.innerHTML = `<i class="fa-solid fa-shield-halved mr-1 text-emerald-400"></i>${escapeHtml(furnace + tier)} • Героев: ${heroesCount}`;
+        pill.className = 'inline-flex items-center text-[10px] font-mono px-2 py-0.5 rounded-lg bg-slate-900/90 text-slate-300 border border-slate-700/80 transition hover:border-sky-500/50';
+        pill.title = 'Профиль синхронизирован с ИИ-советником';
+      }
+      pill.classList.remove('hidden');
+    }
+
+    function buildEmptyStateHtml() {
+      const nick = currentUser && currentUser.nick ? escapeHtml(currentUser.nick) : 'командир';
+      const heroesCount = countConfiguredHeroes(currentCard);
+      const genText = detectedServerGen ? `Сейчас активна база ${escapeHtml(detectedServerGen)}-го поколения.` : 'Поколение сервера определяется автоматически по базе альянса.';
+
+      const warningBanner = (currentCard && heroesCount < 3)
+        ? `<a href="index.html" class="mt-3 flex items-center justify-between gap-3 rounded-xl bg-amber-950/40 hover:bg-amber-950/65 border border-amber-500/35 px-3.5 py-2.5 text-xs text-amber-200 transition">
+             <div class="flex items-center gap-2.5">
+               <i class="fa-solid fa-circle-exclamation text-amber-400 text-sm shrink-0"></i>
+               <span>В твоей карточке отмечено мало героев (${heroesCount}). Заполни их на портале — и расчёты станут точными до каждой звезды.</span>
+             </div>
+             <span class="shrink-0 font-bold text-amber-300 whitespace-nowrap">Заполнить →</span>
+           </a>`
+        : '';
+
+      return `
+        <div class="my-auto py-3 sm:py-6 space-y-4">
+          <div class="rounded-2xl bg-slate-900/75 border border-slate-800/90 backdrop-blur-md p-4 sm:p-5 shadow-xl">
+            <div class="flex items-start gap-3">
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500/25 to-indigo-600/25 border border-sky-400/35 flex items-center justify-center text-lg shrink-0 shadow-inner">
+                🤖
+              </div>
+              <div class="space-y-1">
+                <div class="font-extrabold text-white text-sm sm:text-base">Готов к бою, ${nick}!</div>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                  Я подключён к твоей карточке на портале и базе альянса «Гармония». ${genText} Выбери готовый сценарий ниже или напиши свой вопрос.
+                </p>
+              </div>
+            </div>
+            ${warningBanner}
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <button type="button" onclick="quickAsk('Собери мне лучший отряд на Ловушку на медведя (лидер + присоединяющиеся и пропорции) строго на основе моих героев в профиле.')"
+              class="tactical-card rounded-2xl p-3.5 text-left group">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-emerald-300">🐻 Персональный Медведь</span>
+                <i class="fa-solid fa-arrow-right text-[10px] text-slate-500 group-hover:text-emerald-300 transition"></i>
+              </div>
+              <p class="text-[11px] text-slate-400 mt-1">Подбор лидера, 1-го слота и пропорций войск под твой арсенал.</p>
+            </button>
+
+            <button type="button" onclick="quickAsk('Разбери моих текущих героев и ТОП снаряжение из профиля: кто сильнейший и что качать в первую очередь?')"
+              class="tactical-card rounded-2xl p-3.5 text-left group">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-indigo-300">🦸 Аудит моего профиля</span>
+                <i class="fa-solid fa-arrow-right text-[10px] text-slate-500 group-hover:text-indigo-300 transition"></i>
+              </div>
+              <p class="text-[11px] text-slate-400 mt-1">Разбор твоих звёзд, навыков, пушек и приоритетов снаряжения.</p>
+            </button>
+
+            <button type="button" onclick="insertCounterTemplate()"
+              class="tactical-card rounded-2xl p-3.5 text-left group">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-sky-300">⚔️ Контр-расчёт по разведке</span>
+                <i class="fa-solid fa-arrow-right text-[10px] text-slate-500 group-hover:text-sky-300 transition"></i>
+              </div>
+              <p class="text-[11px] text-slate-400 mt-1">Вставь пропорции врага из отчёта — посчитаю контр-сбор и героев.</p>
+            </button>
+
+            <button type="button" onclick="quickAsk('Подскажи, к каким героям следующего поколения мне лучше заранее готовить самоцветы и золотые осколки?')"
+              class="tactical-card rounded-2xl p-3.5 text-left group">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-amber-300">🔮 План на следующее поколение</span>
+                <i class="fa-solid fa-arrow-right text-[10px] text-slate-500 group-hover:text-amber-300 transition"></i>
+              </div>
+              <p class="text-[11px] text-slate-400 mt-1">Кого брать с Колеса удачи и куда копить золотые универсальные осколки.</p>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderChat(animateLast = false) {
+      const box = document.getElementById('chatMessages');
+      if (chatHistory.length === 0) {
+        box.innerHTML = buildEmptyStateHtml();
+        handleChatScroll();
+        return;
+      }
+
+      box.innerHTML = chatHistory.map((m, idx) => {
         const isUser = m.role === 'user';
+        const isLast = idx === chatHistory.length - 1;
+        const animClass = (animateLast && isLast) ? 'msg-animate' : '';
+        const timeBadge = m.time ? `<span class="text-[10px] font-mono text-slate-500">${escapeHtml(m.time)}</span>` : '';
+
+        if (isUser) {
+          return `
+            <div class="flex flex-col items-end ${animClass}">
+              <div class="max-w-[88%] sm:max-w-[78%] rounded-2xl rounded-br-sm px-3.5 py-2.5 text-xs sm:text-sm leading-relaxed bg-gradient-to-br from-sky-600 to-blue-600 text-white shadow-md shadow-sky-950/50">
+                ${escapeHtml(m.text).replace(/\n/g, '<br>')}
+              </div>
+              ${timeBadge ? `<div class="mt-1 pr-1">${timeBadge}</div>` : ''}
+            </div>
+          `;
+        }
+
+        const isError = !!m.isError;
+        const bubbleStyle = isError
+          ? 'bg-rose-950/55 border border-rose-500/40 text-rose-100'
+          : 'bg-slate-900/90 border border-slate-800/90 text-slate-100 shadow-lg shadow-black/25';
+
+        const retryBtn = (isError && m.retryPrompt)
+          ? `<button type="button" onclick="retryMessage(${idx})" class="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/35 border border-rose-400/40 text-[11px] font-bold text-rose-100 transition active:scale-95">
+               <i class="fa-solid fa-rotate-right"></i><span>Повторить запрос</span>
+             </button>`
+          : '';
+
+        const copyBtn = !isError
+          ? `<button type="button" onclick="copyMessage(${idx}, this)" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-sky-500/40 text-[10px] font-medium text-slate-400 hover:text-sky-300 transition active:scale-95" title="Скопировать ответ для чата игры">
+               <i class="fa-regular fa-copy"></i><span>Копировать</span>
+             </button>`
+          : '';
+
         return `
-          <div class="flex ${isUser ? 'justify-end' : 'justify-start'}">
-            <div class="max-w-[88%] sm:max-w-[78%] rounded-2xl px-3.5 py-2.5 text-xs sm:text-sm leading-relaxed ${
-              isUser
-                ? 'bg-sky-600 text-white rounded-br-sm'
-                : 'bg-slate-900 border border-slate-800 text-slate-100 rounded-bl-sm msg-prose'
-            }">
-              ${isUser ? escapeHtml(m.text).replace(/\n/g, '<br>') : formatAiText(m.text)}
+          <div class="flex flex-col items-start ${animClass}">
+            <div class="max-w-[92%] sm:max-w-[82%] rounded-2xl rounded-bl-sm px-3.5 py-3 text-xs sm:text-sm leading-relaxed backdrop-blur-sm ${bubbleStyle} msg-prose">
+              ${isError ? escapeHtml(m.text).replace(/\n/g, '<br>') : formatAiText(m.text)}
+              ${retryBtn}
+            </div>
+            <div class="flex items-center gap-2 mt-1 pl-1">
+              ${timeBadge}
+              ${copyBtn}
             </div>
           </div>
         `;
       }).join('');
 
-      box.scrollTop = box.scrollHeight;
+      scrollToBottom(false);
     }
 
-    function usePrompt(txt) {
+    function copyMessage(idx, btnEl) {
+      const item = chatHistory[idx];
+      if (!item || !item.text) return;
+      const plain = item.text;
+
+      const onSuccess = () => {
+        showToast('Ответ скопирован в буфер');
+        if (btnEl) {
+          const oldHtml = btnEl.innerHTML;
+          btnEl.innerHTML = '<i class="fa-solid fa-check text-emerald-400"></i><span class="text-emerald-300">Скопировано</span>';
+          setTimeout(() => { btnEl.innerHTML = oldHtml; }, 1600);
+        }
+      };
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(plain).then(onSuccess).catch(() => fallbackCopy(plain, onSuccess));
+      } else {
+        fallbackCopy(plain, onSuccess);
+      }
+    }
+
+    function fallbackCopy(text, onSuccess) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        onSuccess();
+      } catch (e) {}
+      ta.remove();
+    }
+
+    function handleInputResize() {
       const inp = document.getElementById('chatInput');
-      inp.value = txt;
-      inp.focus();
+      inp.style.height = 'auto';
+      inp.style.height = Math.min(inp.scrollHeight, 144) + 'px';
+
+      const len = inp.value.length;
+      const counter = document.getElementById('charCounter');
+      if (len >= 900) {
+        counter.textContent = `${len}/1500`;
+        counter.classList.remove('hidden', 'text-slate-400', 'text-amber-300', 'text-rose-400');
+        if (len >= 1450) counter.classList.add('text-rose-400');
+        else if (len >= 1250) counter.classList.add('text-amber-300');
+        else counter.classList.add('text-slate-400');
+      } else {
+        counter.classList.add('hidden');
+      }
     }
 
-    function clearChat() {
+    function handleChatScroll() {
+      const box = document.getElementById('chatMessages');
+      const btn = document.getElementById('scrollDownBtn');
+      const distFromBottom = box.scrollHeight - box.scrollTop - box.clientHeight;
+      if (distFromBottom > 120) {
+        btn.classList.remove('hidden');
+      } else {
+        btn.classList.add('hidden');
+      }
+    }
+
+    function scrollToBottom(smooth = true) {
+      const box = document.getElementById('chatMessages');
+      box.scrollTo({
+        top: box.scrollHeight,
+        behavior: smooth ? 'smooth' : 'auto'
+      });
+      document.getElementById('scrollDownBtn').classList.add('hidden');
+    }
+
+    function quickAsk(txt) {
+      if (isSending) return;
+      sendMessage(txt);
+    }
+
+    function insertCounterTemplate() {
+      const inp = document.getElementById('chatInput');
+      const prefix = 'У противника в гарнизоне соотношение ';
+      const ratio = '50/20/30';
+      const suffix = ' (пехота/копейщики/стрелки). Каким соотношением и какими героями лучше бить сбором?';
+      inp.value = prefix + ratio + suffix;
+      handleInputResize();
+      inp.focus();
+      inp.setSelectionRange(prefix.length, prefix.length + ratio.length);
+    }
+
+    function openClearModal() {
+      if (chatHistory.length === 0) {
+        showToast('Чат уже пуст');
+        return;
+      }
+      document.getElementById('clearModal').classList.remove('hidden');
+    }
+
+    function closeClearModal() {
+      document.getElementById('clearModal').classList.add('hidden');
+    }
+
+    function confirmClearChat() {
+      closeClearModal();
       chatHistory = [];
       sessionStorage.removeItem('harmony_ai_chat');
       renderChat();
+      showToast('История чата очищена');
     }
 
     function updateLimitBadge(val) {
       const el = document.getElementById('limitBadge');
       if (val === '∞') {
         el.textContent = 'Лимит: ∞ (Офицер)';
-        el.className = 'px-3 py-1 rounded-xl bg-amber-950/60 border border-amber-500/40 font-mono text-[11px] text-amber-300';
+        el.className = 'px-2.5 sm:px-3 py-1 rounded-xl bg-amber-950/60 border border-amber-500/40 font-mono text-[10px] sm:text-[11px] text-amber-300';
       } else {
-        el.textContent = `Осталось сегодня: ${val} / 10`;
-        el.className = 'px-3 py-1 rounded-xl bg-slate-900 border border-slate-700 font-mono text-[11px] text-sky-300';
+        el.textContent = `Сегодня: ${val} / 10`;
+        el.className = 'px-2.5 sm:px-3 py-1 rounded-xl bg-slate-900/90 border border-slate-700/80 font-mono text-[10px] sm:text-[11px] text-sky-300';
       }
     }
 
-    async function sendMessage() {
+    function showLoader() {
+      const box = document.getElementById('chatMessages');
+      const existing = document.getElementById('aiLoader');
+      if (existing) existing.remove();
+
+      let phraseIdx = 0;
+      const loader = document.createElement('div');
+      loader.id = 'aiLoader';
+      loader.className = 'flex justify-start msg-animate';
+      loader.innerHTML = `
+        <div class="bg-slate-900/90 border border-sky-500/30 rounded-2xl rounded-bl-sm px-4 py-3 text-xs text-sky-200 flex items-center gap-3 shadow-lg shadow-sky-950/30">
+          <div class="flex items-center gap-1">
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+          </div>
+          <span id="loaderStatusText" class="text-slate-300">${LOADING_PHRASES[0]}</span>
+        </div>
+      `;
+      box.appendChild(loader);
+      scrollToBottom(true);
+
+      clearInterval(loaderTimer);
+      loaderTimer = setInterval(() => {
+        phraseIdx = (phraseIdx + 1) % LOADING_PHRASES.length;
+        const statusEl = document.getElementById('loaderStatusText');
+        if (statusEl) statusEl.textContent = LOADING_PHRASES[phraseIdx];
+      }, 2200);
+    }
+
+    function removeLoader() {
+      clearInterval(loaderTimer);
+      const loader = document.getElementById('aiLoader');
+      if (loader) loader.remove();
+    }
+
+    function retryMessage(errorIdx) {
+      if (isSending) return;
+      const errItem = chatHistory[errorIdx];
+      if (!errItem || !errItem.retryPrompt) return;
+      const promptText = errItem.retryPrompt;
+
+      // Убираем ошибочный ответ и дублирующий вопрос прямо перед ним
+      chatHistory.splice(errorIdx, 1);
+      if (errorIdx > 0 && chatHistory[errorIdx - 1] && chatHistory[errorIdx - 1].role === 'user' && chatHistory[errorIdx - 1].text === promptText) {
+        chatHistory.splice(errorIdx - 1, 1);
+      }
+      sendMessage(promptText);
+    }
+
+    async function sendMessage(overrideText = null) {
       if (isSending) return;
       const inp = document.getElementById('chatInput');
-      const text = inp.value.trim();
+      const text = (overrideText !== null ? String(overrideText) : inp.value).trim();
       if (!text) return;
 
       isSending = true;
       document.getElementById('sendBtn').disabled = true;
-      inp.value = '';
+      if (overrideText === null) {
+        inp.value = '';
+        handleInputResize();
+      }
 
-      const historyToSend = chatHistory.slice(-6);
-      chatHistory.push({ role: 'user', text });
-      renderChat();
+      // Отправляем в историю только чистые сообщения без ошибок
+      const historyToSend = chatHistory
+        .filter(m => !m.isError)
+        .slice(-6)
+        .map(m => ({ role: m.role, text: m.text }));
 
-      // Индикатор набора
-      const box = document.getElementById('chatMessages');
-      const loader = document.createElement('div');
-      loader.id = 'aiLoader';
-      loader.className = 'flex justify-start';
-      loader.innerHTML = `<div class="bg-slate-900 border border-slate-800 rounded-2xl px-3.5 py-2.5 text-xs text-sky-300 flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin"></i><span>Анализирую тактику...</span></div>`;
-      box.appendChild(loader);
-      box.scrollTop = box.scrollHeight;
+      chatHistory.push({ role: 'user', text, time: nowTimeStr() });
+      renderChat(true);
+      showLoader();
 
       try {
         const res = await fetch(API_URL, {
@@ -208,32 +788,56 @@
           })
         }).then(r => r.json());
 
-        loader.remove();
+        removeLoader();
 
         if (res.ok && res.reply) {
-          chatHistory.push({ role: 'model', text: res.reply });
+          chatHistory.push({ role: 'model', text: res.reply, time: nowTimeStr() });
           sessionStorage.setItem('harmony_ai_chat', JSON.stringify(chatHistory.slice(-20)));
           if (res.remaining !== undefined) updateLimitBadge(res.remaining);
+          if (res.detectedGen) updateGenBadge(res.detectedGen);
         } else {
-          chatHistory.push({ role: 'model', text: '⚠️ ' + (res.error || 'Не удалось получить ответ от ИИ.') });
+          chatHistory.push({
+            role: 'model',
+            text: '⚠️ ' + (res.error || 'Не удалось получить ответ от ИИ.'),
+            isError: true,
+            retryPrompt: text,
+            time: nowTimeStr()
+          });
           if (res.remaining !== undefined) updateLimitBadge(res.remaining);
         }
       } catch (err) {
-        loader.remove();
-        chatHistory.push({ role: 'model', text: '⚠️ Ошибка связи с сервером: ' + err.message });
+        removeLoader();
+        chatHistory.push({
+          role: 'model',
+          text: '⚠️ Ошибка связи с сервером: ' + err.message,
+          isError: true,
+          retryPrompt: text,
+          time: nowTimeStr()
+        });
       } finally {
         isSending = false;
         document.getElementById('sendBtn').disabled = false;
-        renderChat();
-        inp.focus();
+        renderChat(true);
+        if (window.innerWidth >= 640) inp.focus();
       }
     }
 
     function applySession(data) {
       if (!data || !data.user) { window.location.href = 'index.html'; return; }
       currentUser = data.user;
+      currentCard = data.myCard || null;
+
       document.getElementById('userInfoLine').textContent = `${currentUser.nick} (${currentUser.alliance || 'Основа'} • ${currentUser.role || 'Боец'})`;
       updateLimitBadge((currentUser.isOfficer || currentUser.isOwner) ? '∞' : '10');
+      updateProfileStatus();
+
+      if (detectedServerGen) {
+        updateGenBadge(detectedServerGen);
+      }
+
+      if (chatHistory.length === 0) {
+        renderChat(false);
+      }
     }
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -241,7 +845,7 @@
       if (savedChat) {
         try { chatHistory = JSON.parse(savedChat) || []; } catch (e) {}
       }
-      renderChat();
+      renderChat(false);
 
       const code = getPasscode();
       if (!code) { window.location.href = 'index.html'; return; }
@@ -267,7 +871,8 @@
           } else {
             window.location.href = 'index.html';
           }
-        });
+        })
+        .catch(() => {});
     });
   </script>
 </body>
