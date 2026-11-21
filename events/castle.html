@@ -135,16 +135,26 @@
       { key: 'east',   label: 'ВОСТОК (Турель)',icon: '➡️', color: 'border-rose-500/40 text-rose-300' }
     ];
 
+    function createEmptyRaiderSlot() {
+      return {
+        active: true,
+        playerKey: '',
+        nick: '',
+        info: '',
+        times: { north: '', center: '', south: '', west: '', east: '' }
+      };
+    }
+
     let castleState = {
       allies: '',
       enemies: '',
       duration: 300,
       step: 0,
       raiders: [
-        { playerKey: '', nick: '', info: '', times: { north: '', center: '', south: '', west: '', east: '' } },
-        { playerKey: '', nick: '', info: '', times: { north: '', center: '', south: '', west: '', east: '' } },
-        { playerKey: '', nick: '', info: '', times: { north: '', center: '', south: '', west: '', east: '' } },
-        { playerKey: '', nick: '', info: '', times: { north: '', center: '', south: '', west: '', east: '' } }
+        createEmptyRaiderSlot(),
+        createEmptyRaiderSlot(),
+        createEmptyRaiderSlot(),
+        createEmptyRaiderSlot()
       ]
     };
 
@@ -153,6 +163,14 @@
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) castleState = JSON.parse(saved);
       } catch (e) {}
+      if (!Array.isArray(castleState.raiders) || castleState.raiders.length === 0) {
+        castleState.raiders = [createEmptyRaiderSlot()];
+      } else {
+        castleState.raiders.forEach(r => {
+          if (r.active === undefined) r.active = true;
+          if (!r.times) r.times = { north: '', center: '', south: '', west: '', east: '' };
+        });
+      }
       document.getElementById('castleAllies').value = castleState.allies || '';
       document.getElementById('castleEnemies').value = castleState.enemies || '';
       document.getElementById('castleDuration').value = castleState.duration || 300;
@@ -172,10 +190,10 @@
       if (!confirm('Очистить всех выбранных рейдеров и времена хода?')) return;
       localStorage.removeItem(STORAGE_KEY);
       castleState.raiders = [
-        { playerKey: '', nick: '', info: '', times: { north: '', center: '', south: '', west: '', east: '' } },
-        { playerKey: '', nick: '', info: '', times: { north: '', center: '', south: '', west: '', east: '' } },
-        { playerKey: '', nick: '', info: '', times: { north: '', center: '', south: '', west: '', east: '' } },
-        { playerKey: '', nick: '', info: '', times: { north: '', center: '', south: '', west: '', east: '' } }
+        createEmptyRaiderSlot(),
+        createEmptyRaiderSlot(),
+        createEmptyRaiderSlot(),
+        createEmptyRaiderSlot()
       ];
       renderRaiders();
       saveAndRecalc();
@@ -189,7 +207,7 @@
     }
 
     function addRaiderSlot() {
-      castleState.raiders.push({ playerKey: '', nick: '', info: '', times: { north: '', center: '', south: '', west: '', east: '' } });
+      castleState.raiders.push(createEmptyRaiderSlot());
       renderRaiders();
       saveAndRecalc();
     }
@@ -232,18 +250,43 @@
       saveAndRecalc();
     }
 
+    function toggleRaiderActive(idx) {
+      const r = castleState.raiders[idx];
+      if (!r) return;
+      r.active = (r.active === false);
+      renderRaiders();
+      saveAndRecalc();
+    }
+
     function renderRaiders() {
       const container = document.getElementById('raidersContainer');
-      container.innerHTML = castleState.raiders.map((r, idx) => `
-        <div class="glass-card rounded-3xl p-4 border border-slate-800 space-y-3">
+      container.innerHTML = castleState.raiders.map((r, idx) => {
+        const isActive = r.active !== false;
+        const cardStyle = isActive
+          ? (r.nick ? 'border-emerald-500/40' : 'border-slate-800')
+          : 'border-slate-800/60 opacity-60';
+        const toggleBtnStyle = isActive
+          ? 'bg-emerald-600/25 hover:bg-emerald-600/40 border-emerald-500/50 text-emerald-300'
+          : 'bg-slate-900 hover:bg-slate-800 border-slate-700 text-slate-400';
+
+        return `
+        <div class="glass-card rounded-3xl p-4 border ${cardStyle} space-y-3 transition">
           <div class="flex items-center justify-between gap-2 pb-2 border-b border-slate-800">
             <div class="min-w-0">
-              <div class="text-[10px] font-mono text-amber-400 font-bold uppercase">Рейдер #${idx + 1}</div>
-              <div class="text-sm font-extrabold text-white truncate">${r.nick || 'Не выбран'}</div>
+              <div class="text-[10px] font-mono ${isActive ? 'text-amber-400' : 'text-slate-500'} font-bold uppercase">
+                Рейдер #${idx + 1} ${isActive ? '' : '• Резерв'}
+              </div>
+              <div class="text-sm font-extrabold ${isActive ? 'text-white' : 'text-slate-400'} truncate">${r.nick || 'Не выбран'}</div>
               <div class="text-[10px] font-mono text-slate-400 truncate">${r.info || 'Нажмите «Выбрать»'}</div>
             </div>
             <div class="flex items-center gap-1.5 shrink-0">
-              <button type="button" onclick="pickRaider(${idx})" class="px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-xs font-bold text-white transition">
+              <button type="button" onclick="toggleRaiderActive(${idx})"
+                title="${isActive ? 'Идёт в бой (нажмите, чтобы убрать в резерв)' : 'В резерве (нажмите, чтобы включить в расчёт)'}"
+                class="px-2.5 py-1.5 rounded-xl border text-[11px] font-bold transition flex items-center gap-1 ${toggleBtnStyle}">
+                <i class="fa-solid ${isActive ? 'fa-check' : 'fa-pause'} text-[10px]"></i>
+                <span>${isActive ? 'В бою' : 'Резерв'}</span>
+              </button>
+              <button type="button" onclick="pickRaider(${idx})" class="px-2.5 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-xs font-bold text-white transition">
                 ${r.nick ? 'Сменить' : 'Выбрать'}
               </button>
               ${castleState.raiders.length > 1 ? `<button type="button" onclick="removeRaiderSlot(${idx})" class="p-1.5 rounded-xl bg-slate-900 hover:bg-rose-950 text-slate-400 hover:text-rose-400"><i class="fa-solid fa-trash text-xs"></i></button>` : ''}
@@ -285,7 +328,8 @@
             <div></div>
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
     }
 
     function formatTimer(sec) {
@@ -299,7 +343,7 @@
       const duration = castleState.duration || 300;
       const step = castleState.step || 0;
       const entries = castleState.raiders
-        .filter(r => r.nick && Number(r.times[areaKey]) > 0)
+        .filter(r => r.active !== false && r.nick && Number(r.times[areaKey]) > 0)
         .map(r => ({ nick: r.nick, time: Number(r.times[areaKey]) }))
         .sort((a, b) => b.time - a.time);
 
