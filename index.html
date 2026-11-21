@@ -68,6 +68,26 @@
       filter: brightness(0.35);
     }
     input, select, button { font-family: inherit; }
+
+    /* Плавающий индикатор сохранения поверх всех окон */
+    #floatingSaveToast {
+      position: fixed;
+      top: 14px;
+      left: 50%;
+      transform: translate(-50%, -18px);
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s ease, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+      max-width: calc(100vw - 24px);
+    }
+    #floatingSaveToast.is-visible {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+    #floatingSaveToast.is-interactive {
+      pointer-events: auto;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-sky-500 selection:text-white relative">
@@ -76,6 +96,21 @@
   <video id="bgVideo" autoplay muted loop playsinline class="bg-video">
     <source src="assets/background.mp4" type="video/mp4">
   </video>
+
+  <!-- ПЛАВАЮЩИЙ ИНДИКАТОР СОХРАНЕНИЯ ПОВЕРХ ВСЕХ ОКОН -->
+  <div id="floatingSaveToast" role="status" aria-live="polite"
+    class="flex items-center gap-2.5 px-4 py-2 rounded-2xl border shadow-2xl backdrop-blur-xl text-xs font-mono bg-slate-950/95 border-emerald-500/40 text-emerald-300">
+    <i id="floatingSaveIcon" class="fa-solid fa-circle-check shrink-0"></i>
+    <span id="floatingSaveText" class="truncate">Синхронизировано с базой</span>
+    <button id="floatingRetryBtn" type="button" onclick="triggerAutoSave(true)"
+      class="hidden shrink-0 ml-1 px-2.5 py-0.5 rounded-lg bg-rose-500/25 hover:bg-rose-500/40 border border-rose-400/50 text-[11px] font-bold text-rose-100 transition">
+      Повторить
+    </button>
+    <button id="floatingCloseBtn" type="button" onclick="hideFloatingSaveToast()"
+      class="hidden shrink-0 text-rose-300/80 hover:text-white pl-1" title="Закрыть">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
 
   <!-- ==================== ЭКРАН ВХОДА ==================== -->
   <div id="authScreen" class="flex-1 flex items-center justify-center p-4 relative z-10">
@@ -551,21 +586,42 @@
       </div>
 
       <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 space-y-3">
-        <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400"><i class="fa-solid fa-bolt mr-1"></i>Уровни навыков (1–5)</h4>
+        <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400"><i class="fa-solid fa-bolt mr-1"></i>Уровни навыков (Нет / 1–5)</h4>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
           <div class="space-y-2.5 bg-slate-950 p-3 rounded-xl border border-slate-800">
             <div class="font-bold text-amber-300 mb-1">Освоение</div>
             <div class="flex items-center justify-between">
               <span class="text-slate-300">Освоение верхний</span>
-              <select id="mhS_top" onchange="autoSaveActiveHero()" class="w-24 bg-slate-900 border border-slate-700 rounded p-1 text-white font-mono text-xs"><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select>
+              <select id="mhS_top" onchange="autoSaveActiveHero()" class="w-24 bg-slate-900 border border-slate-700 rounded p-1 text-white font-mono text-xs">
+                <option value="Нет">Нет</option>
+                <option value="5" selected>5</option>
+                <option value="4">4</option>
+                <option value="3">3</option>
+                <option value="2">2</option>
+                <option value="1">1</option>
+              </select>
             </div>
             <div class="flex items-center justify-between">
               <span class="text-slate-300">Освоение средний</span>
-              <select id="mhS_mid" onchange="autoSaveActiveHero()" class="w-24 bg-slate-900 border border-slate-700 rounded p-1 text-white font-mono text-xs"><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select>
+              <select id="mhS_mid" onchange="autoSaveActiveHero()" class="w-24 bg-slate-900 border border-slate-700 rounded p-1 text-white font-mono text-xs">
+                <option value="Нет">Нет</option>
+                <option value="5" selected>5</option>
+                <option value="4">4</option>
+                <option value="3">3</option>
+                <option value="2">2</option>
+                <option value="1">1</option>
+              </select>
             </div>
             <div class="flex items-center justify-between">
               <span class="text-slate-300">Освоение нижний</span>
-              <select id="mhS_bot" onchange="autoSaveActiveHero()" class="w-24 bg-slate-900 border border-slate-700 rounded p-1 text-white font-mono text-xs"><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select>
+              <select id="mhS_bot" onchange="autoSaveActiveHero()" class="w-24 bg-slate-900 border border-slate-700 rounded p-1 text-white font-mono text-xs">
+                <option value="Нет">Нет</option>
+                <option value="5" selected>5</option>
+                <option value="4">4</option>
+                <option value="3">3</option>
+                <option value="2">2</option>
+                <option value="1">1</option>
+              </select>
             </div>
           </div>
 
@@ -573,7 +629,14 @@
             <div class="font-bold text-sky-300 mb-1">Экспедиция</div>
             <div class="flex items-center justify-between">
               <span class="text-slate-300">Экспедиция верхний</span>
-              <select id="mhE_top" onchange="autoSaveActiveHero()" class="w-24 bg-slate-900 border border-slate-700 rounded p-1 text-white font-mono text-xs"><option value="5" selected>5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select>
+              <select id="mhE_top" onchange="autoSaveActiveHero()" class="w-24 bg-slate-900 border border-slate-700 rounded p-1 text-white font-mono text-xs">
+                <option value="Нет">Нет</option>
+                <option value="5" selected>5</option>
+                <option value="4">4</option>
+                <option value="3">3</option>
+                <option value="2">2</option>
+                <option value="1">1</option>
+              </select>
             </div>
             <div class="flex items-center justify-between">
               <span class="text-slate-300">Экспедиция средний</span>
@@ -588,7 +651,14 @@
             </div>
             <div class="flex items-center justify-between">
               <span class="text-slate-300">Экспедиция нижний</span>
-              <select id="mhE_bot" onchange="autoSaveActiveHero()" class="w-24 bg-slate-900 border border-slate-700 rounded p-1 text-white font-mono text-xs"><option value="5" selected>5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select>
+              <select id="mhE_bot" onchange="autoSaveActiveHero()" class="w-24 bg-slate-900 border border-slate-700 rounded p-1 text-white font-mono text-xs">
+                <option value="Нет">Нет</option>
+                <option value="5" selected>5</option>
+                <option value="4">4</option>
+                <option value="3">3</option>
+                <option value="2">2</option>
+                <option value="1">1</option>
+              </select>
             </div>
           </div>
         </div>
@@ -712,22 +782,65 @@
       { key: 'элеанор', name: 'Элеанор', gen: 17 }
     ];
 
+    let floatingToastTimer = null;
+
+    function hideFloatingSaveToast() {
+      const toast = document.getElementById('floatingSaveToast');
+      if (!toast) return;
+      toast.classList.remove('is-visible', 'is-interactive');
+    }
+
     function setAutoSaveIndicator(state, text) {
       const box = document.getElementById('autoSaveStatusBox');
       const icon = document.getElementById('autoSaveIcon');
       const txt = document.getElementById('autoSaveText');
-      if (!box || !icon || !txt) return;
 
-      txt.textContent = text;
+      if (box && icon && txt) {
+        txt.textContent = text;
+        if (state === 'saving') {
+          box.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-950/80 border border-amber-500/40 text-[11px] font-mono text-amber-300';
+          icon.className = 'fa-solid fa-spinner fa-spin';
+        } else if (state === 'error') {
+          box.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl bg-rose-950/80 border border-rose-500/40 text-[11px] font-mono text-rose-300';
+          icon.className = 'fa-solid fa-triangle-exclamation';
+        } else {
+          box.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/90 border border-emerald-500/30 text-[11px] font-mono text-emerald-400';
+          icon.className = 'fa-solid fa-circle-check';
+        }
+      }
+
+      const toast = document.getElementById('floatingSaveToast');
+      const fIcon = document.getElementById('floatingSaveIcon');
+      const fText = document.getElementById('floatingSaveText');
+      const retryBtn = document.getElementById('floatingRetryBtn');
+      const closeBtn = document.getElementById('floatingCloseBtn');
+      if (!toast || !fIcon || !fText) return;
+
+      if (floatingToastTimer) {
+        clearTimeout(floatingToastTimer);
+        floatingToastTimer = null;
+      }
+
+      fText.textContent = text;
+
       if (state === 'saving') {
-        box.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-950/80 border border-amber-500/40 text-[11px] font-mono text-amber-300';
-        icon.className = 'fa-solid fa-spinner fa-spin';
+        toast.className = 'flex items-center gap-2.5 px-4 py-2 rounded-2xl border shadow-2xl backdrop-blur-xl text-xs font-mono bg-amber-950/95 border-amber-400/60 text-amber-200 is-visible';
+        fIcon.className = 'fa-solid fa-spinner fa-spin shrink-0 text-amber-300';
+        if (retryBtn) retryBtn.classList.add('hidden');
+        if (closeBtn) closeBtn.classList.add('hidden');
       } else if (state === 'error') {
-        box.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl bg-rose-950/80 border border-rose-500/40 text-[11px] font-mono text-rose-300';
-        icon.className = 'fa-solid fa-triangle-exclamation';
+        toast.className = 'flex items-center gap-2.5 px-4 py-2 rounded-2xl border shadow-2xl backdrop-blur-xl text-xs font-mono bg-rose-950/95 border-rose-500/70 text-rose-100 is-visible is-interactive';
+        fIcon.className = 'fa-solid fa-triangle-exclamation shrink-0 text-rose-400';
+        if (retryBtn) retryBtn.classList.remove('hidden');
+        if (closeBtn) closeBtn.classList.remove('hidden');
       } else {
-        box.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/90 border border-emerald-500/30 text-[11px] font-mono text-emerald-400';
-        icon.className = 'fa-solid fa-cloud-check';
+        toast.className = 'flex items-center gap-2.5 px-4 py-2 rounded-2xl border shadow-2xl backdrop-blur-xl text-xs font-mono bg-emerald-950/95 border-emerald-400/60 text-emerald-200 is-visible';
+        fIcon.className = 'fa-solid fa-circle-check shrink-0 text-emerald-400';
+        if (retryBtn) retryBtn.classList.add('hidden');
+        if (closeBtn) closeBtn.classList.add('hidden');
+        floatingToastTimer = setTimeout(() => {
+          hideFloatingSaveToast();
+        }, 3500);
       }
     }
 
@@ -1312,6 +1425,20 @@
 
     let activeHeroKey = null;
 
+    function normalizeSkillForSelect(primary, legacy) {
+      const raw = primary !== undefined ? primary : legacy;
+      if (raw === 'Нет' || raw === 0 || raw === '0' || raw === null || raw === '') return 'Нет';
+      if (raw === undefined) return '5';
+      return String(raw);
+    }
+
+    function parseSkillSelectValue(selectId) {
+      const raw = document.getElementById(selectId).value;
+      if (raw === 'Нет') return 'Нет';
+      const num = Number(raw);
+      return (num >= 1 && num <= 5) ? num : 'Нет';
+    }
+
     function openHeroModal(key) {
       activeHeroKey = key;
       const h = ALL_HEROES.find(x => x.key === key);
@@ -1320,7 +1447,7 @@
       document.getElementById('modalHeroKey').value = key;
       document.getElementById('modalHeroName').textContent = h.name;
       document.getElementById('modalHeroGen').textContent = `Gen ${h.gen}`;
-      
+
       const modalImg = document.getElementById('modalHeroImg');
       modalImg.src = `Heroes/${h.name}.jpeg`;
       modalImg.onerror = function() {
@@ -1328,9 +1455,9 @@
       };
 
       const d = (localHeroesData && localHeroesData[key]) || {
-        level: 70, starsFull: 5, starsBars: 0, 
-        sTop: 5, sMid: 5, sBot: 5, 
-        eTop: 5, eMid: 5, eBot: 5, 
+        level: 70, starsFull: 5, starsBars: 0,
+        sTop: 5, sMid: 5, sBot: 5,
+        eTop: 5, eMid: 5, eBot: 5,
         cannon: false, cannonLvl: ''
       };
 
@@ -1338,15 +1465,14 @@
       document.getElementById('mhStarsFull').value = d.starsFull !== undefined ? d.starsFull : 5;
       const barsVal = Number(d.starsBars) || 0;
       document.getElementById('mhStarsBars').value = (barsVal >= 0 && barsVal <= 5) ? barsVal : 5;
-      
-      document.getElementById('mhS_top').value = d.sTop || d.s1 || 5;
-      document.getElementById('mhS_mid').value = d.sMid || d.s2 || 5;
-      document.getElementById('mhS_bot').value = d.sBot || d.s3 || 5;
-      
-      document.getElementById('mhE_top').value = d.eTop || d.e1 || 5;
-      const eMidVal = (d.eMid === 'Нет' || d.eMid === 0 || d.eMid === '0') ? 'Нет' : (d.eMid || 5);
-      document.getElementById('mhE_mid').value = eMidVal;
-      document.getElementById('mhE_bot').value = d.eBot || d.e2 || 5;
+
+      document.getElementById('mhS_top').value = normalizeSkillForSelect(d.sTop, d.s1);
+      document.getElementById('mhS_mid').value = normalizeSkillForSelect(d.sMid, d.s2);
+      document.getElementById('mhS_bot').value = normalizeSkillForSelect(d.sBot, d.s3);
+
+      document.getElementById('mhE_top').value = normalizeSkillForSelect(d.eTop, d.e1);
+      document.getElementById('mhE_mid').value = normalizeSkillForSelect(d.eMid, undefined);
+      document.getElementById('mhE_bot').value = normalizeSkillForSelect(d.eBot, d.e2);
 
       document.getElementById('mhHasCannon').checked = !!d.cannon;
       document.getElementById('mhCannonLevel').value = d.cannonLvl || '';
@@ -1357,19 +1483,18 @@
 
     function autoSaveActiveHero() {
       if (!activeHeroKey) return;
-      const eMidRaw = document.getElementById('mhE_mid').value;
 
       localHeroesData[activeHeroKey] = {
         configured: true,
         level: Number(document.getElementById('mhLevel').value) || 70,
         starsFull: Number(document.getElementById('mhStarsFull').value) || 0,
         starsBars: Number(document.getElementById('mhStarsBars').value) || 0,
-        sTop: Number(document.getElementById('mhS_top').value) || 5,
-        sMid: Number(document.getElementById('mhS_mid').value) || 5,
-        sBot: Number(document.getElementById('mhS_bot').value) || 5,
-        eTop: Number(document.getElementById('mhE_top').value) || 5,
-        eMid: eMidRaw === 'Нет' ? 'Нет' : (Number(eMidRaw) || 5),
-        eBot: Number(document.getElementById('mhE_bot').value) || 5,
+        sTop: parseSkillSelectValue('mhS_top'),
+        sMid: parseSkillSelectValue('mhS_mid'),
+        sBot: parseSkillSelectValue('mhS_bot'),
+        eTop: parseSkillSelectValue('mhE_top'),
+        eMid: parseSkillSelectValue('mhE_mid'),
+        eBot: parseSkillSelectValue('mhE_bot'),
         cannon: document.getElementById('mhHasCannon').checked,
         cannonLvl: document.getElementById('mhCannonLevel').value.trim()
       };

@@ -968,16 +968,21 @@
         document.getElementById('arsenalHeroesList').innerHTML =
           `<div class="col-span-3 py-6 text-center text-slate-400">Боец ещё не настроил карточки героев.</div>`;
       } else {
+        const fmtSkill = (primary, legacy) => {
+          const raw = primary !== undefined ? primary : legacy;
+          if (raw === 'Нет' || raw === 0 || raw === '0' || raw === '' || raw === null) return 'Нет';
+          return raw !== undefined ? raw : 5;
+        };
+
         document.getElementById('arsenalHeroesList').innerHTML = configuredKeys.map(k => {
           const h = heroesObj[k];
           const title = ALL_HEROES_MAP[k] || k;
-          const sTop = h.sTop !== undefined ? h.sTop : (h.s1 || 5);
-          const sMid = h.sMid !== undefined ? h.sMid : (h.s2 || 5);
-          const sBot = h.sBot !== undefined ? h.sBot : (h.s3 || 5);
-          const eTop = h.eTop !== undefined ? h.eTop : (h.e1 || 5);
-          const eMidRaw = h.eMid !== undefined ? h.eMid : 5;
-          const eMidLabel = (eMidRaw === 'Нет' || eMidRaw === 0 || eMidRaw === '0') ? 'Нет' : eMidRaw;
-          const eBot = h.eBot !== undefined ? h.eBot : (h.e2 || 5);
+          const sTop = fmtSkill(h.sTop, h.s1);
+          const sMid = fmtSkill(h.sMid, h.s2);
+          const sBot = fmtSkill(h.sBot, h.s3);
+          const eTop = fmtSkill(h.eTop, h.e1);
+          const eMidLabel = fmtSkill(h.eMid, undefined);
+          const eBot = fmtSkill(h.eBot, h.e2);
 
           return `
             <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 space-y-1 font-mono">
