@@ -1,0 +1,1993 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Литейная и Каньон — Штаб Рейдов «Гармония»</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+          colors: { slate: { 850: '#141c2b', 925: '#0b111e', 950: '#060a12' } }
+        }
+      }
+    };
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background-color: #060a12; color: #f1f5f9; }
+    .glass-card { background: rgba(15, 23, 42, 0.86); backdrop-filter: blur(14px); border: 1px solid rgba(51, 65, 85, 0.68); }
+    .squad-card {
+      background: linear-gradient(155deg, rgba(24, 34, 52, 0.94) 0%, rgba(15, 23, 42, 0.95) 100%);
+      backdrop-filter: blur(14px);
+    }
+    .filter-pill.active { background: #0284c7; color: #ffffff; border-color: #38bdf8; }
+    .mode-btn.active-foundry {
+      background: linear-gradient(135deg, rgba(2, 132, 199, 0.35) 0%, rgba(37, 99, 235, 0.4) 100%);
+      border-color: #38bdf8;
+      color: #ffffff;
+      box-shadow: 0 0 18px rgba(56, 189, 248, 0.28);
+    }
+    .mode-btn.active-canyon {
+      background: linear-gradient(135deg, rgba(217, 119, 6, 0.35) 0%, rgba(225, 29, 72, 0.35) 100%);
+      border-color: #fbbf24;
+      color: #ffffff;
+      box-shadow: 0 0 18px rgba(251, 191, 36, 0.28);
+    }
+    .legion-card.is-selected {
+      border-color: #38bdf8;
+      box-shadow: 0 0 22px rgba(56, 189, 248, 0.22);
+      background: linear-gradient(145deg, rgba(22, 36, 58, 0.95) 0%, rgba(15, 23, 42, 0.96) 100%);
+    }
+    .thin-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+    .thin-scroll::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.45); border-radius: 99px; }
+
+    #floatingSaveToast {
+      position: fixed;
+      top: 14px;
+      left: 50%;
+      transform: translate(-50%, -18px);
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s ease, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+      max-width: calc(100vw - 24px);
+    }
+    #floatingSaveToast.is-visible { opacity: 1; transform: translate(-50%, 0); }
+    #floatingSaveToast.is-interactive { pointer-events: auto; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-sky-500 selection:text-white">
+
+  <!-- ПЛАВАЮЩИЙ ИНДИКАТОР ОБЛАЧНОГО СОХРАНЕНИЯ ПОВЕРХ ВСЕХ ОКОН -->
+  <div id="floatingSaveToast" role="status" aria-live="polite"
+    class="flex items-center gap-2.5 px-4 py-2 rounded-2xl border shadow-2xl backdrop-blur-xl text-xs font-mono bg-slate-950/95 border-emerald-500/40 text-emerald-300">
+    <i id="floatingSaveIcon" class="fa-solid fa-circle-check shrink-0"></i>
+    <span id="floatingSaveText" class="truncate">Синхронизировано с облаком</span>
+    <button id="floatingRetryBtn" type="button" onclick="flushCloudSaveNow()"
+      class="hidden shrink-0 ml-1 px-2.5 py-0.5 rounded-lg bg-rose-500/25 hover:bg-rose-500/40 border border-rose-400/50 text-[11px] font-bold text-rose-100 transition">
+      Повторить
+    </button>
+    <button id="floatingCloseBtn" type="button" onclick="hideFloatingSaveToast()"
+      class="hidden shrink-0 text-rose-300/80 hover:text-white pl-1" title="Закрыть">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+
+  <!-- ==================== ШАПКА ==================== -->
+  <header class="sticky top-0 z-30 bg-slate-925/95 backdrop-blur-md border-b border-slate-800 px-4 py-2.5">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <a href="../raids.html" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold text-sky-300 flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-arrow-left"></i><span>В Штаб Рейдов</span>
+        </a>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold text-sm text-white">🏭 ЛИТЕЙНАЯ / КАНЬОН</span>
+            <span id="userRoleBadge" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">Офицер</span>
+          </div>
+          <div class="text-[11px] text-slate-400" id="headerUserNick">Авторизация...</div>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 text-xs">
+        <a href="../ai.html" target="_blank" rel="noopener noreferrer"
+          class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600/85 to-sky-600/85 hover:from-indigo-500 hover:to-sky-500 border border-indigo-400/50 text-xs font-extrabold text-white shadow-md shadow-indigo-950/50 flex items-center gap-1.5 transition"
+          title="Открыть ИИ-Советника в новой вкладке">
+          <i class="fa-solid fa-robot text-sky-200"></i><span>ИИ-Советник</span>
+        </a>
+
+        <!-- Переключатель альянса -->
+        <div class="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-800">
+          <button type="button" id="fAllianceMain" onclick="switchAlliance('Основа')" class="filter-pill active px-2.5 py-1 rounded-lg font-semibold text-slate-300 transition">Основа</button>
+          <button type="button" id="fAllianceAcad" onclick="switchAlliance('Академия')" class="filter-pill px-2.5 py-1 rounded-lg font-semibold text-slate-300 transition">Академия</button>
+        </div>
+
+        <!-- Статус облака -->
+        <div id="cloudSaveBadge" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-[11px] font-mono text-emerald-400">
+          <i id="cloudSaveIcon" class="fa-solid fa-circle-check"></i>
+          <span id="cloudSaveText">Облако готово</span>
+        </div>
+
+        <button type="button" onclick="pullFromCloud(true)" class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sky-300 font-semibold transition flex items-center gap-1.5" title="Загрузить последние правки других офицеров из Google Таблицы">
+          <i id="pullCloudIcon" class="fa-solid fa-rotate"></i><span class="hidden sm:inline">Обновить</span>
+        </button>
+
+        <button type="button" onclick="resetCurrentPlan()" class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-rose-950/60 border border-slate-700 text-slate-300 hover:text-rose-200 transition" title="Очистить текущий план">
+          <i class="fa-solid fa-rotate-left"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6 space-y-6">
+
+    <!-- 1. ВЫБОР ИВЕНТА (ЛИТЕЙНАЯ / КАНЬОН) + ЛЕГИОНЫ 1 И 2 + БАЛАНС -->
+    <section class="space-y-4">
+      <div class="glass-card rounded-3xl p-4 border border-slate-800 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-2">
+          <button type="button" id="modeFoundryBtn" onclick="switchEventMode('foundry')"
+            class="mode-btn active-foundry px-4 py-2.5 rounded-2xl border border-slate-700 bg-slate-900 text-xs sm:text-sm font-extrabold transition flex items-center gap-2">
+            <span>🏭</span>
+            <div class="text-left">
+              <div>Битва в Литейной</div>
+              <div class="text-[10px] font-normal text-sky-200/80">1 на 1 • Телепорты, здания и жилы</div>
+            </div>
+          </button>
+
+          <button type="button" id="modeCanyonBtn" onclick="switchEventMode('canyon')"
+            class="mode-btn px-4 py-2.5 rounded-2xl border border-slate-700 bg-slate-900 text-xs sm:text-sm font-extrabold text-slate-300 hover:text-white transition flex items-center gap-2">
+            <span>🏜️</span>
+            <div class="text-left">
+              <div>Битва в Каньоне</div>
+              <div class="text-[10px] font-normal text-slate-400">1v1v1 • 3 отряда, маршруты и топливо</div>
+            </div>
+          </button>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button type="button" onclick="copyLegionsRegistrationOrder()"
+            class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-sky-600 border border-slate-700 text-xs font-bold text-white transition flex items-center gap-1.5">
+            <i class="fa-solid fa-users"></i><span>Списки Л1 + Л2 в чат</span>
+          </button>
+          <button type="button" onclick="copyActiveLegionBattleOrder()"
+            class="px-4 py-2 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-xs font-extrabold text-white shadow-lg transition flex items-center gap-1.5">
+            <i class="fa-solid fa-copy"></i><span>Боевой приказ легиона</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Карточки Легиона 1 и Легиона 2 -->
+      <div id="legionsCardsGrid" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+
+      <!-- Полоса баланса между Легионом 1 и Легионом 2 -->
+      <div id="legionBalanceBar" class="glass-card rounded-2xl px-4 py-3 border border-slate-800 space-y-1.5"></div>
+    </section>
+
+    <!-- 2. СБОРЩИК СОСТАВА ЛЕГИОНА (30 ОСНОВА + 10 ЗАПАС) С ЗАЩИТОЙ ОТ ДУБЛЕЙ -->
+    <section class="glass-card rounded-3xl p-4 sm:p-5 border border-slate-800 space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+        <div>
+          <h2 class="text-base font-extrabold text-white flex items-center gap-2">
+            <i class="fa-solid fa-user-shield text-sky-400"></i>
+            <span id="rosterSectionTitle">Состав Легиона 1 (до 30 основы + 10 запаса)</span>
+          </h2>
+          <p class="text-[11px] text-slate-400 mt-0.5">Защита от дублей включена: боец может быть записан только в один легион.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 text-xs">
+          <button type="button" onclick="autoFillBalancedLegions()"
+            class="px-3 py-1.5 rounded-xl bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-500/40 text-indigo-200 font-bold transition flex items-center gap-1.5"
+            title="Разложить свободных активных бойцов змейкой (1-2-2-1) между Легионом 1 и Легионом 2 для равного баланса сил">
+            <i class="fa-solid fa-scale-balanced"></i><span>Баланс Л1/Л2 змейкой</span>
+          </button>
+          <button type="button" onclick="clearActiveLegionRoster()"
+            class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-rose-950/70 border border-slate-700 text-slate-300 hover:text-rose-200 font-semibold transition">
+            Очистить легион
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <!-- Левая колонка: База активных бойцов альянса -->
+        <div class="lg:col-span-6 bg-slate-950/65 border border-slate-800 rounded-2xl p-3 space-y-2.5 flex flex-col">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="text-xs font-extrabold text-slate-200">База бойцов (<span id="availableBaseCount">0</span>)</span>
+            <div class="flex items-center gap-1.5 text-[11px]">
+              <select id="baseFilterSelect" onchange="renderRosterBuilder()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-slate-200">
+                <option value="free" selected>Свободные</option>
+                <option value="all">Все бойцы</option>
+                <option value="other">В другом легионе</option>
+              </select>
+              <select id="baseSortSelect" onchange="renderRosterBuilder()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-sky-300">
+                <option value="rally">Сбор ↓</option>
+                <option value="furnace">Печь ↓</option>
+                <option value="march">Марш ↓</option>
+                <option value="tier">Тир ↓</option>
+                <option value="nick">Ник А–Я</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="relative">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
+            <input id="baseSearchInput" type="text" oninput="renderRosterBuilder()" placeholder="Поиск бойца по нику..."
+              class="w-full bg-slate-900 border border-slate-700 focus:border-sky-500 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white focus:outline-none" />
+          </div>
+
+          <div id="allianceRosterList" class="max-h-96 overflow-y-auto thin-scroll space-y-1.5 pr-1"></div>
+        </div>
+
+        <!-- Правая колонка: Выбранный Легион (Основа + Запас) -->
+        <div class="lg:col-span-6 bg-slate-950/65 border border-slate-800 rounded-2xl p-3 space-y-3 flex flex-col">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center bg-slate-900 p-0.5 rounded-xl border border-slate-800 text-xs">
+              <button type="button" id="tabMainRosterBtn" onclick="switchRosterTab('main')" class="filter-pill active px-3 py-1 rounded-lg font-bold text-slate-300 transition">
+                Основа (<span id="curMainCount">0</span>/30)
+              </button>
+              <button type="button" id="tabReserveRosterBtn" onclick="switchRosterTab('reserve')" class="filter-pill px-3 py-1 rounded-lg font-bold text-slate-300 transition">
+                Запас (<span id="curReserveCount">0</span>/10)
+              </button>
+            </div>
+            <span id="unassignedSquadHint" class="text-[11px] font-mono text-amber-300">Без отряда: 0</span>
+          </div>
+
+          <div id="selectedLegionRosterList" class="max-h-96 overflow-y-auto thin-scroll space-y-1.5 pr-1"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. ТАКТИЧЕСКАЯ ДОСКА ОТРЯДОВ И ОТДЕЛЬНЫХ ОБЪЕКТОВ -->
+    <section class="space-y-3">
+      <div class="glass-card rounded-3xl p-4 border border-slate-800 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 id="squadBoardTitle" class="text-base font-extrabold text-white flex items-center gap-2">
+              <i class="fa-solid fa-chess-board text-amber-400"></i>
+              <span>Тактические отряды и роли</span>
+            </h2>
+            <p id="squadBoardSub" class="text-[11px] text-slate-400 mt-0.5">Распределите бойцов выбранного легиона по направлениям и назначьте капитана (👑) в каждой группе.</p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2 text-xs">
+            <button id="addBoardBlockBtn" type="button" onclick="addBoardBlock()"
+              class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow transition flex items-center gap-1.5">
+              <i class="fa-solid fa-plus"></i><span>Добавить отряд</span>
+            </button>
+            <button id="autoDistributeBtn" type="button" onclick="autoDistributeSquads()"
+              class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-extrabold shadow transition flex items-center gap-1.5"
+              title="Автоматически раскидать бойцов текущего легиона">
+              <i class="fa-solid fa-wand-magic-sparkles"></i><span>Авто по отрядам</span>
+            </button>
+            <button id="clearBoardBtn" type="button" onclick="clearLegionSquads()"
+              class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-semibold transition">
+              Сбросить отряды
+            </button>
+          </div>
+        </div>
+
+        <!-- Вкладки режима распределения: Группами / По отдельным объектам -->
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-slate-800/80">
+          <div class="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs">
+            <button type="button" id="boardTabGroupsBtn" onclick="switchBoardView('groups')"
+              class="filter-pill active px-3 py-1.5 rounded-lg font-bold text-slate-300 transition flex items-center gap-1.5">
+              <span>👥 Группами</span>
+              <span id="boardGroupsCount" class="font-mono text-[10px] px-1.5 rounded bg-slate-950/60">4</span>
+            </button>
+            <button type="button" id="boardTabObjectsBtn" onclick="switchBoardView('objects')"
+              class="filter-pill px-3 py-1.5 rounded-lg font-bold text-slate-300 transition flex items-center gap-1.5">
+              <span>📍 По объектам</span>
+              <span id="boardObjectsCount" class="font-mono text-[10px] px-1.5 rounded bg-slate-950/60">12</span>
+            </button>
+          </div>
+
+          <span id="boardModeHint" class="text-[11px] text-slate-400">
+            Боевой приказ и список назначения в легионе работают по активной вкладке
+          </span>
+        </div>
+      </div>
+
+      <div id="squadsGrid" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+    </section>
+
+    <!-- 4. ТАЙМЛАЙН ФАЗ И ПАМЯТКА БОЙЦАМ -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <div class="lg:col-span-7 glass-card rounded-3xl p-5 border border-slate-800 space-y-3">
+        <div class="flex items-center justify-between gap-2 pb-2 border-b border-slate-800">
+          <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+            <i class="fa-solid fa-timeline text-sky-400"></i>
+            <span id="phasesTitle">План по фазам боя</span>
+          </h3>
+          <button type="button" onclick="copyPhasesOrder()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-sky-600 text-[11px] font-bold text-white transition">
+            <i class="fa-solid fa-copy mr-1"></i>В чат
+          </button>
+        </div>
+        <div id="phasesList" class="space-y-2.5"></div>
+      </div>
+
+      <div class="lg:col-span-5 glass-card rounded-3xl p-5 border border-slate-800 space-y-3 flex flex-col">
+        <div class="flex items-center justify-between gap-2 pb-2 border-b border-slate-800">
+          <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+            <i class="fa-solid fa-bullhorn text-emerald-400"></i>
+            <span>Памятка бойцам перед входом</span>
+          </h3>
+          <button type="button" onclick="copyMemoText()" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-[11px] font-bold text-white transition">
+            <i class="fa-solid fa-copy mr-1"></i>Скопировать
+          </button>
+        </div>
+        <textarea id="eventMemoInput" rows="7" oninput="updateEventMemo(this.value)"
+          class="flex-1 w-full bg-slate-900/90 border border-slate-700 focus:border-emerald-400 rounded-2xl p-3 text-xs text-slate-100 leading-relaxed focus:outline-none resize-y"></textarea>
+        <div class="flex items-center justify-between text-[10px] font-mono text-slate-400">
+          <span>Редактируется и сохраняется в облаке</span>
+          <button type="button" onclick="restoreDefaultMemo()" class="text-sky-400 hover:underline">Вернуть шаблон</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. СВОРАЧИВАЕМЫЙ БЛОК ТАКТИЧЕСКИХ ЗАМЕТОК -->
+    <section class="glass-card rounded-3xl border border-slate-800 overflow-hidden">
+      <div onclick="toggleNotesBlock()" class="px-5 py-4 flex flex-wrap items-center justify-between gap-3 cursor-pointer hover:bg-slate-900/60 transition select-none">
+        <div class="flex items-center gap-2.5">
+          <i id="notesChevron" class="fa-solid fa-chevron-down text-sky-400 text-xs transition-transform duration-200"></i>
+          <h2 class="text-base font-extrabold text-white flex items-center gap-2">
+            <i class="fa-solid fa-note-sticky text-amber-400"></i> Тактические заметки штаба
+          </h2>
+          <span id="notesStatusBadge" class="hidden text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">Есть заметки</span>
+        </div>
+        <div class="flex items-center gap-2" onclick="event.stopPropagation()">
+          <button type="button" onclick="copyNotesText()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-sky-600 text-[11px] font-bold text-slate-200 hover:text-white transition">
+            <i class="fa-solid fa-copy mr-1"></i>Копировать
+          </button>
+          <button type="button" onclick="clearNotesText()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-rose-700 text-[11px] font-bold text-slate-300 hover:text-white transition">
+            <i class="fa-solid fa-eraser mr-1"></i>Очистить
+          </button>
+        </div>
+      </div>
+
+      <div id="notesBody" class="hidden px-5 pb-5 pt-1 border-t border-slate-800/80 space-y-2">
+        <textarea id="staffNotesInput" rows="5" oninput="updateNotesText(this.value)"
+          placeholder="Сюда можно записать разбор соперника, кто отвечает за голосовую координацию, список замен на случай неявки и итоги прошлого боя..."
+          class="w-full bg-slate-900/90 border border-slate-700 focus:border-sky-500 rounded-2xl p-3.5 text-xs sm:text-sm text-white placeholder-slate-500 leading-relaxed focus:outline-none resize-y"></textarea>
+        <div class="flex items-center justify-between text-[10px] font-mono text-slate-400">
+          <span>Автосохранение в Google Таблицу для всех офицеров</span>
+          <span id="notesCharCount">0 симв.</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="toastBanner" class="fixed bottom-5 right-5 z-50 bg-slate-900 border border-sky-500/50 text-sky-200 text-xs font-semibold px-4 py-2.5 rounded-xl shadow-2xl opacity-0 transition-opacity pointer-events-none">
+    Готово!
+  </div>
+
+  <script src="raid-core.js"></script>
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwsX-LADURoQu_MsQ2XJVsSPsHAgMebI4_QDXmpPpi3OcpW3ScwPep9ukQBFJfDMrjQ7g/exec';
+    const MAX_MAIN = 30;
+    const MAX_RESERVE = 10;
+
+    const BLOCK_ACCENTS = [
+      'border-amber-500/45 text-amber-300',
+      'border-sky-500/45 text-sky-300',
+      'border-rose-500/45 text-rose-300',
+      'border-emerald-500/45 text-emerald-300',
+      'border-purple-500/45 text-purple-300',
+      'border-cyan-500/45 text-cyan-300'
+    ];
+
+    // Шаблоны тактики для Литейной и Каньона (группы + отдельные объекты карты)
+    const MODE_TEMPLATES = {
+      foundry: {
+        name: 'Битва в Литейной',
+        icon: '🏭',
+        buildingsPool: [
+          'Имперская литейная', 'Пересадочная станция', 'Склад боеприпасов',
+          'Котельная', 'Ремонтный цех', 'Цех прототипов',
+          'Лагерь наёмников', 'Оружейный цех', 'Рудные жилы (45м)'
+        ],
+        squads: [
+          {
+            id: 'sq_center',
+            title: 'Ударный кулак (Центр)',
+            icon: '👑',
+            accent: 'border-amber-500/45 text-amber-300',
+            goals: ['Пересадочная станция', 'Имперская литейная'],
+            task: 'На 00:00 забираем Пересадочную, на 15:00 перелёт в центр и захват Имперской литейной синхронными сборами.'
+          },
+          {
+            id: 'sq_flank_a',
+            title: 'Фланг А (Верх / Лево)',
+            icon: '🛡️',
+            accent: 'border-sky-500/45 text-sky-300',
+            goals: ['Котельная', 'Ремонтный цех', 'Цех прототипов'],
+            task: 'Быстрый захват Котельной и Ремонтного цеха, плотный гарнизон Прототипа, контроль подходов.'
+          },
+          {
+            id: 'sq_flank_b',
+            title: 'Фланг Б (Низ / Право)',
+            icon: '⚔️',
+            accent: 'border-rose-500/45 text-rose-300',
+            goals: ['Склад боеприпасов', 'Лагерь наёмников', 'Цех прототипов'],
+            task: 'Обязательный захват Склада боеприпасов на старте (бафф атаки), давление на вражеский тыл.'
+          },
+          {
+            id: 'sq_mobile',
+            title: 'Мобильная группа / Охотники',
+            icon: '🏃',
+            accent: 'border-emerald-500/45 text-emerald-300',
+            goals: ['Оружейный цех', 'Рудные жилы (45м)'],
+            task: 'Выбиваем одиночные города врага (срываем их сборы), страхуем фланги, с 45-й минуты забираем все рудные жилы.'
+          }
+        ],
+        objects: [
+          { id: 'obj_imperial',   title: 'Имперская литейная',      icon: '🏭', phaseTag: '15:00 • Центр',   accent: 'border-amber-500/50 text-amber-300',   task: 'Главные очки — захват и плотный гарнизон сильнейших лидеров.' },
+          { id: 'obj_transit',    title: 'Пересадочная станция',    icon: '🚉', phaseTag: '00:00 • Приоритет',accent: 'border-sky-500/50 text-sky-300',       task: 'Сокращает КД телепорта с 12 до 6 минут. Брать с 1-й секунды!' },
+          { id: 'obj_munitions',  title: 'Склад боеприпасов',       icon: '💣', phaseTag: '00:00 • Приоритет',accent: 'border-rose-500/50 text-rose-300',     task: 'Даёт мощный боевой бафф урона всему легиону.' },
+          { id: 'obj_boiler1',    title: 'Котельная №1 (Верх)',     icon: '🔥', phaseTag: '00:00 • Верх',    accent: 'border-orange-500/45 text-orange-300', task: 'Ускоряет захват зданий на карте.' },
+          { id: 'obj_boiler2',    title: 'Котельная №2 (Низ)',      icon: '🔥', phaseTag: '00:00 • Низ',     accent: 'border-orange-500/45 text-orange-300', task: 'Ускоряет захват зданий, прикрытие нижнего фланга.' },
+          { id: 'obj_repair1',    title: 'Ремонтный цех №1 (Верх)', icon: '🔧', phaseTag: '00:00 • Верх',    accent: 'border-cyan-500/45 text-cyan-300',     task: 'Ускоряет и удешевляет лечение раненых.' },
+          { id: 'obj_repair2',    title: 'Ремонтный цех №2 (Низ)',  icon: '🔧', phaseTag: '00:00 • Низ',     accent: 'border-cyan-500/45 text-cyan-300',     task: 'Поддержка лечения, контроль нижней половины.' },
+          { id: 'obj_proto1',     title: 'Цех прототипов №1 (Верх)',icon: '🧪', phaseTag: '00:00 • Очки',    accent: 'border-purple-500/45 text-purple-300', task: 'Стабильный приток очков — держать гарнизон.' },
+          { id: 'obj_proto2',     title: 'Цех прототипов №2 (Низ)', icon: '🧪', phaseTag: '00:00 • Очки',    accent: 'border-purple-500/45 text-purple-300', task: 'Стабильный приток очков — держать гарнизон.' },
+          { id: 'obj_merc',       title: 'Лагерь наёмников',        icon: '🪖', phaseTag: '00:00 • Поддержка',accent: 'border-slate-500/50 text-slate-200',  task: 'Дополнительное давление волнами наёмников на врага.' },
+          { id: 'obj_weapon',     title: 'Оружейный цех',           icon: '⚔️', phaseTag: '15:00 • Бой',     accent: 'border-rose-500/45 text-rose-300',     task: 'Открывается на 15-й минуте, важный источник очков и баффа.' },
+          { id: 'obj_veins',      title: 'Рудные жилы / Охотники',  icon: '⛏️', phaseTag: '45:00 • Финал',   accent: 'border-emerald-500/50 text-emerald-300',task: 'Сбор рудных жил с 45-й минуты и выбивание пустых городов врага.' }
+        ],
+        phases: [
+          { time: '00:00 – 15:00', title: 'Захват ключевых баффов', text: 'Главные цели: Пересадочная станция (кд ТП 6 мин) и Склад боеприпасов. Параллельно берём Котельные, Ремонт и Прототипы.' },
+          { time: '15:00 – 45:00', title: 'Имперская литейная и прессинг', text: 'Киты перелетают в центр на Литейную. Охотники жгут города врага без гарнизона, чтобы выбить их на базу.' },
+          { time: '45:00 – 60:00', title: 'Удержание и Рудные жилы', text: 'Центр держит гарнизон. Все свободные марши и младшие бойцы пылесосят рудные жилы по всей карте.' }
+        ],
+        memo: [
+          '🏭 ПАМЯТКА НА БИТВУ В ЛИТЕЙНОЙ:',
+          '1) Безвозвратных потерь нет — после боя все войска вернутся целыми.',
+          '2) Перед входом: все марши дома, лазарет пустой, разведчиков не отправлять.',
+          '3) Лечимся МАЛЫМИ пачками (по 30–60 минут) и постоянно жмём «Помощь» альянсу!',
+          '4) Не тратьте бесплатный телепорт впустую — перелетаем строго по команде капитана отряда.',
+          '5) В 1-й слот присоединения ставим профильных героев (атака: Джесси/Джассер/Со Юн; защита: Патрик/Сергей).'
+        ].join('\n')
+      },
+
+      canyon: {
+        name: 'Битва в Каньоне',
+        icon: '🏜️',
+        accent: 'amber',
+        buildingsPool: [
+          'Цитадель (Центр)', 'Стражи Каньона', 'Левый перекрёсток',
+          'Правый перекрёсток', 'Топливная застава', 'Перерезка Врага №1',
+          'Перерезка Врага №2', 'Тыловые узлы'
+        ],
+        squads: [
+          {
+            id: 'sq_center',
+            title: 'Прорыв: Цитадель и Стражи',
+            icon: '👑',
+            accent: 'border-amber-500/45 text-amber-300',
+            goals: ['Стражи Каньона', 'Цитадель (Центр)'],
+            task: 'Копим топливо в начале, продавливаем центр, забираем Стражей и закрепляемся в Цитадели.'
+          },
+          {
+            id: 'sq_left',
+            title: 'Левый коридор (Враг №1)',
+            icon: '🛡️',
+            accent: 'border-sky-500/45 text-sky-300',
+            goals: ['Левый перекрёсток', 'Перерезка Врага №1'],
+            task: 'Держим узкое горлышко слева, перерезаем дороги снабжения Врага №1 и не пускаем их к центру.'
+          },
+          {
+            id: 'sq_right',
+            title: 'Правый коридор (Враг №2)',
+            icon: '⚔️',
+            accent: 'border-rose-500/45 text-rose-300',
+            goals: ['Правый перекрёсток', 'Перерезка Врага №2'],
+            task: 'Держим правую развилку, отрезаем Врага №2 от их базы и сбиваем их прорывы.'
+          },
+          {
+            id: 'sq_scouts',
+            title: 'Разведка и тылы (Спам 3 отрядов)',
+            icon: '🏃',
+            accent: 'border-emerald-500/45 text-emerald-300',
+            goals: ['Топливная застава', 'Тыловые узлы'],
+            task: 'Забираем свободные боковые узлы, ставим 2-й и 3-й отряды на перекрёстках, тормозим китов врага и сжигаем им топливо.'
+          }
+        ],
+        objects: [
+          { id: 'cobj_citadel',    title: 'Цитадель (Центр)',           icon: '👑', phaseTag: 'Финал • Центр',  accent: 'border-amber-500/50 text-amber-300',   task: 'Главная точка Каньона — копим топливо под захват и удержание.' },
+          { id: 'cobj_guardians',  title: 'Стражи Каньона',             icon: '🗿', phaseTag: 'Середина',       accent: 'border-purple-500/50 text-purple-300', task: 'Ключевой буст — забираем сильнейшими отрядами.' },
+          { id: 'cobj_left_cross', title: 'Левый перекрёсток',          icon: '🛡️', phaseTag: 'Враг №1',        accent: 'border-sky-500/50 text-sky-300',       task: 'Заслон против Врага №1, не пускать к центру.' },
+          { id: 'cobj_right_cross',title: 'Правый перекрёсток',         icon: '⚔️', phaseTag: 'Враг №2',        accent: 'border-rose-500/50 text-rose-300',     task: 'Заслон против Врага №2, сдерживание прорывов.' },
+          { id: 'cobj_cut1',       title: 'Перерезка путей Врага №1',   icon: '✂️', phaseTag: 'Тыл Врага №1',   accent: 'border-cyan-500/45 text-cyan-300',     task: 'Отрезать передовые точки Врага №1 от их базы.' },
+          { id: 'cobj_cut2',       title: 'Перерезка путей Врага №2',   icon: '✂️', phaseTag: 'Тыл Врага №2',   accent: 'border-orange-500/45 text-orange-300', task: 'Отрезать передовые точки Врага №2 от их базы.' },
+          { id: 'cobj_fuel_l',     title: 'Топливная застава (Лево)',   icon: '⛽', phaseTag: 'Старт • Лево',   accent: 'border-emerald-500/45 text-emerald-300',task: 'Контроль левых ресурсных и путевых узлов.' },
+          { id: 'cobj_fuel_r',     title: 'Топливная застава (Право)',  icon: '⛽', phaseTag: 'Старт • Право',  accent: 'border-emerald-500/45 text-emerald-300',task: 'Контроль правых ресурсных и путевых узлов.' },
+          { id: 'cobj_back',       title: 'Тыловые узлы и затыкание',   icon: '🏃', phaseTag: '2–3 отряды',     accent: 'border-slate-500/50 text-slate-200',   task: 'Захват пустых узлов и торможение вражеских китов.' }
+        ],
+        phases: [
+          { time: 'Фаза 1 (Старт)', title: 'Захват развилок и застав', text: 'Выпускаем все 3 отряда: основа на главные перекрёстки, 2–3 отряды — забирать свободные боковые узлы.' },
+          { time: 'Фаза 2 (Середина)', title: 'Стражи и перерезка дорог', text: 'Боремся за Стражей. Отрезаем вражеские узлы от их базы — без пути снабжения враг теряет очки и подкрепление.' },
+          { time: 'Фаза 3 (Финал)', title: 'Штурм и удержание Цитадели', text: 'Тратим накопленное топливо на прорыв в Цитадель и плотный заслон на всех подходах к ней.' }
+        ],
+        memo: [
+          '🏜️ ПАМЯТКА НА БИТВУ В КАНЬОНЕ (1v1v1):',
+          '1) Безвозвратных потерь нет. Каждый боец выставляет 3 отдельных отряда!',
+          '2) ГЛАВНЫЙ РЕСУРС — ТОПЛИВО. Не жгите топливо на бессмысленные ускорения и возрождения в начале боя.',
+          '3) У нас ДВА соперника — не уходите всей толпой в один коридор, держите свои направления.',
+          '4) Если отрезать вражескую точку от их базы — она перестанет работать. Всегда бейте в перекрёстки за спиной врага.',
+          '5) Даже слабый 2-й и 3-й отряд невероятно полезны: они держат пустые узлы и тормозят вражеских топов.'
+        ].join('\n')
+      }
+    };
+
+    // ==================== СОСТОЯНИЕ ====================
+    let currentUser = null;
+    let allPlayers = [];
+    let currentAlliance = 'Основа';
+    let currentMode = 'foundry'; // 'foundry' | 'canyon'
+    let activeLegionKey = 'legion1'; // 'legion1' | 'legion2'
+    let activeRosterTab = 'main'; // 'main' | 'reserve'
+
+    let planState = null;
+    let isDirty = false;
+    let cloudSaveTimer = null;
+    let floatingToastTimer = null;
+
+    function getPasscode() {
+      return sessionStorage.getItem('harmony_passcode') || localStorage.getItem('harmony_passcode') || '';
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&')
+        .replace(/</g, '<')
+        .replace(/>/g, '>')
+        .replace(/"/g, '"');
+    }
+
+    function escapeJsStr(str) {
+      return String(str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+
+    function getPlayerKey(p) {
+      if (window.RaidCore && typeof RaidCore.getPlayerKey === 'function') {
+        return RaidCore.getPlayerKey(p);
+      }
+      return p.playerId ? `ID:${p.playerId}` : `NICK:${(p.nick || '').toLowerCase()}`;
+    }
+
+    function parseFurnaceInfo(furnaceLevel) {
+      const str = String(furnaceLevel || '');
+      const num = Number(str.replace(/\D/g, '')) || 0;
+      const isCrystal = str.toLowerCase().includes('крист') || str.includes('💎');
+      return { num, text: str || '—', isCrystal, score: (isCrystal ? 1000 : 0) + num };
+    }
+
+    function parseTroopTierInfo(troopTier) {
+      const str = String(troopTier || '');
+      const num = Number(str.replace(/\D/g, '')) || 0;
+      const isCrystal = str.toLowerCase().includes('крист') || str.includes('💎');
+      return { num, text: str || '—', isCrystal, score: (isCrystal ? 1000 : 0) + num };
+    }
+
+    function getAlliancePlayers() {
+      return allPlayers.filter(p => (p.status || 'Активен') === 'Активен' && (p.alliance || 'Основа') === currentAlliance);
+    }
+
+    function findPlayerByKey(pKey) {
+      return allPlayers.find(p => getPlayerKey(p) === pKey) || null;
+    }
+
+    function getConfigKey(alliance = currentAlliance, mode = currentMode) {
+      return `foundry_${alliance}_${mode}`;
+    }
+
+    function createEmptyLegion(mode, defaultTime) {
+      const tpl = MODE_TEMPLATES[mode] || MODE_TEMPLATES.foundry;
+      return {
+        time: defaultTime,
+        enemy: '',
+        boardView: 'groups', // 'groups' | 'objects'
+        main: [],     // array of playerKeys (max 30)
+        reserve: [],  // array of playerKeys (max 10)
+        squads: tpl.squads.map(sq => ({
+          id: sq.id,
+          title: sq.title,
+          icon: sq.icon,
+          accent: sq.accent,
+          goals: [...sq.goals],
+          task: sq.task,
+          captain: '',
+          members: []
+        })),
+        objects: tpl.objects.map(obj => ({
+          id: obj.id,
+          title: obj.title,
+          icon: obj.icon,
+          phaseTag: obj.phaseTag || '',
+          accent: obj.accent,
+          task: obj.task || '',
+          captain: '',
+          members: []
+        }))
+      };
+    }
+
+    function createDefaultPlan(mode) {
+      const tpl = MODE_TEMPLATES[mode] || MODE_TEMPLATES.foundry;
+      return {
+        mode,
+        legion1: createEmptyLegion(mode, '14:00 МСК'),
+        legion2: createEmptyLegion(mode, '19:00 МСК'),
+        phases: tpl.phases.map(ph => ({ ...ph })),
+        memo: tpl.memo,
+        notes: '',
+        notesOpen: false
+      };
+    }
+
+    function normalizePlanState(raw, mode) {
+      const def = createDefaultPlan(mode);
+      if (!raw || typeof raw !== 'object') return def;
+
+      const normLegion = (rawLeg, defLeg) => {
+        if (!rawLeg || typeof rawLeg !== 'object') return defLeg;
+        const main = Array.isArray(rawLeg.main) ? Array.from(new Set(rawLeg.main.filter(Boolean))).slice(0, MAX_MAIN) : [];
+        const mainSet = new Set(main);
+        const reserve = Array.isArray(rawLeg.reserve)
+          ? Array.from(new Set(rawLeg.reserve.filter(k => k && !mainSet.has(k)))).slice(0, MAX_RESERVE)
+          : [];
+        const allowedSet = new Set([...main, ...reserve]);
+
+        const usedInSquads = new Set();
+        const rawSquads = Array.isArray(rawLeg.squads) && rawLeg.squads.length > 0 ? rawLeg.squads : defLeg.squads;
+        const squads = rawSquads.map((sq, idx) => {
+          const defSq = defLeg.squads[idx] || defLeg.squads[0];
+          const members = (Array.isArray(sq.members) ? sq.members : []).filter(k => {
+            if (!allowedSet.has(k) || usedInSquads.has(k)) return false;
+            usedInSquads.add(k);
+            return true;
+          });
+          const captain = (sq.captain && members.includes(sq.captain)) ? sq.captain : '';
+          return {
+            id: sq.id || ('sq_' + idx + '_' + Date.now()),
+            title: String(sq.title || defSq.title),
+            icon: sq.icon || defSq.icon || '⚔️',
+            accent: sq.accent || BLOCK_ACCENTS[idx % BLOCK_ACCENTS.length],
+            goals: Array.isArray(sq.goals) ? sq.goals : [],
+            task: String(sq.task !== undefined ? sq.task : ''),
+            captain,
+            members
+          };
+        });
+
+        const usedInObjects = new Set();
+        const rawObjects = Array.isArray(rawLeg.objects) && rawLeg.objects.length > 0 ? rawLeg.objects : defLeg.objects;
+        const objects = rawObjects.map((obj, idx) => {
+          const defObj = defLeg.objects[idx] || defLeg.objects[0];
+          const members = (Array.isArray(obj.members) ? obj.members : []).filter(k => {
+            if (!allowedSet.has(k) || usedInObjects.has(k)) return false;
+            usedInObjects.add(k);
+            return true;
+          });
+          const captain = (obj.captain && members.includes(obj.captain)) ? obj.captain : '';
+          return {
+            id: obj.id || ('obj_' + idx + '_' + Date.now()),
+            title: String(obj.title || defObj.title),
+            icon: obj.icon || defObj.icon || '📍',
+            phaseTag: String(obj.phaseTag !== undefined ? obj.phaseTag : (defObj.phaseTag || '')),
+            accent: obj.accent || BLOCK_ACCENTS[idx % BLOCK_ACCENTS.length],
+            task: String(obj.task !== undefined ? obj.task : ''),
+            captain,
+            members
+          };
+        });
+
+        return {
+          time: String(rawLeg.time || defLeg.time),
+          enemy: String(rawLeg.enemy || ''),
+          boardView: rawLeg.boardView === 'objects' ? 'objects' : 'groups',
+          main,
+          reserve,
+          squads,
+          objects
+        };
+      };
+
+      const leg1 = normLegion(raw.legion1, def.legion1);
+      const leg1Keys = new Set([...leg1.main, ...leg1.reserve]);
+
+      // Гарантируем отсутствие дублей между Легионом 1 и Легионом 2
+      const rawLeg2 = raw.legion2 ? {
+        ...raw.legion2,
+        main: Array.isArray(raw.legion2.main) ? raw.legion2.main.filter(k => !leg1Keys.has(k)) : [],
+        reserve: Array.isArray(raw.legion2.reserve) ? raw.legion2.reserve.filter(k => !leg1Keys.has(k)) : []
+      } : null;
+      const leg2 = normLegion(rawLeg2, def.legion2);
+
+      return {
+        mode,
+        legion1: leg1,
+        legion2: leg2,
+        phases: Array.isArray(raw.phases) && raw.phases.length > 0 ? raw.phases : def.phases,
+        memo: raw.memo !== undefined ? String(raw.memo) : def.memo,
+        notes: String(raw.notes || ''),
+        notesOpen: !!raw.notesOpen
+      };
+    }
+
+    // ==================== ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ (GOOGLE SHEETS) ====================
+    function hideFloatingSaveToast() {
+      const toast = document.getElementById('floatingSaveToast');
+      if (toast) toast.classList.remove('is-visible', 'is-interactive');
+    }
+
+    function setCloudStatus(state, text, showFloating = false) {
+      const box = document.getElementById('cloudSaveBadge');
+      const icon = document.getElementById('cloudSaveIcon');
+      const txt = document.getElementById('cloudSaveText');
+
+      if (box && icon && txt) {
+        txt.textContent = text;
+        if (state === 'saving') {
+          box.className = 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-950/80 border border-amber-500/40 text-[11px] font-mono text-amber-300';
+          icon.className = 'fa-solid fa-spinner fa-spin';
+        } else if (state === 'error') {
+          box.className = 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-rose-950/80 border border-rose-500/40 text-[11px] font-mono text-rose-300';
+          icon.className = 'fa-solid fa-triangle-exclamation';
+        } else {
+          box.className = 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 border border-emerald-500/35 text-[11px] font-mono text-emerald-400';
+          icon.className = 'fa-solid fa-circle-check';
+        }
+      }
+
+      if (!showFloating) return;
+
+      const toast = document.getElementById('floatingSaveToast');
+      const fIcon = document.getElementById('floatingSaveIcon');
+      const fText = document.getElementById('floatingSaveText');
+      const retryBtn = document.getElementById('floatingRetryBtn');
+      const closeBtn = document.getElementById('floatingCloseBtn');
+      if (!toast || !fIcon || !fText) return;
+
+      if (floatingToastTimer) {
+        clearTimeout(floatingToastTimer);
+        floatingToastTimer = null;
+      }
+
+      fText.textContent = text;
+      if (state === 'saving') {
+        toast.className = 'flex items-center gap-2.5 px-4 py-2 rounded-2xl border shadow-2xl backdrop-blur-xl text-xs font-mono bg-amber-950/95 border-amber-400/60 text-amber-200 is-visible';
+        fIcon.className = 'fa-solid fa-spinner fa-spin shrink-0 text-amber-300';
+        retryBtn.classList.add('hidden');
+        closeBtn.classList.add('hidden');
+      } else if (state === 'error') {
+        toast.className = 'flex items-center gap-2.5 px-4 py-2 rounded-2xl border shadow-2xl backdrop-blur-xl text-xs font-mono bg-rose-950/95 border-rose-500/70 text-rose-100 is-visible is-interactive';
+        fIcon.className = 'fa-solid fa-triangle-exclamation shrink-0 text-rose-400';
+        retryBtn.classList.remove('hidden');
+        closeBtn.classList.remove('hidden');
+      } else {
+        toast.className = 'flex items-center gap-2.5 px-4 py-2 rounded-2xl border shadow-2xl backdrop-blur-xl text-xs font-mono bg-emerald-950/95 border-emerald-400/60 text-emerald-200 is-visible';
+        fIcon.className = 'fa-solid fa-circle-check shrink-0 text-emerald-400';
+        retryBtn.classList.add('hidden');
+        closeBtn.classList.add('hidden');
+        floatingToastTimer = setTimeout(hideFloatingSaveToast, 3200);
+      }
+    }
+
+    function scheduleCloudSave() {
+      if (!planState) return;
+      isDirty = true;
+      const key = getConfigKey();
+      localStorage.setItem('harmony_' + key, JSON.stringify(planState));
+      setCloudStatus('saving', 'Сохранение в облако...', true);
+
+      if (cloudSaveTimer) clearTimeout(cloudSaveTimer);
+      cloudSaveTimer = setTimeout(() => {
+        executeCloudSave(key, JSON.parse(JSON.stringify(planState)));
+      }, 850);
+    }
+
+    async function flushCloudSaveNow() {
+      if (!planState) return;
+      if (cloudSaveTimer) {
+        clearTimeout(cloudSaveTimer);
+        cloudSaveTimer = null;
+      }
+      const key = getConfigKey();
+      localStorage.setItem('harmony_' + key, JSON.stringify(planState));
+      await executeCloudSave(key, JSON.parse(JSON.stringify(planState)));
+    }
+
+    async function executeCloudSave(configKey, payloadObj) {
+      setCloudStatus('saving', 'Сохранение в облако...', true);
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'save_event_config',
+            passcode: getPasscode(),
+            configKey,
+            config: payloadObj,
+            page: 'events/liteyka.html',
+            userAgent: navigator.userAgent
+          })
+        }).then(r => r.json());
+
+        if (res.ok) {
+          isDirty = false;
+          const timeLabel = res.updatedAt ? res.updatedAt.slice(0, 16) : 'сейчас';
+          setCloudStatus('saved', `Сохранено в облаке (${timeLabel})`, true);
+        } else {
+          setCloudStatus('error', 'Ошибка: ' + (res.error || 'сбой записи'), true);
+        }
+      } catch (e) {
+        setCloudStatus('error', 'Нет связи с Google Таблицей', true);
+      }
+    }
+
+    async function pullFromCloud(showNotify = false) {
+      const key = getConfigKey();
+      const spinIcon = document.getElementById('pullCloudIcon');
+      if (spinIcon) spinIcon.classList.add('fa-spin');
+      setCloudStatus('saving', 'Загрузка из облака...', false);
+
+      // Сначала мгновенно показываем локальный кэш
+      const localRaw = localStorage.getItem('harmony_' + key);
+      if (localRaw && !showNotify) {
+        try {
+          planState = normalizePlanState(JSON.parse(localRaw), currentMode);
+          renderAll();
+        } catch (e) {
+          planState = createDefaultPlan(currentMode);
+          renderAll();
+        }
+      } else if (!planState) {
+        planState = createDefaultPlan(currentMode);
+        renderAll();
+      }
+
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'get_event_config',
+            passcode: getPasscode(),
+            configKey: key,
+            page: 'events/liteyka.html'
+          })
+        }).then(r => r.json());
+
+        if (res.ok && res.config) {
+          planState = normalizePlanState(res.config, currentMode);
+          localStorage.setItem('harmony_' + key, JSON.stringify(planState));
+          isDirty = false;
+          const timeLabel = res.updatedAt ? res.updatedAt.slice(0, 16) : 'синхронизировано';
+          setCloudStatus('saved', `Облако (${timeLabel})`, showNotify);
+          renderAll();
+          if (showNotify) showToast('Загружен актуальный план из облака');
+        } else {
+          planState = localRaw ? normalizePlanState(JSON.parse(localRaw), currentMode) : createDefaultPlan(currentMode);
+          setCloudStatus('saved', 'Новый план (облако)', false);
+          renderAll();
+        }
+      } catch (e) {
+        setCloudStatus('error', 'Локальный режим (нет связи)', showNotify);
+      } finally {
+        if (spinIcon) spinIcon.classList.remove('fa-spin');
+      }
+    }
+
+    // ==================== ПЕРЕКЛЮЧЕНИЕ АЛЬЯНСА, РЕЖИМА И ЛЕГИОНА ====================
+    async function switchAlliance(alliance) {
+      if (currentUser && !currentUser.isOwner && alliance !== currentUser.alliance) return;
+      if (isDirty) await flushCloudSaveNow();
+      currentAlliance = alliance;
+      if (window.RaidCore) RaidCore.activeAlliance = alliance;
+      document.getElementById('fAllianceMain').classList.toggle('active', alliance === 'Основа');
+      document.getElementById('fAllianceAcad').classList.toggle('active', alliance === 'Академия');
+      await pullFromCloud(false);
+    }
+
+    async function switchEventMode(mode) {
+      if (mode === currentMode && planState) return;
+      if (isDirty) await flushCloudSaveNow();
+      currentMode = mode;
+
+      const fBtn = document.getElementById('modeFoundryBtn');
+      const cBtn = document.getElementById('modeCanyonBtn');
+      fBtn.classList.toggle('active-foundry', mode === 'foundry');
+      cBtn.classList.toggle('active-canyon', mode === 'canyon');
+      if (mode === 'foundry') {
+        fBtn.classList.remove('text-slate-300');
+        cBtn.classList.add('text-slate-300');
+      } else {
+        cBtn.classList.remove('text-slate-300');
+        fBtn.classList.add('text-slate-300');
+      }
+
+      await pullFromCloud(false);
+    }
+
+    function selectLegion(legKey) {
+      activeLegionKey = legKey;
+      renderAll();
+    }
+
+    function switchRosterTab(tab) {
+      activeRosterTab = tab;
+      document.getElementById('tabMainRosterBtn').classList.toggle('active', tab === 'main');
+      document.getElementById('tabReserveRosterBtn').classList.toggle('active', tab === 'reserve');
+      renderRosterBuilder();
+    }
+
+    function resetCurrentPlan() {
+      const tpl = MODE_TEMPLATES[currentMode];
+      if (!confirm(`Сбросить составы обоих легионов, отряды и заметки для «${tpl.name}» (${currentAlliance})?`)) return;
+      planState = createDefaultPlan(currentMode);
+      renderAll();
+      flushCloudSaveNow();
+      showToast('План очищен и сохранён в облаке');
+    }
+
+    // ==================== СТАТИСТИКА И БАЛАНС ЛЕГИОНОВ ====================
+    function calcLegionMetrics(legion) {
+      const mainPlayers = legion.main.map(findPlayerByKey).filter(Boolean);
+      const allLegPlayers = [...legion.main, ...legion.reserve].map(findPlayerByKey).filter(Boolean);
+
+      const rallyCaps = mainPlayers.map(p => Number(p.rallyCap) || 0).sort((a, b) => b - a);
+      const top5RallySum = rallyCaps.slice(0, 5).reduce((a, b) => a + b, 0);
+      const whalesCount = mainPlayers.filter(p => (Number(p.rallyCap) || 0) >= 800000 || parseFurnaceInfo(p.furnaceLevel).isCrystal).length;
+      const avgFurnace = mainPlayers.length > 0
+        ? (mainPlayers.reduce((sum, p) => sum + parseFurnaceInfo(p.furnaceLevel).num, 0) / mainPlayers.length).toFixed(1)
+        : '0.0';
+      const powerScore = mainPlayers.reduce((sum, p) => sum + (Number(p.rallyCap) || 0) + parseFurnaceInfo(p.furnaceLevel).score * 500, 0);
+
+      return {
+        mainCount: legion.main.length,
+        reserveCount: legion.reserve.length,
+        totalCount: allLegPlayers.length,
+        top5RallySum,
+        whalesCount,
+        avgFurnace,
+        powerScore
+      };
+    }
+
+    function updateLegionMeta(legKey, field, val) {
+      if (!planState || !planState[legKey]) return;
+      planState[legKey][field] = val;
+      scheduleCloudSave();
+    }
+
+    function renderLegionCards() {
+      const grid = document.getElementById('legionsCardsGrid');
+      const bar = document.getElementById('legionBalanceBar');
+      if (!grid || !bar || !planState) return;
+
+      const m1 = calcLegionMetrics(planState.legion1);
+      const m2 = calcLegionMetrics(planState.legion2);
+
+      const buildCard = (legKey, label, badgeColor, m) => {
+        const leg = planState[legKey];
+        const isSel = activeLegionKey === legKey;
+        const pct = Math.min(100, Math.round((m.mainCount / MAX_MAIN) * 100));
+
+        return `
+          <div onclick="selectLegion('${legKey}')" class="legion-card glass-card rounded-3xl p-4 border ${isSel ? 'is-selected' : 'border-slate-800 hover:border-slate-600'} cursor-pointer transition space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <span class="px-2.5 py-1 rounded-xl text-xs font-extrabold ${badgeColor}">${label}</span>
+                ${isSel ? '<span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/40">Редактируется</span>' : '<span class="text-[10px] text-slate-400">Нажмите для выбора</span>'}
+              </div>
+              <div class="flex items-center gap-2 font-mono text-xs">
+                <span class="${m.mainCount >= MAX_MAIN ? 'text-emerald-300 font-extrabold' : 'text-white font-bold'}">Основа: ${m.mainCount}/${MAX_MAIN}</span>
+                <span class="text-slate-500">•</span>
+                <span class="text-amber-300 font-bold">Запас: ${m.reserveCount}/${MAX_RESERVE}</span>
+              </div>
+            </div>
+
+            <div class="w-full h-1.5 rounded-full bg-slate-900 overflow-hidden">
+              <div class="h-full rounded-full ${m.mainCount >= MAX_MAIN ? 'bg-emerald-400' : 'bg-gradient-to-r from-sky-500 to-indigo-500'} transition-all" style="width:${pct}%"></div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs" onclick="event.stopPropagation()">
+              <div>
+                <label class="block text-[10px] font-mono text-slate-400 mb-0.5">⏱️ Время старта</label>
+                <input type="text" value="${escapeHtml(leg.time || '')}" oninput="updateLegionMeta('${legKey}', 'time', this.value)" placeholder="Напр: 14:00 МСК"
+                  class="w-full bg-slate-950/90 border border-slate-700 focus:border-sky-400 rounded-xl px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-[10px] font-mono text-slate-400 mb-0.5">🎯 Соперник(и)</label>
+                <input type="text" value="${escapeHtml(leg.enemy || '')}" oninput="updateLegionMeta('${legKey}', 'enemy', this.value)" placeholder="${currentMode === 'canyon' ? 'Враг №1 / Враг №2' : 'Тег соперника'}"
+                  class="w-full bg-slate-950/90 border border-slate-700 focus:border-rose-400 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 pt-1 text-center font-mono text-[11px]">
+              <div class="bg-slate-950/75 border border-slate-800 rounded-xl py-1.5 px-2">
+                <div class="text-[9px] text-slate-400 uppercase">👑 Топ-лидеров</div>
+                <div class="font-extrabold text-amber-300">${m.whalesCount}</div>
+              </div>
+              <div class="bg-slate-950/75 border border-slate-800 rounded-xl py-1.5 px-2">
+                <div class="text-[9px] text-slate-400 uppercase">⚔️ ТОП-5 сбор</div>
+                <div class="font-extrabold text-sky-300">${m.top5RallySum ? (m.top5RallySum / 1000000).toFixed(2) + 'M' : '0'}</div>
+              </div>
+              <div class="bg-slate-950/75 border border-slate-800 rounded-xl py-1.5 px-2">
+                <div class="text-[9px] text-slate-400 uppercase">🔥 Ср. печь</div>
+                <div class="font-extrabold text-emerald-300">${m.avgFurnace}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      };
+
+      grid.innerHTML =
+        buildCard('legion1', '⚔️ ЛЕГИОН 1', 'bg-sky-500/20 text-sky-200 border border-sky-400/40', m1) +
+        buildCard('legion2', '🛡️ ЛЕГИОН 2', 'bg-purple-500/20 text-purple-200 border border-purple-400/40', m2);
+
+      const totalPower = m1.powerScore + m2.powerScore;
+      const pct1 = totalPower > 0 ? Math.round((m1.powerScore / totalPower) * 100) : 50;
+      const pct2 = 100 - pct1;
+      const diff = Math.abs(pct1 - pct2);
+      const balanceLabel = totalPower === 0
+        ? '<span class="text-slate-400">Добавьте бойцов для оценки баланса</span>'
+        : diff <= 14
+        ? '<span class="text-emerald-300 font-bold">✓ Легионы сбалансированы</span>'
+        : `<span class="text-amber-300 font-bold">⚠️ Перекос сил в сторону ${pct1 > pct2 ? 'Легиона 1' : 'Легиона 2'}</span>`;
+
+      bar.innerHTML = `
+        <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono">
+          <span class="text-sky-300 font-bold">Легион 1: ${pct1}% (${m1.mainCount}+${m1.reserveCount})</span>
+          <div>${balanceLabel}</div>
+          <span class="text-purple-300 font-bold">Легион 2: ${pct2}% (${m2.mainCount}+${m2.reserveCount})</span>
+        </div>
+        <div class="w-full h-2 rounded-full bg-slate-900 overflow-hidden flex">
+          <div class="h-full bg-gradient-to-r from-sky-500 to-blue-500 transition-all" style="width:${pct1}%"></div>
+          <div class="h-full bg-gradient-to-r from-purple-500 to-indigo-500 transition-all" style="width:${pct2}%"></div>
+        </div>
+      `;
+    }
+
+    // ==================== УПРАВЛЕНИЕ СОСТАВОМ ЛЕГИОНА (ЗАЩИТА ОТ ДУБЛЕЙ) ====================
+    function getPlayerAssignmentInfo(pKey) {
+      if (planState.legion1.main.includes(pKey)) return { legion: 'legion1', slot: 'main', label: 'Легион 1 • Основа' };
+      if (planState.legion1.reserve.includes(pKey)) return { legion: 'legion1', slot: 'reserve', label: 'Легион 1 • Запас' };
+      if (planState.legion2.main.includes(pKey)) return { legion: 'legion2', slot: 'main', label: 'Легион 2 • Основа' };
+      if (planState.legion2.reserve.includes(pKey)) return { legion: 'legion2', slot: 'reserve', label: 'Легион 2 • Запас' };
+      return null;
+    }
+
+    function removePlayerFromLegion(legKey, pKey) {
+      const leg = planState[legKey];
+      leg.main = leg.main.filter(k => k !== pKey);
+      leg.reserve = leg.reserve.filter(k => k !== pKey);
+      (leg.squads || []).forEach(sq => {
+        sq.members = sq.members.filter(k => k !== pKey);
+        if (sq.captain === pKey) sq.captain = '';
+      });
+      (leg.objects || []).forEach(obj => {
+        obj.members = obj.members.filter(k => k !== pKey);
+        if (obj.captain === pKey) obj.captain = '';
+      });
+    }
+
+    function addPlayerToActiveLegion(pKey, targetSlot = 'main', forceMoveFromOther = false) {
+      const leg = planState[activeLegionKey];
+      const otherKey = activeLegionKey === 'legion1' ? 'legion2' : 'legion1';
+      const existing = getPlayerAssignmentInfo(pKey);
+
+      if (existing && existing.legion === otherKey && !forceMoveFromOther) {
+        return showToast(`Боец уже записан в ${existing.label}`);
+      }
+
+      if (targetSlot === 'main' && leg.main.length >= MAX_MAIN && !leg.main.includes(pKey)) {
+        return showToast(`В основе уже максимум (${MAX_MAIN}/${MAX_MAIN}) — добавьте в Запас`);
+      }
+      if (targetSlot === 'reserve' && leg.reserve.length >= MAX_RESERVE && !leg.reserve.includes(pKey)) {
+        return showToast(`В запасе уже максимум (${MAX_RESERVE}/${MAX_RESERVE})`);
+      }
+
+      if (existing && existing.legion === otherKey) {
+        removePlayerFromLegion(otherKey, pKey);
+      }
+
+      leg.main = leg.main.filter(k => k !== pKey);
+      leg.reserve = leg.reserve.filter(k => k !== pKey);
+
+      if (targetSlot === 'main') leg.main.push(pKey);
+      else leg.reserve.push(pKey);
+
+      scheduleCloudSave();
+      renderAll();
+    }
+
+    function removePlayerFromActiveLegion(pKey) {
+      removePlayerFromLegion(activeLegionKey, pKey);
+      scheduleCloudSave();
+      renderAll();
+    }
+
+    function togglePlayerMainReserve(pKey) {
+      const leg = planState[activeLegionKey];
+      if (leg.main.includes(pKey)) {
+        if (leg.reserve.length >= MAX_RESERVE) return showToast(`Запас заполнен (${MAX_RESERVE}/${MAX_RESERVE})`);
+        leg.main = leg.main.filter(k => k !== pKey);
+        leg.reserve.push(pKey);
+      } else if (leg.reserve.includes(pKey)) {
+        if (leg.main.length >= MAX_MAIN) return showToast(`Основа заполнена (${MAX_MAIN}/${MAX_MAIN})`);
+        leg.reserve = leg.reserve.filter(k => k !== pKey);
+        leg.main.push(pKey);
+      }
+      scheduleCloudSave();
+      renderAll();
+    }
+
+    function clearActiveLegionRoster() {
+      const legLabel = activeLegionKey === 'legion1' ? 'Легиона 1' : 'Легиона 2';
+      if (!confirm(`Очистить весь состав (основу, запас, отряды и объекты) ${legLabel}?`)) return;
+      const leg = planState[activeLegionKey];
+      leg.main = [];
+      leg.reserve = [];
+      (leg.squads || []).forEach(sq => { sq.members = []; sq.captain = ''; });
+      (leg.objects || []).forEach(obj => { obj.members = []; obj.captain = ''; });
+      scheduleCloudSave();
+      renderAll();
+      showToast(`Состав ${legLabel} очищен`);
+    }
+
+    function autoFillBalancedLegions() {
+      const players = getAlliancePlayers()
+        .filter(p => !getPlayerAssignmentInfo(getPlayerKey(p)))
+        .sort((a, b) => {
+          const scoreA = (Number(a.rallyCap) || 0) + parseFurnaceInfo(a.furnaceLevel).score * 500;
+          const scoreB = (Number(b.rallyCap) || 0) + parseFurnaceInfo(b.furnaceLevel).score * 500;
+          return scoreB - scoreA;
+        });
+
+      if (players.length === 0) {
+        return showToast('Все активные бойцы альянса уже распределены по легионам');
+      }
+
+      // Змейка 1-2-2-1 по силе
+      const pattern = ['legion1', 'legion2', 'legion2', 'legion1'];
+      let added = 0;
+
+      players.forEach((p, idx) => {
+        const pKey = getPlayerKey(p);
+        let pref = pattern[idx % 4];
+        const alt = pref === 'legion1' ? 'legion2' : 'legion1';
+
+        const tryPut = (legKey) => {
+          if (planState[legKey].main.length < MAX_MAIN) {
+            planState[legKey].main.push(pKey);
+            return true;
+          }
+          if (planState[legKey].reserve.length < MAX_RESERVE) {
+            planState[legKey].reserve.push(pKey);
+            return true;
+          }
+          return false;
+        };
+
+        if (tryPut(pref) || tryPut(alt)) added++;
+      });
+
+      scheduleCloudSave();
+      renderAll();
+      showToast(`Автобаланс: распределено ${added} свободных бойцов змейкой`);
+    }
+
+    function getActiveBoardCollection(legion) {
+      return legion.boardView === 'objects' ? legion.objects : legion.squads;
+    }
+
+    function findPlayerBoardItem(legion, pKey) {
+      const col = getActiveBoardCollection(legion) || [];
+      return col.find(item => item.members.includes(pKey)) || null;
+    }
+
+    function renderRosterBuilder() {
+      if (!planState) return;
+      const leg = planState[activeLegionKey];
+      const isObjectsView = leg.boardView === 'objects';
+      const activeCol = getActiveBoardCollection(leg);
+      const legTitle = activeLegionKey === 'legion1' ? 'Легиона 1' : 'Легиона 2';
+      document.getElementById('rosterSectionTitle').textContent = `Состав ${legTitle} (до ${MAX_MAIN} основы + ${MAX_RESERVE} запаса)`;
+      document.getElementById('curMainCount').textContent = leg.main.length;
+      document.getElementById('curReserveCount').textContent = leg.reserve.length;
+
+      const assignedSet = new Set();
+      activeCol.forEach(item => item.members.forEach(k => assignedSet.add(k)));
+      const allLegKeys = [...leg.main, ...leg.reserve];
+      const unassignedCount = allLegKeys.filter(k => !assignedSet.has(k)).length;
+      document.getElementById('unassignedSquadHint').textContent = isObjectsView
+        ? `Без объекта: ${unassignedCount}`
+        : `Без отряда: ${unassignedCount}`;
+
+      // 1. Левая колонка: база бойцов альянса
+      const q = (document.getElementById('baseSearchInput').value || '').trim().toLowerCase();
+      const filterMode = document.getElementById('baseFilterSelect').value;
+      const sortMode = document.getElementById('baseSortSelect').value;
+
+      let baseList = getAlliancePlayers().filter(p => {
+        if (q && !(p.nick || '').toLowerCase().includes(q)) return false;
+        const pKey = getPlayerKey(p);
+        const info = getPlayerAssignmentInfo(pKey);
+        if (filterMode === 'free' && info) return false;
+        if (filterMode === 'other' && (!info || info.legion === activeLegionKey)) return false;
+        return true;
+      });
+
+      baseList.sort((a, b) => {
+        if (sortMode === 'furnace') return parseFurnaceInfo(b.furnaceLevel).score - parseFurnaceInfo(a.furnaceLevel).score;
+        if (sortMode === 'march') return (Number(b.marchCap) || 0) - (Number(a.marchCap) || 0);
+        if (sortMode === 'tier') return parseTroopTierInfo(b.troopTier).score - parseTroopTierInfo(a.troopTier).score;
+        if (sortMode === 'nick') return (a.nick || '').localeCompare(b.nick || '', 'ru');
+        return (Number(b.rallyCap) || 0) - (Number(a.rallyCap) || 0);
+      });
+
+      document.getElementById('availableBaseCount').textContent = baseList.length;
+      const baseEl = document.getElementById('allianceRosterList');
+
+      if (baseList.length === 0) {
+        baseEl.innerHTML = `<div class="py-8 text-center text-xs text-slate-500">Нет бойцов по выбранному фильтру</div>`;
+      } else {
+        baseEl.innerHTML = baseList.map(p => {
+          const pKey = getPlayerKey(p);
+          const safeKey = escapeJsStr(pKey);
+          const fInfo = parseFurnaceInfo(p.furnaceLevel);
+          const assign = getPlayerAssignmentInfo(pKey);
+
+          let actionsHtml = '';
+          if (!assign) {
+            actionsHtml = `
+              <button type="button" onclick="addPlayerToActiveLegion('${safeKey}', 'main')"
+                class="px-2 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-[10px] font-bold text-white transition">+ Основа</button>
+              <button type="button" onclick="addPlayerToActiveLegion('${safeKey}', 'reserve')"
+                class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-amber-600/80 border border-slate-700 text-[10px] font-bold text-amber-300 hover:text-white transition">+ Запас</button>
+            `;
+          } else if (assign.legion === activeLegionKey) {
+            actionsHtml = `
+              <span class="px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold ${assign.slot === 'main' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'}">
+                ✓ ${assign.slot === 'main' ? 'Основа' : 'Запас'}
+              </span>
+            `;
+          } else {
+            actionsHtml = `
+              <span class="text-[10px] font-mono text-purple-300">${escapeHtml(assign.label)}</span>
+              <button type="button" onclick="addPlayerToActiveLegion('${safeKey}', 'main', true)" title="Перенести в ${legTitle}"
+                class="px-2 py-1 rounded-lg bg-purple-900/60 hover:bg-sky-600 border border-purple-500/40 text-[10px] font-bold text-purple-200 hover:text-white transition">
+                ⇄ Сюда
+              </button>
+            `;
+          }
+
+          return `
+            <div class="p-2 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-600 flex items-center justify-between gap-2 text-xs">
+              <div class="flex items-center gap-2 min-w-0">
+                <div class="w-7 h-7 rounded-lg flex items-center justify-center font-mono text-[11px] font-extrabold shrink-0 ${
+                  fInfo.isCrystal ? 'bg-gradient-to-br from-orange-500 to-red-600 text-white' : 'bg-sky-500/20 text-sky-300 border border-sky-500/40'
+                }">${fInfo.num || '?'}</div>
+                <div class="min-w-0">
+                  <div class="font-bold text-white truncate">${escapeHtml(p.nick)}</div>
+                  <div class="text-[10px] font-mono text-slate-400 truncate">
+                    Сбор: ${(Number(p.rallyCap) || 0).toLocaleString('ru-RU')} • ${escapeHtml(p.troopTier || '—')}
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center gap-1 shrink-0">${actionsHtml}</div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // 2. Правая колонка: состав текущего легиона (Основа или Запас)
+      const listKeys = activeRosterTab === 'main' ? leg.main : leg.reserve;
+      const selEl = document.getElementById('selectedLegionRosterList');
+
+      if (listKeys.length === 0) {
+        selEl.innerHTML = `<div class="py-10 text-center text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">
+          ${activeRosterTab === 'main' ? 'Основной состав пока пуст — добавьте бойцов из базы слева' : 'Список запаса пока пуст'}
+        </div>`;
+      } else {
+        selEl.innerHTML = listKeys.map((pKey, idx) => {
+          const p = findPlayerByKey(pKey);
+          const safeKey = escapeJsStr(pKey);
+          const nick = p ? p.nick : pKey;
+          const fInfo = parseFurnaceInfo(p ? p.furnaceLevel : '');
+          const sq = findPlayerBoardItem(leg, pKey);
+
+          const sqOptions = `<option value="">${isObjectsView ? '— Без объекта —' : '— Без отряда —'}</option>` +
+            activeCol.map(s => `<option value="${escapeHtml(s.id)}" ${sq && sq.id === s.id ? 'selected' : ''}>${s.icon} ${escapeHtml(s.title)}</option>`).join('');
+
+          return `
+            <div class="p-2 rounded-xl bg-slate-900/90 border ${sq ? 'border-emerald-500/35' : 'border-slate-800'} flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="font-mono text-[10px] text-slate-500 w-5 text-right shrink-0">${idx + 1}.</span>
+                <div class="w-6 h-6 rounded-md flex items-center justify-center font-mono text-[10px] font-extrabold shrink-0 ${
+                  fInfo.isCrystal ? 'bg-orange-600 text-white' : 'bg-slate-800 text-sky-300'
+                }">${fInfo.num || '?'}</div>
+                <div class="min-w-0">
+                  <div class="font-bold text-white truncate">${escapeHtml(nick)}</div>
+                  <div class="text-[10px] font-mono text-slate-400">Сбор: ${(Number(p && p.rallyCap) || 0).toLocaleString('ru-RU')}</div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-1.5 shrink-0">
+                <select onchange="assignPlayerToSquad('${safeKey}', this.value)"
+                  class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-[10px] text-sky-200 max-w-[140px] focus:outline-none">
+                  ${sqOptions}
+                </select>
+                <button type="button" onclick="togglePlayerMainReserve('${safeKey}')"
+                  title="${activeRosterTab === 'main' ? 'Перевести в Запас' : 'Перевести в Основу'}"
+                  class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-amber-600/70 text-[10px] font-bold text-amber-300 hover:text-white transition">
+                  ${activeRosterTab === 'main' ? '→ Зап.' : '→ Осн.'}
+                </button>
+                <button type="button" onclick="removePlayerFromActiveLegion('${safeKey}')" title="Убрать из легиона"
+                  class="w-6 h-6 rounded-lg bg-slate-950 hover:bg-rose-900/80 text-slate-400 hover:text-rose-300 flex items-center justify-center transition">
+                  <i class="fa-solid fa-xmark text-[11px]"></i>
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    // ==================== ТАКТИЧЕСКАЯ ДОСКА: ГРУППАМИ И ПО ОТДЕЛЬНЫМ ОБЪЕКТАМ ====================
+    function switchBoardView(view) {
+      const leg = planState[activeLegionKey];
+      if (!leg) return;
+      leg.boardView = view === 'objects' ? 'objects' : 'groups';
+      scheduleCloudSave();
+      renderRosterBuilder();
+      renderSquadsBoard();
+    }
+
+    function addBoardBlock() {
+      const leg = planState[activeLegionKey];
+      if (!leg) return;
+
+      if (leg.boardView === 'objects') {
+        const idx = leg.objects.length;
+        leg.objects.push({
+          id: 'obj_custom_' + Date.now() + '_' + Math.floor(Math.random() * 999),
+          title: `Новый объект #${idx + 1}`,
+          icon: '📍',
+          phaseTag: 'Доп. точка',
+          accent: BLOCK_ACCENTS[idx % BLOCK_ACCENTS.length],
+          task: '',
+          captain: '',
+          members: []
+        });
+        scheduleCloudSave();
+        renderRosterBuilder();
+        renderSquadsBoard();
+        showToast('Добавлена карточка нового объекта');
+      } else {
+        const idx = leg.squads.length;
+        const icons = ['⚔️', '🛡️', '🔥', '🎯', '🏃', '👑'];
+        leg.squads.push({
+          id: 'sq_custom_' + Date.now() + '_' + Math.floor(Math.random() * 999),
+          title: `Отряд #${idx + 1}`,
+          icon: icons[idx % icons.length],
+          accent: BLOCK_ACCENTS[idx % BLOCK_ACCENTS.length],
+          goals: [],
+          task: '',
+          captain: '',
+          members: []
+        });
+        scheduleCloudSave();
+        renderRosterBuilder();
+        renderSquadsBoard();
+        showToast('Добавлен новый тактический отряд');
+      }
+    }
+
+    function removeBoardBlock(itemId) {
+      const leg = planState[activeLegionKey];
+      if (!leg) return;
+      const isObj = leg.boardView === 'objects';
+      const col = isObj ? leg.objects : leg.squads;
+
+      if (col.length <= 1) {
+        return showToast(isObj ? 'Должен остаться минимум 1 объект' : 'Должен остаться минимум 1 отряд');
+      }
+
+      const target = col.find(x => x.id === itemId);
+      if (!target) return;
+      if (target.members.length > 0 && !confirm(`Удалить блок «${target.title}»? Назначенные бойцы (${target.members.length} чел.) останутся в составе легиона.`)) {
+        return;
+      }
+
+      if (isObj) {
+        leg.objects = leg.objects.filter(x => x.id !== itemId);
+      } else {
+        leg.squads = leg.squads.filter(x => x.id !== itemId);
+      }
+
+      scheduleCloudSave();
+      renderRosterBuilder();
+      renderSquadsBoard();
+      showToast(`Блок «${target.title}» удалён`);
+    }
+
+    function assignPlayerToSquad(pKey, targetId) {
+      const leg = planState[activeLegionKey];
+      const col = getActiveBoardCollection(leg);
+      col.forEach(item => {
+        item.members = item.members.filter(k => k !== pKey);
+        if (item.captain === pKey) item.captain = '';
+      });
+      if (targetId) {
+        const target = col.find(item => item.id === targetId);
+        if (target && !target.members.includes(pKey)) {
+          target.members.push(pKey);
+        }
+      }
+      scheduleCloudSave();
+      renderRosterBuilder();
+      renderSquadsBoard();
+    }
+
+    function toggleSquadCaptain(itemId, pKey) {
+      const col = getActiveBoardCollection(planState[activeLegionKey]);
+      const item = col.find(s => s.id === itemId);
+      if (!item) return;
+      item.captain = item.captain === pKey ? '' : pKey;
+      scheduleCloudSave();
+      renderSquadsBoard();
+    }
+
+    function updateSquadField(itemId, field, val) {
+      const col = getActiveBoardCollection(planState[activeLegionKey]);
+      const item = col.find(s => s.id === itemId);
+      if (!item) return;
+      item[field] = val;
+      scheduleCloudSave();
+    }
+
+    function toggleSquadGoal(squadId, goalName) {
+      const sq = planState[activeLegionKey].squads.find(s => s.id === squadId);
+      if (!sq) return;
+      if (!Array.isArray(sq.goals)) sq.goals = [];
+      if (sq.goals.includes(goalName)) {
+        sq.goals = sq.goals.filter(g => g !== goalName);
+      } else {
+        sq.goals.push(goalName);
+      }
+      scheduleCloudSave();
+      renderSquadsBoard();
+    }
+
+    function clearLegionSquads() {
+      const leg = planState[activeLegionKey];
+      const isObj = leg.boardView === 'objects';
+      const col = getActiveBoardCollection(leg);
+      col.forEach(item => { item.members = []; item.captain = ''; });
+      scheduleCloudSave();
+      renderRosterBuilder();
+      renderSquadsBoard();
+      showToast(isObj ? 'Назначения по объектам очищены (состав легиона сохранён)' : 'Отряды очищены (состав легиона сохранён)');
+    }
+
+    function autoDistributeSquads() {
+      const leg = planState[activeLegionKey];
+      const poolKeys = [...leg.main];
+      if (poolKeys.length === 0) {
+        return showToast('Сначала добавьте бойцов в Основной состав легиона');
+      }
+
+      const sorted = poolKeys
+        .map(k => ({ key: k, p: findPlayerByKey(k) }))
+        .sort((a, b) => {
+          const sa = (Number(a.p && a.p.rallyCap) || 0) + parseFurnaceInfo(a.p && a.p.furnaceLevel).score * 500;
+          const sb = (Number(b.p && b.p.rallyCap) || 0) + parseFurnaceInfo(b.p && b.p.furnaceLevel).score * 500;
+          return sb - sa;
+        })
+        .map(x => x.key);
+
+      const isObj = leg.boardView === 'objects';
+      const col = getActiveBoardCollection(leg);
+      if (col.length === 0) return;
+
+      col.forEach(item => { item.members = []; item.captain = ''; });
+
+      if (isObj) {
+        // По объектам: сильнейшие бойцы первыми занимают приоритетные объекты по кругу, чтобы у каждого здания был капитан
+        sorted.forEach((k, idx) => {
+          col[idx % col.length].members.push(k);
+        });
+      } else if (col.length === 1) {
+        col[0].members.push(...sorted);
+      } else {
+        // По группам: ~30% сильнейших в 1-й ударный отряд, остальные равномерно по остальным группам
+        const centerQuota = Math.max(1, Math.round(sorted.length * 0.30));
+        const otherCount = col.length - 1;
+        sorted.forEach((k, idx) => {
+          if (idx < centerQuota) {
+            col[0].members.push(k);
+          } else {
+            const targetIdx = 1 + ((idx - centerQuota) % otherCount);
+            col[targetIdx].members.push(k);
+          }
+        });
+      }
+
+      col.forEach(item => {
+        if (item.members.length > 0) item.captain = item.members[0];
+      });
+
+      scheduleCloudSave();
+      renderRosterBuilder();
+      renderSquadsBoard();
+      showToast(isObj ? 'Основной состав распределён по объектам (капитаны назначены)' : 'Основной состав распределён по отрядам (капитаны назначены)');
+    }
+
+    function renderSquadsBoard() {
+      const grid = document.getElementById('squadsGrid');
+      if (!grid || !planState) return;
+
+      const tpl = MODE_TEMPLATES[currentMode];
+      const leg = planState[activeLegionKey];
+      const isObj = leg.boardView === 'objects';
+      const legTitle = activeLegionKey === 'legion1' ? 'Легион 1' : 'Легион 2';
+
+      // Обновляем шапку и вкладки
+      document.getElementById('squadBoardTitle').innerHTML = isObj
+        ? `<i class="fa-solid fa-map-pin text-amber-400"></i><span>Назначение по объектам — ${tpl.icon} ${tpl.name} (${legTitle})</span>`
+        : `<i class="fa-solid fa-chess-board text-amber-400"></i><span>Тактические отряды — ${tpl.icon} ${tpl.name} (${legTitle})</span>`;
+
+      document.getElementById('squadBoardSub').textContent = isObj
+        ? 'Назначайте бойцов конкретно на каждое здание / узел карты и выбирайте ответственного капитана (👑).'
+        : 'Распределите бойцов выбранного легиона по группам на несколько объектов, добавляйте или удаляйте отряды.';
+
+      document.getElementById('boardTabGroupsBtn').classList.toggle('active', !isObj);
+      document.getElementById('boardTabObjectsBtn').classList.toggle('active', isObj);
+      document.getElementById('boardGroupsCount').textContent = leg.squads.length;
+      document.getElementById('boardObjectsCount').textContent = leg.objects.length;
+
+      document.getElementById('addBoardBlockBtn').innerHTML = isObj
+        ? '<i class="fa-solid fa-plus"></i><span>Добавить объект</span>'
+        : '<i class="fa-solid fa-plus"></i><span>Добавить отряд</span>';
+      document.getElementById('autoDistributeBtn').innerHTML = isObj
+        ? '<i class="fa-solid fa-wand-magic-sparkles"></i><span>Авто по объектам</span>'
+        : '<i class="fa-solid fa-wand-magic-sparkles"></i><span>Авто по отрядам</span>';
+      document.getElementById('clearBoardBtn').textContent = isObj ? 'Сбросить объекты' : 'Сбросить отряды';
+
+      grid.className = isObj
+        ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4'
+        : 'grid grid-cols-1 lg:grid-cols-2 gap-4';
+
+      const activeCol = getActiveBoardCollection(leg);
+      const assignedMap = {};
+      activeCol.forEach(item => item.members.forEach(k => { assignedMap[k] = item.title; }));
+      const allLegionKeys = [...leg.main, ...leg.reserve];
+      const canDeleteBlock = activeCol.length > 1;
+
+      const buildMembersHtml = (item, safeItemId) => {
+        if (item.members.length === 0) {
+          return `<div class="py-3.5 text-center text-[11px] text-slate-500 border border-dashed border-slate-800 rounded-xl">Бойцы не назначены</div>`;
+        }
+        return `<div class="space-y-1.5">
+          ${item.members.map(pKey => {
+            const p = findPlayerByKey(pKey);
+            const safeKey = escapeJsStr(pKey);
+            const nick = p ? p.nick : pKey;
+            const fInfo = parseFurnaceInfo(p ? p.furnaceLevel : '');
+            const isCap = item.captain === pKey;
+            const isRes = leg.reserve.includes(pKey);
+
+            return `
+              <div class="px-2.5 py-1.5 rounded-xl border ${isCap ? 'bg-amber-950/35 border-amber-400/60' : 'bg-slate-950/80 border-slate-800'} flex items-center justify-between gap-2 text-xs">
+                <div class="flex items-center gap-2 min-w-0">
+                  <button type="button" onclick="toggleSquadCaptain('${safeItemId}', '${safeKey}')"
+                    title="${isCap ? 'Снять роль капитана' : 'Назначить ответственным капитаном'}"
+                    class="text-sm leading-none transition ${isCap ? 'text-amber-300 scale-110' : 'text-slate-600 hover:text-amber-300'}">
+                    👑
+                  </button>
+                  <span class="font-bold ${isCap ? 'text-amber-200' : 'text-white'} truncate">${escapeHtml(nick)}</span>
+                  ${isRes ? '<span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300">Запас</span>' : ''}
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                  <span class="text-[10px] font-mono text-slate-400">П${fInfo.num || '?'} • ${(Number(p && p.rallyCap) || 0) >= 1000 ? Math.round((Number(p.rallyCap) || 0) / 1000) + 'k' : (p && p.rallyCap) || 0}</span>
+                  <button type="button" onclick="assignPlayerToSquad('${safeKey}', '')" title="Убрать"
+                    class="text-slate-500 hover:text-rose-400 transition">
+                    <i class="fa-solid fa-xmark text-[11px]"></i>
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>`;
+      };
+
+      const buildCandidateOptions = (item) => allLegionKeys
+        .filter(k => !item.members.includes(k))
+        .sort((a, b) => (assignedMap[a] ? 1 : 0) - (assignedMap[b] ? 1 : 0))
+        .map(k => {
+          const p = findPlayerByKey(k);
+          const nick = p ? p.nick : k;
+          const resMark = leg.reserve.includes(k) ? ' [Запас]' : '';
+          const curMark = assignedMap[k] ? ` (перенести из: ${assignedMap[k]})` : '';
+          return `<option value="${escapeHtml(k)}">${escapeHtml(nick + resMark + curMark)}</option>`;
+        }).join('');
+
+      if (isObj) {
+        // ВКЛАДКА 2: ПО ОТДЕЛЬНЫМ ОБЪЕКТАМ
+        grid.innerHTML = leg.objects.map(obj => {
+          const safeId = escapeJsStr(obj.id);
+          return `
+            <div class="squad-card rounded-3xl p-4 border ${obj.accent} space-y-2.5 flex flex-col justify-between">
+              <div class="space-y-2.5">
+                <div class="flex items-start justify-between gap-2 pb-2 border-b border-slate-700/80">
+                  <div class="flex items-start gap-2 flex-1 min-w-0">
+                    <span class="text-lg shrink-0 mt-0.5">${obj.icon}</span>
+                    <div class="flex-1 min-w-0">
+                      <input type="text" value="${escapeHtml(obj.title)}" oninput="updateSquadField('${safeId}', 'title', this.value)"
+                        class="w-full bg-transparent font-extrabold text-sm text-white focus:outline-none focus:text-sky-200" />
+                      <input type="text" value="${escapeHtml(obj.phaseTag || '')}" oninput="updateSquadField('${safeId}', 'phaseTag', this.value)" placeholder="Время / сектор..."
+                        class="w-full bg-transparent font-mono text-[10px] text-slate-400 focus:text-sky-300 focus:outline-none" />
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-1 shrink-0">
+                    <span class="px-2 py-0.5 rounded-lg bg-slate-950/90 border border-slate-700 font-mono text-[11px] font-bold text-slate-200">${obj.members.length}</span>
+                    <button type="button" onclick="copySingleSquadOrder('${safeId}')"
+                      class="p-1.5 rounded-lg bg-slate-800 hover:bg-sky-600 text-[11px] text-white transition" title="Скопировать состав на объект">
+                      <i class="fa-solid fa-copy"></i>
+                    </button>
+                    ${canDeleteBlock ? `<button type="button" onclick="removeBoardBlock('${safeId}')"
+                      class="p-1.5 rounded-lg bg-slate-900 hover:bg-rose-950 text-slate-400 hover:text-rose-400 transition" title="Удалить объект">
+                      <i class="fa-solid fa-trash text-[11px]"></i>
+                    </button>` : ''}
+                  </div>
+                </div>
+
+                <input type="text" value="${escapeHtml(obj.task || '')}" oninput="updateSquadField('${safeId}', 'task', this.value)" placeholder="Короткая задача по объекту..."
+                  class="w-full bg-slate-950/75 border border-slate-800 focus:border-sky-500 rounded-xl px-2.5 py-1.5 text-[11px] text-slate-200 placeholder-slate-500 focus:outline-none" />
+
+                ${buildMembersHtml(obj, safeId)}
+              </div>
+
+              <select onchange="if(this.value){ assignPlayerToSquad(this.value, '${safeId}'); this.value=''; }"
+                class="w-full bg-slate-950/90 border border-dashed border-slate-600 hover:border-sky-400 rounded-xl px-2.5 py-1.5 text-xs text-sky-200 focus:outline-none cursor-pointer">
+                <option value="">+ Назначить бойца из ${legTitle}...</option>
+                ${buildCandidateOptions(obj)}
+              </select>
+            </div>
+          `;
+        }).join('');
+        return;
+      }
+
+      // ВКЛАДКА 1: ГРУППАМИ (ОТРЯДЫ С ДОБАВЛЕНИЕМ И УДАЛЕНИЕМ)
+      grid.innerHTML = leg.squads.map(sq => {
+        const safeSqId = escapeJsStr(sq.id);
+        const goalsChipsHtml = tpl.buildingsPool.map(bName => {
+          const active = (sq.goals || []).includes(bName);
+          return `
+            <button type="button" onclick="toggleSquadGoal('${safeSqId}', '${escapeJsStr(bName)}')"
+              class="px-2 py-0.5 rounded-lg border text-[10px] font-semibold transition ${
+                active
+                  ? 'bg-emerald-500/25 border-emerald-400/70 text-emerald-200'
+                  : 'bg-slate-950/70 hover:bg-slate-800 border-slate-800 text-slate-400 hover:text-slate-200'
+              }">${active ? '✓ ' : ''}${escapeHtml(bName)}</button>
+          `;
+        }).join('');
+
+        return `
+          <div class="squad-card rounded-3xl p-4 border ${sq.accent} space-y-3">
+            <div class="flex items-center justify-between gap-2 pb-2 border-b border-slate-700/80">
+              <div class="flex items-center gap-2 flex-1 min-w-0">
+                <span class="text-lg shrink-0">${sq.icon}</span>
+                <input type="text" value="${escapeHtml(sq.title)}" oninput="updateSquadField('${safeSqId}', 'title', this.value)"
+                  class="flex-1 bg-transparent font-extrabold text-sm text-white focus:outline-none focus:text-sky-200 min-w-0" />
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <span class="px-2 py-0.5 rounded-lg bg-slate-950/90 border border-slate-700 font-mono text-[11px] font-bold text-slate-200">${sq.members.length} чел.</span>
+                <button type="button" onclick="copySingleSquadOrder('${safeSqId}')"
+                  class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-sky-600 text-[11px] font-bold text-white transition" title="Скопировать задачу отряда в чат">
+                  <i class="fa-solid fa-copy"></i>
+                </button>
+                ${canDeleteBlock ? `<button type="button" onclick="removeBoardBlock('${safeSqId}')"
+                  class="p-1.5 rounded-lg bg-slate-900 hover:bg-rose-950 text-slate-400 hover:text-rose-400 transition" title="Удалить отряд">
+                  <i class="fa-solid fa-trash text-[11px]"></i>
+                </button>` : ''}
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <div class="text-[10px] font-mono text-slate-400 uppercase">Приоритетные точки / цели:</div>
+              <div class="flex flex-wrap gap-1">${goalsChipsHtml}</div>
+            </div>
+
+            <div>
+              <textarea rows="2" oninput="updateSquadField('${safeSqId}', 'task', this.value)" placeholder="Задача отряда..."
+                class="w-full bg-slate-950/75 border border-slate-800 focus:border-sky-500 rounded-xl p-2 text-[11px] text-slate-200 leading-snug focus:outline-none resize-none">${escapeHtml(sq.task || '')}</textarea>
+            </div>
+
+            ${buildMembersHtml(sq, safeSqId)}
+
+            <select onchange="if(this.value){ assignPlayerToSquad(this.value, '${safeSqId}'); this.value=''; }"
+              class="w-full bg-slate-950/90 border border-dashed border-slate-600 hover:border-sky-400 rounded-xl px-2.5 py-1.5 text-xs text-sky-200 focus:outline-none cursor-pointer">
+              <option value="">+ Добавить бойца из ${legTitle}...</option>
+              ${buildCandidateOptions(sq)}
+            </select>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ==================== ФАЗЫ, ПАМЯТКА И ЗАМЕТКИ ====================
+    function updatePhaseField(idx, field, val) {
+      if (!planState.phases[idx]) return;
+      planState.phases[idx][field] = val;
+      scheduleCloudSave();
+    }
+
+    function renderPhasesAndMemo() {
+      if (!planState) return;
+      const tpl = MODE_TEMPLATES[currentMode];
+      document.getElementById('phasesTitle').textContent = `План по фазам — ${tpl.icon} ${tpl.name}`;
+
+      const listEl = document.getElementById('phasesList');
+      listEl.innerHTML = (planState.phases || []).map((ph, idx) => `
+        <div class="bg-slate-950/75 border border-slate-800 rounded-2xl p-3 space-y-1.5">
+          <div class="flex flex-wrap items-center gap-2">
+            <input type="text" value="${escapeHtml(ph.time || '')}" oninput="updatePhaseField(${idx}, 'time', this.value)"
+              class="w-32 bg-slate-900 border border-sky-500/40 rounded-lg px-2 py-0.5 font-mono text-[11px] font-bold text-sky-300 focus:outline-none" />
+            <input type="text" value="${escapeHtml(ph.title || '')}" oninput="updatePhaseField(${idx}, 'title', this.value)"
+              class="flex-1 bg-transparent font-bold text-xs text-white focus:outline-none" />
+          </div>
+          <textarea rows="2" oninput="updatePhaseField(${idx}, 'text', this.value)"
+            class="w-full bg-slate-900/70 border border-slate-800 focus:border-slate-600 rounded-xl p-2 text-[11px] text-slate-300 focus:outline-none resize-none">${escapeHtml(ph.text || '')}</textarea>
+        </div>
+      `).join('');
+
+      document.getElementById('eventMemoInput').value = planState.memo || '';
+    }
+
+    function updateEventMemo(val) {
+      planState.memo = val;
+      scheduleCloudSave();
+    }
+
+    function restoreDefaultMemo() {
+      if (!confirm('Восстановить стандартную памятку для этого ивента?')) return;
+      planState.memo = MODE_TEMPLATES[currentMode].memo;
+      document.getElementById('eventMemoInput').value = planState.memo;
+      scheduleCloudSave();
+      showToast('Памятка восстановлена');
+    }
+
+    function toggleNotesBlock() {
+      planState.notesOpen = !planState.notesOpen;
+      scheduleCloudSave();
+      renderNotesUI();
+    }
+
+    function updateNotesText(val) {
+      planState.notes = val;
+      scheduleCloudSave();
+      updateNotesMeta();
+    }
+
+    function updateNotesMeta() {
+      const txt = String((planState && planState.notes) || '');
+      document.getElementById('notesStatusBadge').classList.toggle('hidden', txt.trim().length === 0);
+      document.getElementById('notesCharCount').textContent = `${txt.length} симв.`;
+    }
+
+    function renderNotesUI() {
+      if (!planState) return;
+      document.getElementById('staffNotesInput').value = planState.notes || '';
+      document.getElementById('notesBody').classList.toggle('hidden', !planState.notesOpen);
+      document.getElementById('notesChevron').style.transform = planState.notesOpen ? 'rotate(180deg)' : 'rotate(0deg)';
+      updateNotesMeta();
+    }
+
+    function clearNotesText() {
+      if (!planState.notes) return;
+      if (!confirm('Очистить тактические заметки?')) return;
+      planState.notes = '';
+      scheduleCloudSave();
+      renderNotesUI();
+      showToast('Заметки очищены');
+    }
+
+    // ==================== ГЕНЕРАТОРЫ ПРИКАЗОВ В ИГРОВОЙ ЧАТ ====================
+    function nickByKey(pKey) {
+      const p = findPlayerByKey(pKey);
+      return p ? p.nick : pKey;
+    }
+
+    function copyLegionsRegistrationOrder() {
+      const tpl = MODE_TEMPLATES[currentMode];
+      const formatLeg = (title, leg) => {
+        const lines = [`${title} (${leg.time || 'время уточняется'})${leg.enemy ? ' • Соперник: ' + leg.enemy : ''}`];
+        lines.push(`Основа (${leg.main.length}/${MAX_MAIN}): ${leg.main.length ? leg.main.map(nickByKey).join(', ') : 'не набрана'}`);
+        if (leg.reserve.length > 0) {
+          lines.push(`Запас (${leg.reserve.length}/${MAX_RESERVE}): ${leg.reserve.map(nickByKey).join(', ')}`);
+        }
+        return lines.join('\n');
+      };
+
+      const parts = [
+        `${tpl.icon} АЛЬЯНС «ГАРМОНИЯ» (${currentAlliance}) — ${tpl.name.toUpperCase()}`,
+        '========================================',
+        formatLeg('⚔️ ЛЕГИОН 1', planState.legion1),
+        '',
+        formatLeg('🛡️ ЛЕГИОН 2', planState.legion2),
+        '========================================',
+        'Проверьте свой легион и время! За 15 минут до старта уберите марши домой и очистите лазарет.'
+      ];
+
+      copyText(parts.join('\n'), 'Списки Легионов 1 и 2 скопированы в буфер!');
+    }
+
+    function formatSquadOrderText(item, leg, isObjectItem = false) {
+      const tagPart = (isObjectItem && item.phaseTag) ? ` [${item.phaseTag}]` : '';
+      const lines = [`${item.icon} ${item.title.toUpperCase()}${tagPart}`];
+      if (!isObjectItem && item.goals && item.goals.length > 0) lines.push(`🎯 Цели: ${item.goals.join(', ')}`);
+      if (item.task) lines.push(`📋 Задача: ${item.task}`);
+      if (item.captain) lines.push(`👑 Капитан: ${nickByKey(item.captain)}`);
+      const others = item.members.filter(k => k !== item.captain).map(k => {
+        const resTag = leg.reserve.includes(k) ? ' (зап.)' : '';
+        return nickByKey(k) + resTag;
+      });
+      lines.push(`👥 Состав: ${others.length > 0 ? others.join(', ') : (item.captain ? 'только капитан' : 'не назначен')}`);
+      return lines.join('\n');
+    }
+
+    function copySingleSquadOrder(itemId) {
+      const leg = planState[activeLegionKey];
+      const isObj = leg.boardView === 'objects';
+      const col = getActiveBoardCollection(leg);
+      const item = col.find(s => s.id === itemId);
+      if (!item) return;
+      copyText(formatSquadOrderText(item, leg, isObj), `Приказ для «${item.title}» скопирован!`);
+    }
+
+    function copyActiveLegionBattleOrder() {
+      const tpl = MODE_TEMPLATES[currentMode];
+      const leg = planState[activeLegionKey];
+      const isObj = leg.boardView === 'objects';
+      const col = getActiveBoardCollection(leg);
+      const legTitle = activeLegionKey === 'legion1' ? 'ЛЕГИОН 1' : 'ЛЕГИОН 2';
+
+      // Во вкладке «По объектам» копируем в первую очередь те здания, куда назначены бойцы (если пусто — все)
+      const filledItems = col.filter(item => item.members.length > 0);
+      const listToPrint = (isObj && filledItems.length > 0) ? filledItems : col;
+
+      const parts = [
+        `${tpl.icon} ${tpl.name.toUpperCase()} — ${legTitle} (${leg.time || '—'})`,
+        isObj ? '📍 Формат: распределение по объектам' : '👥 Формат: распределение по группам',
+        leg.enemy ? `🎯 Соперник: ${leg.enemy}` : null,
+        '----------------------------------------',
+        ...listToPrint.map(item => formatSquadOrderText(item, leg, isObj) + '\n')
+      ].filter(Boolean);
+
+      copyText(parts.join('\n').trim(), `Боевой приказ (${legTitle}) скопирован!`);
+    }
+
+    function copyPhasesOrder() {
+      const tpl = MODE_TEMPLATES[currentMode];
+      const lines = [`⏱️ ПЛАН ПО ФАЗАМ — ${tpl.icon} ${tpl.name.toUpperCase()}`];
+      (planState.phases || []).forEach(ph => {
+        lines.push(`• [${ph.time}] ${ph.title}: ${ph.text}`);
+      });
+      copyText(lines.join('\n'), 'План по фазам скопирован!');
+    }
+
+    function copyMemoText() {
+      const txt = String(planState.memo || '').trim();
+      if (!txt) return showToast('Памятка пустая');
+      copyText(txt, 'Памятка бойцам скопирована!');
+    }
+
+    function copyNotesText() {
+      const txt = String(planState.notes || '').trim();
+      if (!txt) return showToast('Заметки пустые');
+      copyText(txt, 'Заметки скопированы!');
+    }
+
+    function copyText(txt, msg) {
+      navigator.clipboard.writeText(txt);
+      showToast(msg);
+    }
+
+    function showToast(msg) {
+      const el = document.getElementById('toastBanner');
+      el.textContent = msg;
+      el.classList.remove('opacity-0');
+      setTimeout(() => el.classList.add('opacity-0'), 2500);
+    }
+
+    function renderAll() {
+      renderLegionCards();
+      renderRosterBuilder();
+      renderSquadsBoard();
+      renderPhasesAndMemo();
+      renderNotesUI();
+    }
+
+    // ==================== АВТОРИЗАЦИЯ И ЗАПУСК ====================
+    function applyUserAndPlayers(user, playersList) {
+      if (!user || !user.isOfficer) {
+        alert('Доступ в Штаб Рейдов открыт только Владельцу и Офицерам!');
+        window.location.href = '../index.html';
+        return;
+      }
+
+      currentUser = user;
+      if (Array.isArray(playersList) && playersList.length > 0) {
+        allPlayers = playersList;
+      }
+
+      const roleLabel = user.role || 'Офицер';
+      document.getElementById('headerUserNick').textContent = `${user.nick} (${user.alliance || 'Основа'} • ${roleLabel})`;
+      const badge = document.getElementById('userRoleBadge');
+      badge.textContent = roleLabel;
+      if (user.isOwner) {
+        badge.className = 'text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40';
+      }
+
+      if (!user.isOwner) {
+        currentAlliance = user.alliance || 'Основа';
+        document.getElementById(currentAlliance === 'Основа' ? 'fAllianceAcad' : 'fAllianceMain').classList.add('hidden');
+      }
+      document.getElementById('fAllianceMain').classList.toggle('active', currentAlliance === 'Основа');
+      document.getElementById('fAllianceAcad').classList.toggle('active', currentAlliance === 'Академия');
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      const code = getPasscode();
+      if (!code) {
+        window.location.href = '../index.html';
+        return;
+      }
+
+      // Быстрый старт из кэша сессии
+      try {
+        const cached = JSON.parse(sessionStorage.getItem('harmony_session_cache') || 'null');
+        if (cached && cached.user) {
+          applyUserAndPlayers(cached.user, cached.allPlayers || []);
+        }
+      } catch (e) {}
+
+      // Инициализация через RaidCore + актуальный sync базы игроков
+      if (window.RaidCore && typeof RaidCore.init === 'function') {
+        RaidCore.init('events/liteyka.html', (core) => {
+          const playersFromCore = core.allPlayers || core.players || allPlayers;
+          applyUserAndPlayers(core.user, playersFromCore);
+          pullFromCloud(false);
+        });
+      }
+
+      // Подстраховка: обновляем свежий список игроков с сервера
+      try {
+        const syncRes = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'sync', passcode: code, page: 'events/liteyka.html', userAgent: navigator.userAgent })
+        }).then(r => r.json());
+
+        if (syncRes.ok && syncRes.user) {
+          sessionStorage.setItem('harmony_session_cache', JSON.stringify(syncRes));
+          applyUserAndPlayers(syncRes.user, syncRes.allPlayers || []);
+          if (!planState) await pullFromCloud(false);
+          else renderAll();
+        }
+      } catch (e) {}
+    });
+  </script>
+</body>
+</html>
