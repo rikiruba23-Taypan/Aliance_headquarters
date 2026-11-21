@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Альянс «Гармония» — ИИ-Советник (Белая мгла)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+          colors: { slate: { 850: '#141c2b', 925: '#0b111e', 950: '#060a12' } }
+        }
+      }
+    };
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background-color: #060a12; color: #f1f5f9; }
+    .thin-scroll::-webkit-scrollbar { width: 5px; }
+    .thin-scroll::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.45); border-radius: 99px; }
+    .msg-prose strong { color: #fde68a; font-weight: 700; }
+    .msg-prose ul { list-style: disc; padding-left: 1.25rem; margin: 0.35rem 0; }
+    .msg-prose li { margin: 0.2rem 0; }
+  </style>
+</head>
+<body class="h-screen flex flex-col bg-slate-950 text-slate-100">
+
+  <!-- ШАПКА -->
+  <header class="shrink-0 bg-slate-925/95 backdrop-blur-md border-b border-slate-800 px-4 py-2.5 flex flex-wrap items-center justify-between gap-2">
+    <div class="flex items-center gap-3">
+      <a href="index.html" class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold text-sky-300 flex items-center gap-1.5 transition">
+        <i class="fa-solid fa-arrow-left"></i><span>На портал</span>
+      </a>
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="font-extrabold text-sm text-white">🤖 ИИ-СОВЕТНИК</span>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30">Белая мгла</span>
+        </div>
+        <div id="userInfoLine" class="text-[10px] text-slate-400">Авторизация...</div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2 text-xs">
+      <div id="limitBadge" class="px-3 py-1 rounded-xl bg-slate-900 border border-slate-700 font-mono text-[11px] text-amber-300">
+        Лимит: —
+      </div>
+      <button type="button" onclick="clearChat()" class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-rose-300 text-xs font-semibold transition" title="Очистить историю чата">
+        <i class="fa-solid fa-trash-can"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ОБЛАСТЬ ЧАТА -->
+  <main class="flex-1 min-h-0 flex flex-col max-w-4xl w-full mx-auto px-3 sm:px-4 py-3">
+    <!-- Быстрые тактические шаблоны -->
+    <div class="shrink-0 flex flex-wrap gap-1.5 pb-3">
+      <button type="button" onclick="usePrompt('У противника в гарнизоне соотношение 50/20/30 (пехота/копейщики/стрелки). Каким соотношением и какими героями лучше бить сбором?')"
+        class="px-2.5 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-sky-500/50 text-[11px] text-sky-200 transition">
+        ⚔️ Контр 50/20/30
+      </button>
+      <button type="button" onclick="usePrompt('Какое оптимальное соотношение войск и каких героев ставить в гарнизон Солнечного замка?')"
+        class="px-2.5 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-amber-500/50 text-[11px] text-amber-200 transition">
+        🏰 Гарнизон Замка
+      </button>
+      <button type="button" onclick="usePrompt('Какое лучшее соотношение войск и герои для максимального урона на Охоте на медведя?')"
+        class="px-2.5 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/50 text-[11px] text-emerald-200 transition">
+        🐻 Охота на медведя
+      </button>
+      <button type="button" onclick="usePrompt('Объясни коротко механику первых навыков героев-присоединяющихся в сборе и в гарнизоне.')"
+        class="px-2.5 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-purple-500/50 text-[11px] text-purple-200 transition">
+        🦸 Герои в сбор/гарнизон
+      </button>
+    </div>
+
+    <!-- Сообщения -->
+    <div id="chatMessages" class="flex-1 overflow-y-auto thin-scroll space-y-3 pr-1 pb-2"></div>
+
+    <!-- Поле ввода -->
+    <form onsubmit="event.preventDefault(); sendMessage();" class="shrink-0 pt-2 border-t border-slate-800/80">
+      <div class="flex items-end gap-2 bg-slate-900 border border-slate-700 focus-within:border-sky-500 rounded-2xl p-2 transition">
+        <textarea id="chatInput" rows="2" placeholder="Спросите про соотношение войск, героев, Замок или Медведя... (Enter — отправить)"
+          onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); sendMessage(); }"
+          class="flex-1 bg-transparent text-xs sm:text-sm text-white placeholder-slate-500 px-2 py-1 focus:outline-none resize-none max-h-32"></textarea>
+        <button id="sendBtn" type="submit"
+          class="shrink-0 px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 disabled:opacity-40 text-xs font-extrabold text-white shadow transition flex items-center gap-1.5">
+          <i class="fa-solid fa-paper-plane"></i><span class="hidden sm:inline">Отправить</span>
+        </button>
+      </div>
+    </form>
+  </main>
+
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwsX-LADURoQu_MsQ2XJVsSPsHAgMebI4_QDXmpPpi3OcpW3ScwPep9ukQBFJfDMrjQ7g/exec';
+    let currentUser = null;
+    let chatHistory = [];
+    let isSending = false;
+
+    function getPasscode() {
+      return sessionStorage.getItem('harmony_passcode') || localStorage.getItem('harmony_passcode') || '';
+    }
+
+    function escapeHtml(str) {
+      return String(str || '').replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>');
+    }
+
+    function formatAiText(text) {
+      let html = escapeHtml(text);
+      html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      html = html.replace(/^\s*[\*\-]\s+(.+)$/gm, '<li>$1</li>');
+      html = html.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
+      html = html.replace(/\n/g, '<br>');
+      return html;
+    }
+
+    function renderChat() {
+      const box = document.getElementById('chatMessages');
+      if (chatHistory.length === 0) {
+        box.innerHTML = `
+          <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 text-xs text-slate-300 space-y-1.5">
+            <div class="font-bold text-white text-sm">👋 Привет! Я тактический ИИ-советник по «Белой мгле. Выживание».</div>
+            <p class="text-slate-400">Напишите соотношение войск противника, вопрос по героям, сбору, гарнизону или событиям — подскажу оптимальный вариант.</p>
+          </div>
+        `;
+        return;
+      }
+
+      box.innerHTML = chatHistory.map(m => {
+        const isUser = m.role === 'user';
+        return `
+          <div class="flex ${isUser ? 'justify-end' : 'justify-start'}">
+            <div class="max-w-[88%] sm:max-w-[78%] rounded-2xl px-3.5 py-2.5 text-xs sm:text-sm leading-relaxed ${
+              isUser
+                ? 'bg-sky-600 text-white rounded-br-sm'
+                : 'bg-slate-900 border border-slate-800 text-slate-100 rounded-bl-sm msg-prose'
+            }">
+              ${isUser ? escapeHtml(m.text).replace(/\n/g, '<br>') : formatAiText(m.text)}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function usePrompt(txt) {
+      const inp = document.getElementById('chatInput');
+      inp.value = txt;
+      inp.focus();
+    }
+
+    function clearChat() {
+      chatHistory = [];
+      sessionStorage.removeItem('harmony_ai_chat');
+      renderChat();
+    }
+
+    function updateLimitBadge(val) {
+      const el = document.getElementById('limitBadge');
+      if (val === '∞') {
+        el.textContent = 'Лимит: ∞ (Офицер)';
+        el.className = 'px-3 py-1 rounded-xl bg-amber-950/60 border border-amber-500/40 font-mono text-[11px] text-amber-300';
+      } else {
+        el.textContent = `Осталось сегодня: ${val} / 10`;
+        el.className = 'px-3 py-1 rounded-xl bg-slate-900 border border-slate-700 font-mono text-[11px] text-sky-300';
+      }
+    }
+
+    async function sendMessage() {
+      if (isSending) return;
+      const inp = document.getElementById('chatInput');
+      const text = inp.value.trim();
+      if (!text) return;
+
+      isSending = true;
+      document.getElementById('sendBtn').disabled = true;
+      inp.value = '';
+
+      const historyToSend = chatHistory.slice(-6);
+      chatHistory.push({ role: 'user', text });
+      renderChat();
+
+      // Индикатор набора
+      const box = document.getElementById('chatMessages');
+      const loader = document.createElement('div');
+      loader.id = 'aiLoader';
+      loader.className = 'flex justify-start';
+      loader.innerHTML = `<div class="bg-slate-900 border border-slate-800 rounded-2xl px-3.5 py-2.5 text-xs text-sky-300 flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin"></i><span>Анализирую тактику...</span></div>`;
+      box.appendChild(loader);
+      box.scrollTop = box.scrollHeight;
+
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'ai_chat',
+            passcode: getPasscode(),
+            message: text,
+            history: historyToSend,
+            page: 'ai.html'
+          })
+        }).then(r => r.json());
+
+        loader.remove();
+
+        if (res.ok && res.reply) {
+          chatHistory.push({ role: 'model', text: res.reply });
+          sessionStorage.setItem('harmony_ai_chat', JSON.stringify(chatHistory.slice(-20)));
+          if (res.remaining !== undefined) updateLimitBadge(res.remaining);
+        } else {
+          chatHistory.push({ role: 'model', text: '⚠️ ' + (res.error || 'Не удалось получить ответ от ИИ.') });
+          if (res.remaining !== undefined) updateLimitBadge(res.remaining);
+        }
+      } catch (err) {
+        loader.remove();
+        chatHistory.push({ role: 'model', text: '⚠️ Ошибка связи с сервером: ' + err.message });
+      } finally {
+        isSending = false;
+        document.getElementById('sendBtn').disabled = false;
+        renderChat();
+        inp.focus();
+      }
+    }
+
+    function applySession(data) {
+      if (!data || !data.user) { window.location.href = 'index.html'; return; }
+      currentUser = data.user;
+      document.getElementById('userInfoLine').textContent = `${currentUser.nick} (${currentUser.alliance || 'Основа'} • ${currentUser.role || 'Боец'})`;
+      updateLimitBadge((currentUser.isOfficer || currentUser.isOwner) ? '∞' : '10');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedChat = sessionStorage.getItem('harmony_ai_chat');
+      if (savedChat) {
+        try { chatHistory = JSON.parse(savedChat) || []; } catch (e) {}
+      }
+      renderChat();
+
+      const code = getPasscode();
+      if (!code) { window.location.href = 'index.html'; return; }
+
+      const cached = sessionStorage.getItem('harmony_session_cache');
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (parsed && parsed.user) applySession(parsed);
+        } catch (e) {}
+      }
+
+      fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'sync', passcode: code, page: 'ai.html', userAgent: navigator.userAgent })
+      })
+        .then(r => r.json())
+        .then(res => {
+          if (res.ok) {
+            sessionStorage.setItem('harmony_session_cache', JSON.stringify(res));
+            applySession(res);
+          } else {
+            window.location.href = 'index.html';
+          }
+        });
+    });
+  </script>
+</body>
+</html>
