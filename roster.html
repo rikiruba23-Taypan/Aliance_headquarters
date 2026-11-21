@@ -389,8 +389,14 @@
             <input id="editNick" type="text" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white" />
           </div>
           <div>
-            <label class="block text-slate-400 mb-1">Неизменный ID игрока</label>
-            <input id="editPlayerId" type="text" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono text-amber-300" />
+            <label class="block text-slate-400 mb-1">
+              Неизменный ID игрока <span class="text-[10px] text-slate-500">(только просмотр)</span>
+            </label>
+            <div class="relative flex items-center">
+              <input id="editPlayerId" type="text" readonly tabindex="-1" placeholder="Не назначен"
+                class="w-full bg-slate-950/90 border border-slate-800 rounded-xl px-3 py-2 pr-8 font-mono text-amber-300/90 cursor-not-allowed select-all focus:outline-none" />
+              <i class="fa-solid fa-lock absolute right-3 text-slate-600 text-[11px]" title="ID защищён от изменения"></i>
+            </div>
           </div>
         </div>
 
@@ -1148,7 +1154,7 @@
 
       const cardPayload = {
         nick: document.getElementById('editNick').value.trim(),
-        playerId: document.getElementById('editPlayerId').value.trim(),
+        playerId: origId,
         alliance: document.getElementById('editAlliance').value,
         role: document.getElementById('editRole').value,
         status: document.getElementById('editStatus').value,
