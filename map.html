@@ -970,28 +970,41 @@
       return { id, type, x, y, size: OBJECT_SIZES[type] || 1, ...extra };
     }
 
-    function getDefaultWorldState() {
-      // Улей альянса (дубль стяга X:744 Y:440 автоматически исключён)
+    function getDefaultWorldState(alliance = currentAlliance) {
+      // Общие объекты штата: Солнечный замок и 4 орудийные башни в центре
+      const commonCastleItems = [
+        makeWorldObj('init_castle', 'castle', 597, 597),
+        makeWorldObj('init_turret_n', 'turret', 604, 604, { label: 'Северная орудийная башня' }),
+        makeWorldObj('init_turret_w', 'turret', 594, 604, { label: 'Западная орудийная башня' }),
+        makeWorldObj('init_turret_s', 'turret', 594, 594, { label: 'Южная орудийная башня' }),
+        makeWorldObj('init_turret_e', 'turret', 604, 594, { label: 'Восточная орудийная башня' })
+      ];
+
+      // Для Академии при первом открытии не подставляем постройки улья Основы
+      if (alliance !== 'Основа') {
+        return {
+          items: commonCastleItems,
+          zones: [],
+          bookmarks: [
+            { id: 'bm_castle', icon: '🏰', name: 'Замок', x: 600, y: 600, scale: 0.65, pinned: true }
+          ]
+        };
+      }
+
+      // Улей Основы (дубль стяга X:744 Y:440 автоматически исключён)
       const hiveBanners = [
         [747, 451], [744, 447], [744, 440], [751, 454], [751, 433],
         [766, 447], [766, 440], [758, 433], [765, 433], [772, 438]
       ];
 
       const items = [
-        // Постоянные постройки Улья
         makeWorldObj('init_bear1', 'bear1', 749, 446),
         makeWorldObj('init_bear2', 'bear2', 759, 438),
         makeWorldObj('init_hq', 'hq', 754, 443),
         makeWorldObj('init_statue_champ', 'statue', 755, 456, { subType: 'champ_silver' }),
         makeWorldObj('init_statue_conq', 'statue', 755, 454, { subType: 'conqueror' }),
         ...hiveBanners.map((b, idx) => makeWorldObj(`init_banner_${idx + 1}`, 'banner', b[0], b[1])),
-
-        // Солнечный замок и 4 орудийные башни в центре штата
-        makeWorldObj('init_castle', 'castle', 597, 597),
-        makeWorldObj('init_turret_n', 'turret', 604, 604, { label: 'Северная орудийная башня' }),
-        makeWorldObj('init_turret_w', 'turret', 594, 604, { label: 'Западная орудийная башня' }),
-        makeWorldObj('init_turret_s', 'turret', 594, 594, { label: 'Южная орудийная башня' }),
-        makeWorldObj('init_turret_e', 'turret', 604, 594, { label: 'Восточная орудийная башня' })
+        ...commonCastleItems
       ];
 
       const bookmarks = [
@@ -3459,8 +3472,43 @@
       allPlayers = fromMap;
     }
 
+    let mapLoadSeq = 0;
+    let pendingSaveJob = null;
+
+    async function flushPendingCloudSave() {
+      if (saveTimer) {
+        clearTimeout(saveTimer);
+        saveTimer = null;
+      }
+      if (!pendingSaveJob) return;
+      const job = pendingSaveJob;
+      pendingSaveJob = null;
+
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'save_event_config',
+            passcode: getPasscode(),
+            configKey: job.key,
+            config: job.payloadObj
+          })
+        }).then(r => r.json());
+
+        if (getMapConfigKey() === job.key) {
+          if (res.ok) setCloudStatus('saved', `Сохранено (${res.updatedAt.slice(11, 16)})`);
+          else setCloudStatus('error', 'Ошибка сохранения');
+        }
+      } catch (e) {
+        if (getMapConfigKey() === job.key) setCloudStatus('error', 'Нет связи');
+      }
+    }
+
     async function switchAlliance(alliance) {
       if (currentUser && !currentUser.isOwner && alliance !== currentUser.alliance) return;
+      if (pendingSaveJob) await flushPendingCloudSave();
+
       currentAlliance = alliance;
       document.getElementById('mFilterMain').classList.toggle('active', alliance === 'Основа');
       document.getElementById('mFilterAcad').classList.toggle('active', alliance === 'Академия');
@@ -3476,6 +3524,7 @@
     }
 
     async function loadCloudMap() {
+      const reqSeq = ++mapLoadSeq;
       const key = getMapConfigKey();
       setCloudStatus('saving', 'Загрузка...');
 
@@ -3505,6 +3554,9 @@
           body: JSON.stringify({ action: 'get_event_config', passcode: getPasscode(), configKey: key })
         }).then(r => r.json());
 
+        // Игнорируем устаревший ответ, если офицер уже переключил альянс
+        if (reqSeq !== mapLoadSeq || getMapConfigKey() !== key) return;
+
         if (res.ok && res.config && Array.isArray(res.config.items)) {
           applyLoadedWorldPayload(res.config);
           localStorage.setItem('harmony_' + key, JSON.stringify({
@@ -3524,8 +3576,11 @@
           setCloudStatus('saved', 'Шаблон штата');
         }
       } catch (e) {
+        if (reqSeq !== mapLoadSeq || getMapConfigKey() !== key) return;
         setCloudStatus('error', 'Локальный режим');
       }
+
+      if (reqSeq !== mapLoadSeq || getMapConfigKey() !== key) return;
 
       // В режиме просмотра автоматически фокусируем камеру на городе текущего бойца
       if (isReadOnly && myPlayerKey) {
@@ -3545,45 +3600,31 @@
     function scheduleCloudSave() {
       if (isReadOnly) return;
       const key = getMapConfigKey();
-      const payloadObj = {
+      const payloadObj = JSON.parse(JSON.stringify({
         items: mapItems,
         zones: mapZones,
         bookmarks: mapBookmarks
-      };
+      }));
       localStorage.setItem('harmony_' + key, JSON.stringify(payloadObj));
       setCloudStatus('saving', 'Сохранение...');
 
       if (saveTimer) clearTimeout(saveTimer);
-      saveTimer = setTimeout(async () => {
-        try {
-          const res = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({
-              action: 'save_event_config',
-              passcode: getPasscode(),
-              configKey: key,
-              config: payloadObj
-            })
-          }).then(r => r.json());
-          if (res.ok) setCloudStatus('saved', `Сохранено (${res.updatedAt.slice(11, 16)})`);
-          else setCloudStatus('error', 'Ошибка сохранения');
-        } catch (e) {
-          setCloudStatus('error', 'Нет связи');
-        }
+      pendingSaveJob = { key, payloadObj };
+      saveTimer = setTimeout(() => {
+        flushPendingCloudSave();
       }, 900);
     }
 
     function clearMapConfirm() {
       if (isReadOnly) return;
-      if (!confirm('Сбросить карту штата к исходному шаблону (Улей + Солнечный замок и башни в реальных координатах)? Все расставленные топки, зоны и пользовательские области будут очищены.')) return;
+      if (!confirm(`Сбросить карту альянса «${currentAlliance}» к исходному шаблону? Все расставленные топки, зоны и пользовательские области этого альянса будут очищены.`)) return;
 
       pushUndoState();
-      const def = getDefaultWorldState();
+      const def = getDefaultWorldState(currentAlliance);
       mapItems = def.items;
       mapZones = def.zones;
       mapBookmarks = def.bookmarks;
-      activeBookmarkId = 'bm_hive';
+      activeBookmarkId = def.bookmarks[0]?.id || '';
       movedCitiesMap = {};
       updateBatchNotifyBadge();
       cancelPendingSwap();
@@ -3595,7 +3636,7 @@
       renderEntities(true);
       scheduleMapRender();
       scheduleCloudSave();
-      showToast('Карта сброшена к исходному шаблону штата');
+      showToast(`Карта «${currentAlliance}» сброшена к шаблону`);
     }
 
     function toggleMapTheme() {
@@ -4308,7 +4349,13 @@
         document.getElementById(currentAlliance === 'Основа' ? 'mFilterAcad' : 'mFilterMain').classList.add('hidden');
       }
 
-      switchAlliance(currentAlliance);
+      if (!window.__mapSessionBooted) {
+        window.__mapSessionBooted = true;
+        switchAlliance(currentAlliance);
+      } else {
+        renderPlayersSidebar();
+        renderEntities(true);
+      }
     }
 
     window.addEventListener('DOMContentLoaded', () => {
