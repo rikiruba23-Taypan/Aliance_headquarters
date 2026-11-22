@@ -467,10 +467,14 @@
           <span class="font-bold text-white">Топки игроков (2×2)</span>
           <span id="placedCounter" class="font-mono text-[11px] text-emerald-400">0 / 0</span>
         </div>
-        <div class="relative">
-          <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-500 text-[11px]"></i>
-          <input id="playerSearchInput" type="text" oninput="renderPlayersSidebar()" placeholder="Поиск игрока по нику..."
-            class="w-full bg-slate-900 border border-slate-700 focus:border-sky-500 rounded-xl pl-8 pr-2.5 py-1.5 text-xs text-white focus:outline-none" />
+        <div class="relative flex items-center">
+          <i class="fa-solid fa-magnifying-glass absolute left-2.5 text-sky-400 text-[11px] pointer-events-none"></i>
+          <input id="playerSearchInput" type="text" autocomplete="off" oninput="renderPlayersSidebar()" placeholder="Поиск игрока по нику или ID..."
+            class="w-full bg-slate-900 border border-sky-500/50 focus:border-sky-400 rounded-xl pl-8 pr-7 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none" />
+          <button id="playerSearchClearBtn" type="button" onclick="clearPlayerSearch()" title="Очистить поиск игрока"
+            class="hidden absolute right-2 text-slate-400 hover:text-rose-400 px-0.5 text-xs">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
         </div>
         <div class="grid grid-cols-2 gap-1.5">
           <select id="placedFilterSelect" onchange="renderPlayersSidebar()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-slate-200">
@@ -499,18 +503,18 @@
           <option value="nick">Сорт: Ник А–Я</option>
         </select>
 
-        <!-- Фильтр героев с живым поиском -->
+        <!-- Фильтр игроков по герою -->
         <div id="heroPickerWrapper" class="relative">
           <input type="hidden" id="heroFilterSelect" value="" />
           <div class="relative flex items-center">
-            <i class="fa-solid fa-magnifying-glass absolute left-2.5 text-amber-400/70 text-[10px] pointer-events-none"></i>
+            <i class="fa-solid fa-filter absolute left-2.5 text-slate-500 text-[10px] pointer-events-none"></i>
             <input id="heroSearchBox" type="text" autocomplete="off"
               onfocus="this.select(); openHeroDropdown();"
               onclick="openHeroDropdown()"
               oninput="onHeroSearchInput(this.value)"
-              placeholder="🦸 Поиск героя (имя или G1..G17)..."
-              class="w-full bg-slate-900 border border-amber-500/40 focus:border-amber-400 rounded-lg pl-7 pr-7 py-1 text-[11px] text-amber-200 placeholder-slate-400 font-semibold focus:outline-none" />
-            <button id="heroClearBtn" type="button" onclick="clearHeroFilter(event)" title="Сбросить героя"
+              placeholder="Фильтр по герою (выбрать из списка)..."
+              class="w-full bg-slate-900/80 border border-slate-700 focus:border-amber-400 rounded-lg pl-7 pr-7 py-1 text-[11px] text-amber-200 placeholder-slate-500 font-medium focus:outline-none" />
+            <button id="heroClearBtn" type="button" onclick="clearHeroFilter(event)" title="Сбросить фильтр по герою"
               class="hidden absolute right-1.5 text-slate-400 hover:text-rose-400 px-1 text-xs">
               <i class="fa-solid fa-xmark"></i>
             </button>
@@ -1021,7 +1025,7 @@
     }
 
     function getPlayerKey(p) {
-      return p.playerId ? `ID:${p.playerId}` : `NICK:${(p.nick || '').toLowerCase()}`;
+      return p.playerId ? `ID:${p.playerId}` : `NICK:${String(p.nick || '').toLowerCase()}`;
     }
 
     function getFilteredPlayers() {
@@ -3288,9 +3292,31 @@
       renderPlayersSidebar();
     }
 
+    function normalizeSearchStr(val) {
+      return String(val || '')
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/ё/g, 'е');
+    }
+
+    function clearPlayerSearch() {
+      const inp = document.getElementById('playerSearchInput');
+      if (inp) {
+        inp.value = '';
+        inp.focus();
+      }
+      renderPlayersSidebar();
+    }
+
     function renderPlayersSidebar() {
       const container = document.getElementById('playersSidebarList');
-      const q = (document.getElementById('playerSearchInput').value || '').trim().toLowerCase();
+      const searchInp = document.getElementById('playerSearchInput');
+      const rawQuery = (searchInp ? searchInp.value : '').trim();
+      const q = normalizeSearchStr(rawQuery);
+      const clearBtn = document.getElementById('playerSearchClearBtn');
+      if (clearBtn) clearBtn.classList.toggle('hidden', rawQuery.length === 0);
+
       const filter = document.getElementById('placedFilterSelect').value;
       const trait = document.getElementById('traitFilterSelect')?.value || 'all';
       const sortBy = document.getElementById('sortPlayersSelect').value;
@@ -3308,7 +3334,11 @@
         const isPlaced = placedMap.has(pKey);
         if (filter === 'placed' && !isPlaced) return false;
         if (filter === 'unplaced' && isPlaced) return false;
-        if (q && !(p.nick || '').toLowerCase().includes(q)) return false;
+        if (q) {
+          const normNick = normalizeSearchStr(p.nick);
+          const normId = normalizeSearchStr(p.playerId);
+          if (!normNick.includes(q) && !normId.includes(q)) return false;
+        }
 
         if (trait === 'crystal' && !parseFurnaceInfo(p.furnaceLevel).isCrystal) return false;
         if (trait === 't10' && parseTroopTierInfo(p.troopTier).num < 10) return false;
@@ -3327,7 +3357,7 @@
         if (sortBy === 'tier') return parseTroopTierInfo(b.troopTier).score - parseTroopTierInfo(a.troopTier).score;
         if (sortBy === 'topEq') return calcTopEqScore(b) - calcTopEqScore(a);
         if (sortBy === 'governor') return calcGovernorInfo(b).score - calcGovernorInfo(a).score;
-        if (sortBy === 'nick') return (a.nick || '').localeCompare(b.nick || '', 'ru');
+        if (sortBy === 'nick') return String(a.nick || '').localeCompare(String(b.nick || ''), 'ru');
         return parseFurnaceInfo(b.furnaceLevel).score - parseFurnaceInfo(a.furnaceLevel).score;
       });
 
