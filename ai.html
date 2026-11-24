@@ -173,7 +173,7 @@
               <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-70"></span>
               <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
             </span>
-            <span class="font-extrabold text-xs sm:text-sm text-white tracking-tight">🤖 ИИ-СОВЕТНИК</span>
+            <span class="font-extrabold text-xs sm:text-sm text-white tracking-tight">🔥 ИСКРА • ИИ-СОВЕТНИК</span>
             <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/30">Белая мгла</span>
             <span id="genBadge" class="hidden text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-200 border border-indigo-400/35"></span>
           </div>
@@ -228,6 +228,14 @@
         <button type="button" onclick="quickAsk('Напомни правила 1-го слота для присоединяющихся в атаку, в гарнизон и на Медведя в нашем поколении.')"
           class="shrink-0 px-2.5 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-purple-500/50 text-[11px] font-medium text-purple-200 transition active:scale-95">
           📋 Присоединяющиеся
+        </button>
+        <button type="button" onclick="quickAsk('Куда правильнее всего тратить самоцветы, золотые осколки и очки магазинов, чтобы быстрее расти без лишнего доната?')"
+          class="shrink-0 px-2.5 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-amber-400/50 text-[11px] font-medium text-amber-200 transition active:scale-95">
+          💎 Самоцветы и магазины
+        </button>
+        <button type="button" onclick="quickAsk('Расскажи коротко про наш портал альянса «Гармония»: какие тут есть разделы, как правильно заполнить карточку и найти свой город на карте?')"
+          class="shrink-0 px-2.5 py-1.5 rounded-xl bg-cyan-950/50 hover:bg-cyan-900/60 border border-cyan-500/35 hover:border-cyan-400/60 text-[11px] font-medium text-cyan-200 transition active:scale-95">
+          ❓ Гид по порталу
         </button>
       </div>
     </div>
@@ -469,13 +477,13 @@
         <div class="my-auto py-3 sm:py-6 space-y-4">
           <div class="rounded-2xl bg-slate-900/75 border border-slate-800/90 backdrop-blur-md p-4 sm:p-5 shadow-xl">
             <div class="flex items-start gap-3">
-              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500/25 to-indigo-600/25 border border-sky-400/35 flex items-center justify-center text-lg shrink-0 shadow-inner">
-                🤖
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/25 to-sky-600/25 border border-amber-400/40 flex items-center justify-center text-lg shrink-0 shadow-inner">
+                🔥
               </div>
               <div class="space-y-1">
-                <div class="font-extrabold text-white text-sm sm:text-base">Готов к бою, ${nick}!</div>
+                <div class="font-extrabold text-white text-sm sm:text-base">На связи Искра, ${nick}!</div>
                 <p class="text-xs text-slate-400 leading-relaxed">
-                  Я подключён к твоей карточке на портале и базе альянса «Гармония». ${genText} Выбери готовый сценарий ниже или напиши свой вопрос.
+                  Я подключена к твоей карточке и знаю всё об игре «Белая мгла. Выживание» и нашем портале «Гармония». ${genText} Спрашивай про героев, механики, ивенты или любую кнопку на сайте.
                 </p>
               </div>
             </div>

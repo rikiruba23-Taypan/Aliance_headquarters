@@ -177,14 +177,13 @@
           <select id="messageSelectPlayer" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white">
             <option value="">— Выберите получателя —</option>
           </select>
-          <div class="flex gap-2">
-            <input id="quickMessageInput" type="text" placeholder="Текст уведомления для игрока..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:border-sky-500 focus:outline-none" />
-            <button type="button" onclick="handleQuickSendMessage()" class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 font-bold text-white shadow transition flex items-center gap-1.5 shrink-0">
-              <i class="fa-solid fa-paper-plane"></i><span>Отправить</span>
-            </button>
-          </div>
+          <textarea id="quickMessageInput" rows="3" placeholder="Текст уведомления или объявления (поддерживает переносы строк)..."
+            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:border-sky-500 focus:outline-none resize-y leading-relaxed"></textarea>
+          <button type="button" onclick="handleQuickSendMessage()" class="w-full py-2 rounded-xl bg-sky-600 hover:bg-sky-500 font-bold text-white shadow transition flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-paper-plane"></i><span>Отправить уведомление</span>
+          </button>
           <p class="text-[11px] text-slate-400 leading-tight">
-            Сообщение появится в личной карточке бойца при входе на портал.
+            Сообщение появится во всплывающем окне при входе на портал.
           </p>
         </div>
       </div>
