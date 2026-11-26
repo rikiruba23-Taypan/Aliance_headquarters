@@ -202,6 +202,18 @@
         </div>
       </div>
 
+      <!-- Переключатель режима расчёта -->
+      <div class="flex flex-wrap items-center gap-2 text-xs">
+        <button type="button" id="btModeClassicBtn" onclick="setBearCalcMode('classic')"
+          class="px-3.5 py-2 rounded-xl border font-bold transition flex items-center gap-1.5 bg-sky-600/25 border-sky-400 text-white">
+          <span>📊</span><span>Как в таблице (поровну)</span>
+        </button>
+        <button type="button" id="btModeSmartBtn" onclick="setBearCalcMode('smart')"
+          class="px-3.5 py-2 rounded-xl border font-bold transition flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 border-slate-700 text-slate-300">
+          <span>🎯</span><span>Умный расчёт (Макс. Стрелки и Копья)</span>
+        </button>
+      </div>
+
       <!-- Панель управления маршами -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5 text-xs">
         <div class="flex items-center justify-between gap-3 bg-slate-950/90 border border-slate-800 rounded-xl px-3.5 py-2">
@@ -219,39 +231,149 @@
         </div>
 
         <div class="flex items-center justify-between gap-3 bg-slate-950/90 border border-slate-800 rounded-xl px-3.5 py-2 md:col-span-2">
-          <label for="bearModeSelect" class="font-semibold text-slate-300 shrink-0">Формула деления:</label>
+          <label for="bearModeSelect" class="font-semibold text-slate-300 shrink-0">Схема маршей:</label>
           <select id="bearModeSelect" onchange="recalcBearTroops()"
             class="w-full sm:w-auto bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-sky-200 font-medium focus:outline-none focus:border-sky-400">
-            <option value="plus1" selected>Как в таблице: Свой + N чужих (деление на N + 1)</option>
-            <option value="exact">Всего N маршей: 1 свой + (N − 1) чужих (деление на N)</option>
+            <option value="plus1" selected>Как в таблице: 1 свой + N чужих</option>
+            <option value="exact">Всего N маршей: 1 свой + (N − 1) чужих</option>
           </select>
         </div>
       </div>
 
-      <!-- Таблица войск К5–Т7 -->
-      <div class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950/60">
-        <table class="w-full text-left border-collapse text-xs">
-          <thead>
-            <tr class="bg-slate-900/95 border-b border-slate-800 text-slate-300 font-mono uppercase text-[11px]">
-              <th class="py-2.5 px-3 w-36 sm:w-44">Всего:</th>
-              <th class="py-2.5 px-3">Боец</th>
-              <th class="py-2.5 px-3 text-right w-28 sm:w-36 text-amber-300">Свой</th>
-              <th class="py-2.5 px-3 text-right w-28 sm:w-36 text-sky-300">В чужие</th>
-            </tr>
-          </thead>
-          <tbody id="bearTroopsTbody" class="divide-y divide-slate-800/70"></tbody>
-          <tfoot>
-            <tr class="bg-rose-950/45 border-t-2 border-amber-500/40 font-mono text-xs sm:text-sm font-extrabold">
-              <td class="py-3 px-3 text-white" id="btSumTotal">0</td>
-              <td class="py-3 px-3 text-amber-300 uppercase tracking-wider">ИТОГО:</td>
-              <td class="py-3 px-3 text-right text-amber-300" id="btSumOwn">0</td>
-              <td class="py-3 px-3 text-right text-sky-300" id="btSumOther">0</td>
-            </tr>
-          </tfoot>
-        </table>
+      <!-- Настройки «Умного расчёта на Медведя» -->
+      <div id="bearSmartSettings" class="hidden bg-emerald-950/20 border border-emerald-500/35 rounded-2xl p-4 space-y-3.5 text-xs">
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-800/80">
+          <div class="font-bold text-emerald-300 flex items-center gap-1.5">
+            <i class="fa-solid fa-bullseye"></i>
+            <span>Приоритет: Стрелки → Копейщики → Пехота (срез пехоты до минимума)</span>
+          </div>
+          <div class="flex flex-wrap items-center gap-1.5">
+            <button type="button" onclick="applyBearSmartPreset(10, 10)" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-emerald-900/50 border border-slate-700 hover:border-emerald-400/60 font-mono text-[11px] text-emerald-200 transition">10/10/80</button>
+            <button type="button" onclick="applyBearSmartPreset(10, 20)" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-emerald-900/50 border border-slate-700 hover:border-emerald-400/60 font-mono text-[11px] text-emerald-200 transition">10/20/70</button>
+            <button type="button" onclick="applyBearSmartPreset(5, 15)" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-emerald-900/50 border border-slate-700 hover:border-emerald-400/60 font-mono text-[11px] text-emerald-200 transition">5/15/80</button>
+            <button type="button" onclick="applyBearSmartPreset(10, 0)" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-emerald-900/50 border border-slate-700 hover:border-emerald-400/60 font-mono text-[11px] text-amber-200 transition">10/0/90 (макс. стр)</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label for="btOwnCapInput" class="font-semibold text-amber-300">Лимит «Свой» марш</label>
+              <button type="button" onclick="fillBearCapsFromCard()" class="text-[10px] text-sky-400 hover:underline">Из карточки</button>
+            </div>
+            <input id="btOwnCapInput" type="number" min="1000" step="500" value="150000" oninput="recalcBearTroops()"
+              class="w-full bg-slate-900 border border-amber-500/40 focus:border-amber-400 rounded-lg px-2.5 py-1.5 font-mono text-sm font-bold text-white focus:outline-none" />
+          </div>
+
+          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3 space-y-1.5">
+            <div class="flex items-center justify-between gap-1">
+              <label for="btOtherCapInput" class="font-semibold text-sky-300">Лимит «В чужие»</label>
+              <div class="flex gap-1">
+                <button type="button" onclick="setBearOtherCap(90000)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[10px] font-mono text-slate-300">90k</button>
+                <button type="button" onclick="syncBearOtherCapToOwn()" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[10px] text-sky-300">=Свой</button>
+              </div>
+            </div>
+            <input id="btOtherCapInput" type="number" min="1000" step="500" value="150000" oninput="recalcBearTroops()"
+              class="w-full bg-slate-900 border border-sky-500/40 focus:border-sky-400 rounded-lg px-2.5 py-1.5 font-mono text-sm font-bold text-white focus:outline-none" />
+          </div>
+
+          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-slate-300">Мин. Пех / Коп (%)</span>
+              <span id="btMaxMrkHint" class="font-mono text-[10px] text-emerald-300">Стр до 80%</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <input id="btMinInfPct" type="number" min="0" max="50" value="10" oninput="recalcBearTroops()" title="Минимальный % Пехоты"
+                class="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 rounded-lg px-2 py-1.5 font-mono text-sm font-bold text-amber-300 text-center focus:outline-none" />
+              <input id="btMinLanPct" type="number" min="0" max="50" value="10" oninput="recalcBearTroops()" title="Минимальный % Копейщиков"
+                class="w-full bg-slate-900 border border-slate-700 focus:border-sky-400 rounded-lg px-2 py-1.5 font-mono text-sm font-bold text-sky-300 text-center focus:outline-none" />
+            </div>
+          </div>
+
+          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3 space-y-1.5">
+            <label for="btPrioritySelect" class="block font-semibold text-slate-300">Приоритет топ-стрелков</label>
+            <select id="btPrioritySelect" onchange="recalcBearTroops()"
+              class="w-full bg-slate-900 border border-slate-700 focus:border-emerald-400 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none">
+              <option value="even" selected>Равномерно по всем маршам</option>
+              <option value="own">Сначала забить «Свой» сбор</option>
+            </select>
+          </div>
+        </div>
       </div>
 
-      <div id="btCapHint" class="hidden rounded-xl px-3.5 py-2 text-xs font-mono border"></div>
+      <!-- Компактная 2-колоночная раскладка: слева плотная таблица, справа итоги -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+
+        <!-- Левая колонка: фильтр тиров + компактная таблица -->
+        <div class="lg:col-span-7 space-y-2.5 min-w-0">
+          <!-- Быстрый выбор отображаемых тиров -->
+          <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-900/75 border border-slate-800 rounded-xl px-3 py-2 text-[11px]">
+            <div class="flex flex-wrap items-center gap-1">
+              <span class="text-slate-400 font-semibold mr-1">Тиры:</span>
+              <div id="btTierFilterBar" class="flex flex-wrap items-center gap-1"></div>
+            </div>
+            <div class="flex items-center gap-1 shrink-0 font-mono">
+              <button type="button" onclick="setBearTierGroup('normal')" class="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-[10px] text-sky-300 transition">Т7–Т10</button>
+              <button type="button" onclick="setBearTierGroup('crystal')" class="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-[10px] text-rose-300 transition">К1–К5</button>
+              <button type="button" onclick="setBearTierGroup('all')" class="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-[10px] text-amber-300 transition">Все</button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950/70">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-slate-900/95 border-b border-slate-800 text-slate-300 font-mono uppercase text-[10px]">
+                  <th class="py-2 px-2.5 w-28 sm:w-32">Всего:</th>
+                  <th class="py-2 px-2">Боец</th>
+                  <th class="py-2 px-2.5 text-right w-20 sm:w-24 text-amber-300">Свой</th>
+                  <th class="py-2 px-2.5 text-right w-20 sm:w-24 text-sky-300">В чужие</th>
+                </tr>
+              </thead>
+              <tbody id="bearTroopsTbody" class="divide-y divide-slate-800/60"></tbody>
+              <tfoot>
+                <tr class="bg-rose-950/45 border-t-2 border-amber-500/40 font-mono text-xs font-extrabold">
+                  <td class="py-2 px-2.5 text-white" id="btSumTotal">0</td>
+                  <td class="py-2 px-2 text-amber-300 uppercase tracking-wider">ИТОГО:</td>
+                  <td class="py-2 px-2.5 text-right text-amber-300" id="btSumOwn">0</td>
+                  <td class="py-2 px-2.5 text-right text-sky-300" id="btSumOther">0</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- Правая колонка: закреплённая сводка по маршам и остатку -->
+        <div class="lg:col-span-5 lg:sticky lg:top-20 space-y-2.5">
+          <div id="btSummaryCards" class="space-y-2.5 text-xs font-mono">
+            <div class="bg-slate-900/90 border border-amber-500/35 rounded-2xl p-3.5 space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="text-amber-300 font-bold">👑 Свой сбор</span>
+                <span id="btOwnSummaryTotal" class="text-sm font-extrabold text-white">0</span>
+              </div>
+              <div id="btOwnSummarySplit" class="text-[11px] text-slate-300 leading-relaxed">Введите войска слева для расчёта</div>
+            </div>
+
+            <div class="bg-slate-900/90 border border-sky-500/35 rounded-2xl p-3.5 space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="text-sky-300 font-bold">🤝 В чужие (<span id="btOtherMultLabel">×6</span>)</span>
+                <span id="btOtherSummaryTotal" class="text-sm font-extrabold text-white">0</span>
+              </div>
+              <div id="btOtherSummarySplit" class="text-[11px] text-slate-300 leading-relaxed">—</div>
+            </div>
+
+            <div class="bg-slate-900/90 border border-slate-700/80 rounded-2xl p-3.5 space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400 font-bold">🏠 Остаётся дома</span>
+                <span id="btLeftoverTotal" class="text-sm font-extrabold text-slate-200">0</span>
+              </div>
+              <div id="btLeftoverSplit" class="text-[11px] text-slate-400 leading-relaxed">Все войска задействованы</div>
+            </div>
+          </div>
+
+          <div id="btCapHint" class="hidden rounded-2xl px-3.5 py-2.5 text-[11px] font-mono leading-relaxed border"></div>
+        </div>
+
+      </div>
     </section>
 
     <!-- 3. КАЛЬКУЛЯТОР УСКОРЕНИЙ И КАЛЬКУЛЯТОР ОСКОЛКОВ ГЕРОЯ -->
@@ -361,44 +483,46 @@
     const BEAR_CALC_STORAGE_KEY = 'harmony_bear_troops_calc_v1';
     let sessionCard = null;
     let bearOnlyFilled = false;
+    let bearCalcMode = 'classic'; // 'classic' | 'smart'
     let hasSavedBearState = false;
+    let hasSavedBearCaps = false;
 
     const BEAR_TROOP_ROWS = [
-      { id: 'k5_inf', tier: 'К5', icon: '🛡️', name: 'Огненный пехотинец (К5)',    bg: 'bg-rose-950/55',    borderTop: 'border-t-2 border-slate-700/90' },
-      { id: 'k5_lan', tier: 'К5', icon: '⚔️', name: 'Огненный копейщик (К5)',     bg: 'bg-rose-950/55',    borderTop: '' },
-      { id: 'k5_mrk', tier: 'К5', icon: '🏹', name: 'Огненный стрелок (К5)',      bg: 'bg-rose-950/55',    borderTop: '' },
+      { id: 'k5_inf', cls: 'inf', tier: 'К5', icon: '🛡️', name: 'Огненный пехотинец (К5)',    bg: 'bg-rose-950/55',    borderTop: 'border-t-2 border-slate-700/90' },
+      { id: 'k5_lan', cls: 'lan', tier: 'К5', icon: '⚔️', name: 'Огненный копейщик (К5)',     bg: 'bg-rose-950/55',    borderTop: '' },
+      { id: 'k5_mrk', cls: 'mrk', tier: 'К5', icon: '🏹', name: 'Огненный стрелок (К5)',      bg: 'bg-rose-950/55',    borderTop: '' },
 
-      { id: 'k4_inf', tier: 'К4', icon: '🛡️', name: 'Огненный пехотинец (К4)',    bg: 'bg-rose-950/42',    borderTop: 'border-t-2 border-slate-700/90' },
-      { id: 'k4_lan', tier: 'К4', icon: '⚔️', name: 'Огненный копейщик (К4)',     bg: 'bg-rose-950/42',    borderTop: '' },
-      { id: 'k4_mrk', tier: 'К4', icon: '🏹', name: 'Огненный стрелок (К4)',      bg: 'bg-rose-950/42',    borderTop: '' },
+      { id: 'k4_inf', cls: 'inf', tier: 'К4', icon: '🛡️', name: 'Огненный пехотинец (К4)',    bg: 'bg-rose-950/42',    borderTop: 'border-t-2 border-slate-700/90' },
+      { id: 'k4_lan', cls: 'lan', tier: 'К4', icon: '⚔️', name: 'Огненный копейщик (К4)',     bg: 'bg-rose-950/42',    borderTop: '' },
+      { id: 'k4_mrk', cls: 'mrk', tier: 'К4', icon: '🏹', name: 'Огненный стрелок (К4)',      bg: 'bg-rose-950/42',    borderTop: '' },
 
-      { id: 'k3_inf', tier: 'К3', icon: '🛡️', name: 'Огненный пехотинец (К3)',    bg: 'bg-rose-950/32',    borderTop: 'border-t-2 border-slate-700/90' },
-      { id: 'k3_lan', tier: 'К3', icon: '⚔️', name: 'Огненный копейщик (К3)',     bg: 'bg-rose-950/32',    borderTop: '' },
-      { id: 'k3_mrk', tier: 'К3', icon: '🏹', name: 'Огненный стрелок (К3)',      bg: 'bg-rose-950/32',    borderTop: '' },
+      { id: 'k3_inf', cls: 'inf', tier: 'К3', icon: '🛡️', name: 'Огненный пехотинец (К3)',    bg: 'bg-rose-950/32',    borderTop: 'border-t-2 border-slate-700/90' },
+      { id: 'k3_lan', cls: 'lan', tier: 'К3', icon: '⚔️', name: 'Огненный копейщик (К3)',     bg: 'bg-rose-950/32',    borderTop: '' },
+      { id: 'k3_mrk', cls: 'mrk', tier: 'К3', icon: '🏹', name: 'Огненный стрелок (К3)',      bg: 'bg-rose-950/32',    borderTop: '' },
 
-      { id: 'k2_inf', tier: 'К2', icon: '🛡️', name: 'Огненный пехотинец (К2)',    bg: 'bg-rose-950/22',    borderTop: 'border-t-2 border-slate-700/90' },
-      { id: 'k2_lan', tier: 'К2', icon: '⚔️', name: 'Огненный копейщик (К2)',     bg: 'bg-rose-950/22',    borderTop: '' },
-      { id: 'k2_mrk', tier: 'К2', icon: '🏹', name: 'Огненный стрелок (К2)',      bg: 'bg-rose-950/22',    borderTop: '' },
+      { id: 'k2_inf', cls: 'inf', tier: 'К2', icon: '🛡️', name: 'Огненный пехотинец (К2)',    bg: 'bg-rose-950/22',    borderTop: 'border-t-2 border-slate-700/90' },
+      { id: 'k2_lan', cls: 'lan', tier: 'К2', icon: '⚔️', name: 'Огненный копейщик (К2)',     bg: 'bg-rose-950/22',    borderTop: '' },
+      { id: 'k2_mrk', cls: 'mrk', tier: 'К2', icon: '🏹', name: 'Огненный стрелок (К2)',      bg: 'bg-rose-950/22',    borderTop: '' },
 
-      { id: 'k1_inf', tier: 'К1', icon: '🛡️', name: 'Огненный пехотинец (К1)',    bg: 'bg-rose-950/15',    borderTop: 'border-t-2 border-slate-700/90' },
-      { id: 'k1_lan', tier: 'К1', icon: '⚔️', name: 'Огненный копейщик (К1)',     bg: 'bg-rose-950/15',    borderTop: '' },
-      { id: 'k1_mrk', tier: 'К1', icon: '🏹', name: 'Огненный стрелок (К1)',      bg: 'bg-rose-950/15',    borderTop: '' },
+      { id: 'k1_inf', cls: 'inf', tier: 'К1', icon: '🛡️', name: 'Огненный пехотинец (К1)',    bg: 'bg-rose-950/15',    borderTop: 'border-t-2 border-slate-700/90' },
+      { id: 'k1_lan', cls: 'lan', tier: 'К1', icon: '⚔️', name: 'Огненный копейщик (К1)',     bg: 'bg-rose-950/15',    borderTop: '' },
+      { id: 'k1_mrk', cls: 'mrk', tier: 'К1', icon: '🏹', name: 'Огненный стрелок (К1)',      bg: 'bg-rose-950/15',    borderTop: '' },
 
-      { id: 't10_inf', tier: 'Т10', icon: '🛡️', name: 'Непобедимый пехотинец (Т10)', bg: 'bg-amber-950/35',  borderTop: 'border-t-2 border-slate-700/90' },
-      { id: 't10_lan', tier: 'Т10', icon: '⚔️', name: 'Непобедимый копейщик (Т10)',  bg: 'bg-amber-950/35',  borderTop: '' },
-      { id: 't10_mrk', tier: 'Т10', icon: '🏹', name: 'Непобедимый стрелок (Т10)',   bg: 'bg-amber-950/35',  borderTop: '' },
+      { id: 't10_inf', cls: 'inf', tier: 'Т10', icon: '🛡️', name: 'Непобедимый пехотинец (Т10)', bg: 'bg-amber-950/35',  borderTop: 'border-t-2 border-slate-700/90' },
+      { id: 't10_lan', cls: 'lan', tier: 'Т10', icon: '⚔️', name: 'Непобедимый копейщик (Т10)',  bg: 'bg-amber-950/35',  borderTop: '' },
+      { id: 't10_mrk', cls: 'mrk', tier: 'Т10', icon: '🏹', name: 'Непобедимый стрелок (Т10)',   bg: 'bg-amber-950/35',  borderTop: '' },
 
-      { id: 't9_inf', tier: 'Т9', icon: '🛡️', name: 'Выдающийся пехотинец (Т9)',  bg: 'bg-sky-950/40',     borderTop: 'border-t-2 border-slate-700/90' },
-      { id: 't9_lan', tier: 'Т9', icon: '⚔️', name: 'Выдающийся копейщик (Т9)',   bg: 'bg-sky-950/40',     borderTop: '' },
-      { id: 't9_mrk', tier: 'Т9', icon: '🏹', name: 'Выдающийся стрелок (Т9)',    bg: 'bg-sky-950/40',     borderTop: '' },
+      { id: 't9_inf', cls: 'inf', tier: 'Т9', icon: '🛡️', name: 'Выдающийся пехотинец (Т9)',  bg: 'bg-sky-950/40',     borderTop: 'border-t-2 border-slate-700/90' },
+      { id: 't9_lan', cls: 'lan', tier: 'Т9', icon: '⚔️', name: 'Выдающийся копейщик (Т9)',   bg: 'bg-sky-950/40',     borderTop: '' },
+      { id: 't9_mrk', cls: 'mrk', tier: 'Т9', icon: '🏹', name: 'Выдающийся стрелок (Т9)',    bg: 'bg-sky-950/40',     borderTop: '' },
 
-      { id: 't8_inf', tier: 'Т8', icon: '🛡️', name: 'Элитный пехотинец (Т8)',     bg: 'bg-yellow-950/30',  borderTop: 'border-t-2 border-slate-700/90' },
-      { id: 't8_lan', tier: 'Т8', icon: '⚔️', name: 'Элитный копейщик (Т8)',      bg: 'bg-yellow-950/30',  borderTop: '' },
-      { id: 't8_mrk', tier: 'Т8', icon: '🏹', name: 'Элитный стрелок (Т8)',       bg: 'bg-yellow-950/30',  borderTop: '' },
+      { id: 't8_inf', cls: 'inf', tier: 'Т8', icon: '🛡️', name: 'Элитный пехотинец (Т8)',     bg: 'bg-yellow-950/30',  borderTop: 'border-t-2 border-slate-700/90' },
+      { id: 't8_lan', cls: 'lan', tier: 'Т8', icon: '⚔️', name: 'Элитный копейщик (Т8)',      bg: 'bg-yellow-950/30',  borderTop: '' },
+      { id: 't8_mrk', cls: 'mrk', tier: 'Т8', icon: '🏹', name: 'Элитный стрелок (Т8)',       bg: 'bg-yellow-950/30',  borderTop: '' },
 
-      { id: 't7_inf', tier: 'Т7', icon: '🛡️', name: 'Бесстрашный пехотинец (Т7)', bg: 'bg-emerald-950/30', borderTop: 'border-t-2 border-slate-700/90' },
-      { id: 't7_lan', tier: 'Т7', icon: '⚔️', name: 'Бесстрашный копейщик (Т7)',  bg: 'bg-emerald-950/30', borderTop: '' },
-      { id: 't7_mrk', tier: 'Т7', icon: '🏹', name: 'Бесстрашный стрелок (Т7)',   bg: 'bg-emerald-950/30', borderTop: '' }
+      { id: 't7_inf', cls: 'inf', tier: 'Т7', icon: '🛡️', name: 'Бесстрашный пехотинец (Т7)', bg: 'bg-emerald-950/30', borderTop: 'border-t-2 border-slate-700/90' },
+      { id: 't7_lan', cls: 'lan', tier: 'Т7', icon: '⚔️', name: 'Бесстрашный копейщик (Т7)',  bg: 'bg-emerald-950/30', borderTop: '' },
+      { id: 't7_mrk', cls: 'mrk', tier: 'Т7', icon: '🏹', name: 'Бесстрашный стрелок (Т7)',   bg: 'bg-emerald-950/30', borderTop: '' }
     ];
 
     function showToast(msg) {
@@ -413,24 +537,129 @@
       return sessionStorage.getItem('harmony_passcode') || localStorage.getItem('harmony_passcode') || '';
     }
 
+    const BEAR_ALL_TIERS = ['К5', 'К4', 'К3', 'К2', 'К1', 'Т10', 'Т9', 'Т8', 'Т7'];
+    let bearVisibleTiers = new Set(['Т10', 'Т9', 'Т8', 'Т7']);
+
+    function renderBearTierFilterBar() {
+      const bar = document.getElementById('btTierFilterBar');
+      if (!bar) return;
+
+      const filledTiers = new Set();
+      BEAR_TROOP_ROWS.forEach(r => {
+        const inp = document.getElementById('btIn_' + r.id);
+        if (inp && Number(inp.value) > 0) filledTiers.add(r.tier);
+      });
+
+      bar.innerHTML = BEAR_ALL_TIERS.map(t => {
+        const isOn = bearVisibleTiers.has(t);
+        const hasData = filledTiers.has(t);
+        const isCrystal = t.startsWith('К');
+        const activeCls = isCrystal
+          ? 'bg-rose-500/25 border-rose-400/70 text-rose-200 font-bold'
+          : 'bg-sky-500/25 border-sky-400/70 text-sky-200 font-bold';
+        const inactiveCls = 'bg-slate-950 border-slate-700/80 text-slate-400 hover:text-white hover:border-slate-500';
+        const dot = hasData ? '<span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 ml-1"></span>' : '';
+
+        return `
+          <button type="button" onclick="toggleBearTier('${t}')"
+            class="px-2 py-0.5 rounded-md border font-mono text-[10px] transition flex items-center ${isOn ? activeCls : inactiveCls}">
+            <span>${t}</span>${dot}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function toggleBearTier(tier) {
+      if (bearVisibleTiers.has(tier)) {
+        if (bearVisibleTiers.size > 1) bearVisibleTiers.delete(tier);
+      } else {
+        bearVisibleTiers.add(tier);
+      }
+      renderBearTierFilterBar();
+      recalcBearTroops();
+    }
+
+    function setBearTierGroup(group) {
+      if (group === 'all') bearVisibleTiers = new Set(BEAR_ALL_TIERS);
+      else if (group === 'crystal') bearVisibleTiers = new Set(['К5', 'К4', 'К3', 'К2', 'К1']);
+      else bearVisibleTiers = new Set(['Т10', 'Т9', 'Т8', 'Т7']);
+      renderBearTierFilterBar();
+      recalcBearTroops();
+    }
+
     function renderBearTroopTable() {
       const tbody = document.getElementById('bearTroopsTbody');
       if (!tbody) return;
 
       tbody.innerHTML = BEAR_TROOP_ROWS.map(r => `
         <tr id="btRow_${r.id}" class="${r.bg} ${r.borderTop} hover:bg-slate-800/45 transition">
-          <td class="py-1.5 px-2.5">
+          <td class="py-1 px-2">
             <input id="btIn_${r.id}" type="number" min="0" step="1" placeholder="—"
               oninput="recalcBearTroops()"
-              class="no-spin w-full bg-slate-950/85 border border-slate-700/80 focus:border-sky-400 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm font-mono font-bold text-white placeholder-slate-600 focus:outline-none transition" />
+              class="no-spin w-full bg-slate-950/90 border border-slate-700/80 focus:border-sky-400 rounded-md px-2 py-0.5 text-xs font-mono font-bold text-white placeholder-slate-600 focus:outline-none transition" />
           </td>
-          <td class="py-1.5 px-3 font-medium text-slate-100 whitespace-nowrap">
-            <span class="mr-1.5">${r.icon}</span><span>${r.name}</span>
+          <td class="py-1 px-2 text-[11px] sm:text-xs font-medium text-slate-100 whitespace-nowrap">
+            <span class="mr-1">${r.icon}</span><span>${r.name}</span>
           </td>
-          <td id="btOwn_${r.id}" class="py-1.5 px-3 text-right font-mono font-bold text-amber-300">—</td>
-          <td id="btOther_${r.id}" class="py-1.5 px-3 text-right font-mono font-bold text-sky-300">—</td>
+          <td id="btOwn_${r.id}" class="py-1 px-2.5 text-right font-mono text-xs font-bold text-amber-300">—</td>
+          <td id="btOther_${r.id}" class="py-1 px-2.5 text-right font-mono text-xs font-bold text-sky-300">—</td>
         </tr>
       `).join('');
+    }
+
+    function updateBearModeButtonsUI() {
+      const isSmart = bearCalcMode === 'smart';
+      const classicBtn = document.getElementById('btModeClassicBtn');
+      const smartBtn = document.getElementById('btModeSmartBtn');
+      const smartPanel = document.getElementById('bearSmartSettings');
+
+      if (classicBtn) {
+        classicBtn.className = !isSmart
+          ? 'px-3.5 py-2 rounded-xl border font-bold transition flex items-center gap-1.5 bg-sky-600/25 border-sky-400 text-white'
+          : 'px-3.5 py-2 rounded-xl border font-bold transition flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 border-slate-700 text-slate-300';
+      }
+      if (smartBtn) {
+        smartBtn.className = isSmart
+          ? 'px-3.5 py-2 rounded-xl border font-bold transition flex items-center gap-1.5 bg-emerald-600/25 border-emerald-400 text-emerald-200 shadow-lg shadow-emerald-950/50'
+          : 'px-3.5 py-2 rounded-xl border font-bold transition flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 border-slate-700 text-slate-300';
+      }
+      if (smartPanel) {
+        smartPanel.classList.toggle('hidden', !isSmart);
+      }
+    }
+
+    function setBearCalcMode(nextMode) {
+      bearCalcMode = nextMode === 'smart' ? 'smart' : 'classic';
+      updateBearModeButtonsUI();
+      recalcBearTroops();
+    }
+
+    function applyBearSmartPreset(minInf, minLan) {
+      document.getElementById('btMinInfPct').value = minInf;
+      document.getElementById('btMinLanPct').value = minLan;
+      recalcBearTroops();
+    }
+
+    function fillBearCapsFromCard() {
+      const cap = sessionCard && Number(sessionCard.marchCap) > 0 ? Number(sessionCard.marchCap) : 0;
+      if (!cap) {
+        showToast('Размер марша не указан в вашей карточке');
+        return;
+      }
+      document.getElementById('btOwnCapInput').value = cap;
+      document.getElementById('btOtherCapInput').value = cap;
+      recalcBearTroops();
+      showToast('Подставлен размер марша из карточки');
+    }
+
+    function setBearOtherCap(val) {
+      document.getElementById('btOtherCapInput').value = val;
+      recalcBearTroops();
+    }
+
+    function syncBearOtherCapToOwn() {
+      document.getElementById('btOtherCapInput').value = document.getElementById('btOwnCapInput').value || 150000;
+      recalcBearTroops();
     }
 
     function loadBearTroopsState() {
@@ -442,6 +671,22 @@
         hasSavedBearState = true;
         if (st.marches) document.getElementById('bearMarchesSelect').value = String(st.marches);
         if (st.mode) document.getElementById('bearModeSelect').value = st.mode;
+        if (st.calcMode === 'smart' || st.calcMode === 'classic') bearCalcMode = st.calcMode;
+        if (st.ownCap && Number(st.ownCap) > 0) {
+          document.getElementById('btOwnCapInput').value = Number(st.ownCap);
+          hasSavedBearCaps = true;
+        }
+        if (st.otherCap && Number(st.otherCap) > 0) {
+          document.getElementById('btOtherCapInput').value = Number(st.otherCap);
+          hasSavedBearCaps = true;
+        }
+        if (st.minInfPct !== undefined) document.getElementById('btMinInfPct').value = Number(st.minInfPct);
+        if (st.minLanPct !== undefined) document.getElementById('btMinLanPct').value = Number(st.minLanPct);
+        if (st.priority) document.getElementById('btPrioritySelect').value = st.priority;
+
+        if (Array.isArray(st.visibleTiers) && st.visibleTiers.length > 0) {
+          bearVisibleTiers = new Set(st.visibleTiers);
+        }
         if (st.counts && typeof st.counts === 'object') {
           BEAR_TROOP_ROWS.forEach(r => {
             const val = st.counts[r.id];
@@ -452,16 +697,180 @@
           });
         }
       } catch (e) {}
+      updateBearModeButtonsUI();
+      renderBearTierFilterBar();
+    }
+
+    /**
+     * Распределяет доступный пул войск одного класса (от высших тиров К5 к низшим Т7)
+     * между 1 «Своим» маршем (потребность needOwn) и K маршами «В чужие» (потребность needOther в каждый).
+     */
+    function allocateBearClassPool(cls, availMap, resOwn, resOther, needOwn, needOther, otherCount, ownFirst) {
+      let remOwn = Math.max(0, Math.floor(needOwn));
+      let remOther = otherCount > 0 ? Math.max(0, Math.floor(needOther)) : 0;
+      const rows = BEAR_TROOP_ROWS.filter(r => r.cls === cls);
+
+      if (ownFirst) {
+        // Сначала до отказа заполняем Свой марш лучшими тирами
+        for (const r of rows) {
+          if (remOwn <= 0) break;
+          const av = availMap[r.id] || 0;
+          if (av <= 0) continue;
+          const take = Math.min(av, remOwn);
+          resOwn[r.id] += take;
+          availMap[r.id] -= take;
+          remOwn -= take;
+        }
+        // Затем делим оставшиеся лучшие тиры поровну в чужие сборы
+        if (otherCount > 0) {
+          for (const r of rows) {
+            if (remOther <= 0) break;
+            const av = availMap[r.id] || 0;
+            if (av < otherCount) continue;
+            const takeEach = Math.min(remOther, Math.floor(av / otherCount));
+            if (takeEach > 0) {
+              resOther[r.id] += takeEach;
+              availMap[r.id] -= takeEach * otherCount;
+              remOther -= takeEach;
+            }
+          }
+        }
+      } else {
+        // Равномерное распределение каждого тира между Своим и Чужими пропорционально свободному месту
+        for (const r of rows) {
+          const totalNeed = remOwn + otherCount * remOther;
+          if (totalNeed <= 0) break;
+          const av = availMap[r.id] || 0;
+          if (av <= 0) continue;
+
+          const usable = Math.min(av, totalNeed);
+          let giveOwn = 0;
+          let giveOther = 0;
+
+          if (otherCount === 0 || remOther === 0) {
+            giveOwn = Math.min(remOwn, usable);
+          } else if (usable === totalNeed) {
+            giveOwn = remOwn;
+            giveOther = remOther;
+          } else {
+            giveOther = Math.min(remOther, Math.floor(usable * (remOther / totalNeed)));
+            giveOwn = Math.min(remOwn, usable - otherCount * giveOther);
+            let left = usable - giveOwn - otherCount * giveOther;
+            if (left >= otherCount && giveOther < remOther) {
+              const addOther = Math.min(remOther - giveOther, Math.floor(left / otherCount));
+              giveOther += addOther;
+              left -= addOther * otherCount;
+            }
+            if (left > 0 && giveOwn < remOwn) {
+              const addOwn = Math.min(remOwn - giveOwn, left);
+              giveOwn += addOwn;
+            }
+          }
+
+          resOwn[r.id] += giveOwn;
+          resOther[r.id] += giveOther;
+          availMap[r.id] -= (giveOwn + otherCount * giveOther);
+          remOwn -= giveOwn;
+          remOther -= giveOther;
+        }
+      }
+
+      return {
+        usedOwn: Math.max(0, Math.floor(needOwn)) - remOwn,
+        usedOther: (otherCount > 0 ? Math.max(0, Math.floor(needOther)) : 0) - remOther
+      };
     }
 
     function recalcBearTroops() {
       const marches = Math.max(1, Number(document.getElementById('bearMarchesSelect').value) || 6);
       const mode = document.getElementById('bearModeSelect').value || 'plus1';
+      const otherCount = mode === 'exact' ? Math.max(0, marches - 1) : marches;
+
+      const ownCap = Math.max(0, Math.floor(Number(document.getElementById('btOwnCapInput')?.value) || 0));
+      const otherCap = Math.max(0, Math.floor(Number(document.getElementById('btOtherCapInput')?.value) || 0));
+      const minInfPct = Math.max(0, Math.min(100, Number(document.getElementById('btMinInfPct')?.value) || 0));
+      const minLanPct = Math.max(0, Math.min(100 - minInfPct, Number(document.getElementById('btMinLanPct')?.value) || 0));
+      const priority = document.getElementById('btPrioritySelect')?.value || 'even';
+
+      const mrkHintEl = document.getElementById('btMaxMrkHint');
+      if (mrkHintEl) {
+        mrkHintEl.textContent = `Стр до ${Math.max(0, 100 - minInfPct - minLanPct)}%`;
+      }
+
+      const totals = {};
+      const avail = {};
+      const resOwn = {};
+      const resOther = {};
+      const savedCounts = {};
+
+      BEAR_TROOP_ROWS.forEach(r => {
+        const inp = document.getElementById('btIn_' + r.id);
+        const raw = inp ? String(inp.value || '').trim() : '';
+        const val = raw !== '' ? Math.max(0, Math.floor(Number(raw) || 0)) : 0;
+        totals[r.id] = val;
+        avail[r.id] = val;
+        resOwn[r.id] = 0;
+        resOther[r.id] = 0;
+        if (val > 0) savedCounts[r.id] = val;
+      });
+
+      if (bearCalcMode === 'smart') {
+        const ownFirst = priority === 'own';
+        let ownSpace = ownCap;
+        let otherSpace = otherCount > 0 ? otherCap : 0;
+
+        // 1. Минимальная пехота (с высших тиров)
+        const infFloorOwn = Math.floor(ownCap * (minInfPct / 100));
+        const infFloorOther = Math.floor(otherCap * (minInfPct / 100));
+        const st1 = allocateBearClassPool('inf', avail, resOwn, resOther, Math.min(ownSpace, infFloorOwn), Math.min(otherSpace, infFloorOther), otherCount, ownFirst);
+        ownSpace -= st1.usedOwn;
+        otherSpace -= st1.usedOther;
+
+        // 2. Минимальные копейщики (если задан порог > 0)
+        if (minLanPct > 0) {
+          const lanFloorOwn = Math.floor(ownCap * (minLanPct / 100));
+          const lanFloorOther = Math.floor(otherCap * (minLanPct / 100));
+          const st2 = allocateBearClassPool('lan', avail, resOwn, resOther, Math.min(ownSpace, lanFloorOwn), Math.min(otherSpace, lanFloorOther), otherCount, ownFirst);
+          ownSpace -= st2.usedOwn;
+          otherSpace -= st2.usedOther;
+        }
+
+        // 3. Максимум СТРЕЛКОВ во всё свободное место
+        const st3 = allocateBearClassPool('mrk', avail, resOwn, resOther, ownSpace, otherSpace, otherCount, ownFirst);
+        ownSpace -= st3.usedOwn;
+        otherSpace -= st3.usedOther;
+
+        // 4. Остаток свободного места забиваем КОПЕЙЩИКАМИ
+        const st4 = allocateBearClassPool('lan', avail, resOwn, resOther, ownSpace, otherSpace, otherCount, ownFirst);
+        ownSpace -= st4.usedOwn;
+        otherSpace -= st4.usedOther;
+
+        // 5. Если всё ещё есть пустое место в марше — добираем ПЕХОТОЙ
+        if (ownSpace > 0 || otherSpace > 0) {
+          allocateBearClassPool('inf', avail, resOwn, resOther, ownSpace, otherSpace, otherCount, ownFirst);
+        }
+      } else {
+        // Классический режим 1-в-1 из таблицы
+        BEAR_TROOP_ROWS.forEach(r => {
+          const total = totals[r.id];
+          if (total <= 0) return;
+          if (otherCount === 0) {
+            resOther[r.id] = 0;
+            resOwn[r.id] = total;
+          } else {
+            const otherVal = Math.floor(total / (otherCount + 1));
+            resOther[r.id] = otherVal;
+            resOwn[r.id] = total - (otherCount * otherVal);
+          }
+        });
+      }
 
       let sumTotal = 0;
       let sumOwn = 0;
       let sumOther = 0;
-      const savedCounts = {};
+      const ownByCls = { inf: 0, lan: 0, mrk: 0 };
+      const otherByCls = { inf: 0, lan: 0, mrk: 0 };
+      const leftByCls = { inf: 0, lan: 0, mrk: 0 };
 
       BEAR_TROOP_ROWS.forEach(r => {
         const inp = document.getElementById('btIn_' + r.id);
@@ -470,43 +879,35 @@
         const rowEl = document.getElementById('btRow_' + r.id);
         if (!inp || !ownEl || !otherEl || !rowEl) return;
 
-        const raw = String(inp.value || '').trim();
-        const total = raw !== '' ? Math.max(0, Math.floor(Number(raw) || 0)) : 0;
-
+        const total = totals[r.id];
         if (total > 0) {
-          savedCounts[r.id] = total;
-          let otherVal = 0;
-          let ownVal = 0;
-
-          if (mode === 'exact') {
-            if (marches <= 1) {
-              otherVal = 0;
-              ownVal = total;
-            } else {
-              otherVal = Math.floor(total / marches);
-              ownVal = total - ((marches - 1) * otherVal);
-            }
-          } else {
-            // Точная формула из таблицы: ОКРУГЛВНИЗ(Всего / (N + 1); 0) и Всего - (N * В чужие)
-            otherVal = Math.floor(total / (marches + 1));
-            ownVal = total - (marches * otherVal);
-          }
+          const ov = resOwn[r.id];
+          const jv = resOther[r.id];
+          const leftover = Math.max(0, total - ov - otherCount * jv);
 
           sumTotal += total;
-          sumOwn += ownVal;
-          sumOther += otherVal;
+          sumOwn += ov;
+          sumOther += jv;
+          ownByCls[r.cls] += ov;
+          otherByCls[r.cls] += jv;
+          leftByCls[r.cls] += leftover;
 
-          ownEl.textContent = ownVal.toLocaleString('ru-RU');
-          otherEl.textContent = otherVal.toLocaleString('ru-RU');
+          ownEl.textContent = ov > 0 ? ov.toLocaleString('ru-RU') : '0';
+          otherEl.textContent = jv > 0 ? jv.toLocaleString('ru-RU') : '0';
+          ownEl.classList.toggle('opacity-40', ov === 0);
+          otherEl.classList.toggle('opacity-40', jv === 0);
+
           inp.classList.add('border-emerald-500/60', 'text-emerald-200');
           inp.classList.remove('border-slate-700/80');
           rowEl.classList.remove('hidden');
         } else {
           ownEl.textContent = '—';
           otherEl.textContent = '—';
+          ownEl.classList.remove('opacity-40');
+          otherEl.classList.remove('opacity-40');
           inp.classList.remove('border-emerald-500/60', 'text-emerald-200');
           inp.classList.add('border-slate-700/80');
-          rowEl.classList.toggle('hidden', bearOnlyFilled);
+          rowEl.classList.toggle('hidden', bearOnlyFilled || !bearVisibleTiers.has(r.tier));
         }
       });
 
@@ -514,22 +915,63 @@
       document.getElementById('btSumOwn').textContent = sumOwn.toLocaleString('ru-RU');
       document.getElementById('btSumOther').textContent = sumOther.toLocaleString('ru-RU');
 
+      renderBearTierFilterBar();
+      updateBearSummaryCards(sumTotal, sumOwn, sumOther, ownByCls, otherByCls, leftByCls, otherCount);
       updateBearCapHint(sumOwn, sumOther);
 
       try {
         localStorage.setItem(BEAR_CALC_STORAGE_KEY, JSON.stringify({
           marches,
           mode,
+          calcMode: bearCalcMode,
+          ownCap,
+          otherCap,
+          minInfPct,
+          minLanPct,
+          priority,
+          visibleTiers: Array.from(bearVisibleTiers),
           counts: savedCounts
         }));
       } catch (e) {}
     }
 
+    function formatBearSplitLine(clsObj, total) {
+      if (total <= 0) return 'Введите войска слева для расчёта';
+      const pInf = Math.round((clsObj.inf / total) * 100);
+      const pLan = Math.round((clsObj.lan / total) * 100);
+      const pMrk = Math.max(0, 100 - pInf - pLan);
+      return `🛡️ ${pInf}% (${clsObj.inf.toLocaleString('ru-RU')}) • ⚔️ ${pLan}% (${clsObj.lan.toLocaleString('ru-RU')}) • 🏹 ${pMrk}% (${clsObj.mrk.toLocaleString('ru-RU')})`;
+    }
+
+    function updateBearSummaryCards(sumTotal, sumOwn, sumOther, ownByCls, otherByCls, leftByCls, otherCount) {
+      const box = document.getElementById('btSummaryCards');
+      if (!box) return;
+
+      document.getElementById('btOwnSummaryTotal').textContent = sumOwn.toLocaleString('ru-RU');
+      document.getElementById('btOwnSummarySplit').textContent = formatBearSplitLine(ownByCls, sumOwn);
+
+      document.getElementById('btOtherMultLabel').textContent = `×${otherCount}`;
+      document.getElementById('btOtherSummaryTotal').textContent = sumOther.toLocaleString('ru-RU');
+      document.getElementById('btOtherSummarySplit').textContent = otherCount > 0
+        ? formatBearSplitLine(otherByCls, sumOther)
+        : 'Нет маршей в чужие сборы';
+
+      const leftTotal = leftByCls.inf + leftByCls.lan + leftByCls.mrk;
+      document.getElementById('btLeftoverTotal').textContent = leftTotal.toLocaleString('ru-RU');
+      document.getElementById('btLeftoverSplit').textContent = leftTotal > 0
+        ? `🛡️ ${leftByCls.inf.toLocaleString('ru-RU')} • ⚔️ ${leftByCls.lan.toLocaleString('ru-RU')} • 🏹 ${leftByCls.mrk.toLocaleString('ru-RU')}`
+        : 'Все войска задействованы без остатка';
+    }
+
     function updateBearCapHint(sumOwn, sumOther) {
       const hint = document.getElementById('btCapHint');
       if (!hint) return;
-      const myMarch = sessionCard && Number(sessionCard.marchCap) > 0 ? Number(sessionCard.marchCap) : 0;
+      if (bearCalcMode === 'smart') {
+        hint.classList.add('hidden');
+        return;
+      }
 
+      const myMarch = sessionCard && Number(sessionCard.marchCap) > 0 ? Number(sessionCard.marchCap) : 0;
       if (!myMarch || (sumOwn === 0 && sumOther === 0)) {
         hint.classList.add('hidden');
         return;
@@ -538,10 +980,10 @@
       hint.classList.remove('hidden');
       if (sumOwn <= myMarch && sumOther <= myMarch) {
         hint.className = 'rounded-xl px-3.5 py-2 text-xs font-mono border bg-emerald-950/40 border-emerald-500/40 text-emerald-200';
-        hint.textContent = `✓ Отряды полностью помещаются в ваш марш (${myMarch.toLocaleString('ru-RU')}): Свой ${sumOwn.toLocaleString('ru-RU')} • В чужие ${sumOther.toLocaleString('ru-RU')}.`;
+        hint.textContent = `✓ Отряды помещаются в ваш марш (${myMarch.toLocaleString('ru-RU')}).`;
       } else {
         hint.className = 'rounded-xl px-3.5 py-2 text-xs font-mono border bg-amber-950/45 border-amber-500/45 text-amber-200';
-        hint.textContent = `⚠️ Рассчитанный отряд (Свой: ${sumOwn.toLocaleString('ru-RU')} / В чужие: ${sumOther.toLocaleString('ru-RU')}) превышает размер марша из карточки (${myMarch.toLocaleString('ru-RU')}) — часть войск (в первую очередь пехоту) можно оставить дома ради максимума стрелков.`;
+        hint.textContent = `⚠️ Отряд превышает ваш марш (${myMarch.toLocaleString('ru-RU')}). Переключитесь на «🎯 Умный расчёт», чтобы автоматически срезать лишнюю пехоту и отдать максимум места стрелкам и копейщикам.`;
       }
     }
 
@@ -574,7 +1016,8 @@
 
     function copyBearTroopsCalc() {
       const marches = document.getElementById('bearMarchesSelect').value;
-      const lines = [`🐻 Расчёт войск на Медведя (маршей: ${marches}):`];
+      const modeTitle = bearCalcMode === 'smart' ? 'Умный расчёт — макс. урон' : 'Поровну';
+      const lines = [`🐻 Расчёт войск на Медведя (${modeTitle}, маршей: ${marches}):`];
       let hasAny = false;
 
       BEAR_TROOP_ROWS.forEach(r => {
@@ -584,7 +1027,7 @@
           hasAny = true;
           const ownTxt = document.getElementById('btOwn_' + r.id).textContent;
           const otherTxt = document.getElementById('btOther_' + r.id).textContent;
-          lines.push(`• ${r.name}: Свой ${ownTxt} | В чужие ${otherTxt} (всего ${total.toLocaleString('ru-RU')})`);
+          lines.push(`• ${r.name}: Свой ${ownTxt} | В чужие ${otherTxt}`);
         }
       });
 
@@ -593,7 +1036,8 @@
         return;
       }
 
-      lines.push(`ИТОГО: Свой ${document.getElementById('btSumOwn').textContent} | В чужие ${document.getElementById('btSumOther').textContent} (всего ${document.getElementById('btSumTotal').textContent})`);
+      lines.push(`ИТОГО Свой: ${document.getElementById('btSumOwn').textContent} (${document.getElementById('btOwnSummarySplit').textContent})`);
+      lines.push(`ИТОГО В чужие (${document.getElementById('btOtherMultLabel').textContent}): ${document.getElementById('btSumOther').textContent} (${document.getElementById('btOtherSummarySplit').textContent})`);
       navigator.clipboard.writeText(lines.join('\n')).then(() => showToast('Расчёт на Медведя скопирован!'));
     }
 
@@ -620,6 +1064,11 @@
       if (sessionCard.marchCap && Number(sessionCard.marchCap) > 0) {
         document.getElementById('calcCapInput').value = Number(sessionCard.marchCap);
         calculateTroopSplit();
+
+        if (!hasSavedBearCaps) {
+          document.getElementById('btOwnCapInput').value = Number(sessionCard.marchCap);
+          document.getElementById('btOtherCapInput').value = Number(sessionCard.marchCap);
+        }
       }
 
       if (!hasSavedBearState && sessionCard.marchesCount) {
