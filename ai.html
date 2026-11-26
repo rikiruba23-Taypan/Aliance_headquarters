@@ -299,6 +299,27 @@
     </div>
   </div>
 
+  <!-- МОДАЛЬНОЕ ОКНО ПРОСМОТРА ИЗОБРАЖЕНИЯ -->
+  <div id="imgPreviewModal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-5" onclick="if(event.target===this) closeAiImagePreview()">
+    <div class="w-full max-w-3xl rounded-2xl bg-slate-900 border border-slate-700/90 shadow-2xl p-3.5 sm:p-4 space-y-3">
+      <div class="flex items-center justify-between gap-2 pb-2 border-b border-slate-800">
+        <h3 id="imgPreviewTitle" class="font-bold text-xs sm:text-sm text-white truncate">Изображение</h3>
+        <div class="flex items-center gap-2 shrink-0">
+          <a id="imgPreviewOriginalLink" href="#" target="_blank" rel="noopener noreferrer"
+            class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] font-semibold text-sky-300 transition flex items-center gap-1" title="Открыть оригинал в новой вкладке">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i><span class="hidden sm:inline">Оригинал</span>
+          </a>
+          <button type="button" onclick="closeAiImagePreview()" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition" title="Закрыть (Esc)">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+      <div class="flex justify-center bg-slate-950 rounded-xl border border-slate-800 p-2 max-h-[78vh] overflow-auto thin-scroll">
+        <img id="imgPreviewEl" src="" alt="" referrerpolicy="no-referrer" class="rounded-lg max-h-[72vh] w-auto object-contain" />
+      </div>
+    </div>
+  </div>
+
   <!-- ВСПЛЫВАЮЩЕЕ УВЕДОМЛЕНИЕ (TOAST) -->
   <div id="toast" class="pointer-events-none fixed bottom-20 left-1/2 -translate-x-1/2 z-50 opacity-0 translate-y-2 transition-all duration-200 px-3.5 py-2 rounded-xl bg-slate-900/95 border border-sky-500/40 text-xs font-semibold text-sky-200 shadow-xl backdrop-blur-md flex items-center gap-2">
     <i class="fa-solid fa-circle-check text-emerald-400"></i>
@@ -573,10 +594,13 @@
              </button>`
           : '';
 
+        const imagesHtml = !isError ? buildMessageImagesHtml(m.images, idx) : '';
+
         return `
           <div class="flex flex-col items-start ${animClass}">
             <div class="max-w-[92%] sm:max-w-[82%] rounded-2xl rounded-bl-sm px-3.5 py-3 text-xs sm:text-sm leading-relaxed backdrop-blur-sm ${bubbleStyle} msg-prose">
               ${isError ? escapeHtml(m.text).replace(/\n/g, '<br>') : formatAiText(m.text)}
+              ${imagesHtml}
               ${retryBtn}
             </div>
             <div class="flex items-center gap-2 mt-1 pl-1">
@@ -589,6 +613,90 @@
 
       scrollToBottom(false);
     }
+
+    function isSafeImageUrl(url) {
+      const s = String(url || '').trim();
+      return s.startsWith('https://') || s.startsWith('http://') ||
+        s.startsWith('Hero_cards/') || s.startsWith('Heroes/') ||
+        s.startsWith('kb_images/') || s.startsWith('assets/');
+    }
+
+    function buildMessageImagesHtml(images, msgIdx) {
+      if (!Array.isArray(images) || images.length === 0) return '';
+      const valid = images.filter(img => img && isSafeImageUrl(img.url));
+      if (valid.length === 0) return '';
+
+      const gridCls = valid.length === 1 ? 'grid-cols-1 max-w-xs' : 'grid-cols-2';
+      const tiles = valid.map((img, imgIdx) => {
+        const safeUrl = escapeHtml(img.url);
+        const safeCaption = escapeHtml(img.caption || 'Открыть изображение');
+        return `
+          <button type="button" onclick="openAiImagePreview(${msgIdx}, ${imgIdx})"
+            class="ai-img-tile group relative rounded-xl overflow-hidden bg-slate-950/90 border border-slate-700/80 hover:border-sky-400/70 transition text-left focus:outline-none">
+            <img src="${safeUrl}" data-orig-url="${safeUrl}" alt="${safeCaption}" loading="lazy" referrerpolicy="no-referrer"
+              onerror="handleAiImgError(this)"
+              class="w-full h-36 sm:h-40 object-contain bg-slate-950 p-1 group-hover:scale-[1.03] transition duration-200" />
+            <div class="px-2 py-1 bg-slate-900/95 border-t border-slate-800/90 flex items-center justify-between gap-1.5">
+              <span class="text-[10px] text-slate-300 truncate">${safeCaption}</span>
+              <i class="fa-solid fa-magnifying-glass-plus text-[10px] text-sky-400 shrink-0"></i>
+            </div>
+          </button>
+        `;
+      }).join('');
+
+      return `<div class="ai-img-grid mt-3 pt-2.5 border-t border-slate-800/80 grid ${gridCls} gap-2">${tiles}</div>`;
+    }
+
+    function handleAiImgError(imgEl) {
+      if (!imgEl) return;
+      const orig = imgEl.getAttribute('data-orig-url') || '';
+      if (!imgEl.dataset.fbTried && orig.startsWith('Hero_cards/') && orig.includes('-')) {
+        imgEl.dataset.fbTried = '1';
+        imgEl.src = orig.replace(/-/g, ' ');
+        return;
+      }
+      const tile = imgEl.closest('.ai-img-tile');
+      const grid = tile ? tile.parentElement : null;
+      if (tile) tile.remove();
+      if (grid && grid.children.length === 0) grid.remove();
+    }
+
+    function openAiImagePreview(msgIdx, imgIdx) {
+      const item = chatHistory[msgIdx];
+      if (!item || !Array.isArray(item.images)) return;
+      const valid = item.images.filter(img => img && isSafeImageUrl(img.url));
+      const imgObj = valid[imgIdx];
+      if (!imgObj) return;
+
+      const modal = document.getElementById('imgPreviewModal');
+      const imgEl = document.getElementById('imgPreviewEl');
+      const titleEl = document.getElementById('imgPreviewTitle');
+      const linkEl = document.getElementById('imgPreviewOriginalLink');
+
+      titleEl.textContent = imgObj.caption || 'Изображение';
+      linkEl.href = imgObj.url;
+      delete imgEl.dataset.fbTried;
+      imgEl.onerror = function() {
+        if (!this.dataset.fbTried && imgObj.url.startsWith('Hero_cards/') && imgObj.url.includes('-')) {
+          this.dataset.fbTried = '1';
+          this.src = imgObj.url.replace(/-/g, ' ');
+        }
+      };
+      imgEl.src = imgObj.url;
+      modal.classList.remove('hidden');
+    }
+
+    function closeAiImagePreview() {
+      document.getElementById('imgPreviewModal').classList.add('hidden');
+      document.getElementById('imgPreviewEl').src = '';
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeAiImagePreview();
+        closeClearModal();
+      }
+    });
 
     function copyMessage(idx, btnEl) {
       const item = chatHistory[idx];
@@ -799,7 +907,8 @@
         removeLoader();
 
         if (res.ok && res.reply) {
-          chatHistory.push({ role: 'model', text: res.reply, time: nowTimeStr() });
+          const imgs = Array.isArray(res.images) ? res.images.filter(x => x && x.url) : [];
+          chatHistory.push({ role: 'model', text: res.reply, images: imgs, time: nowTimeStr() });
           sessionStorage.setItem('harmony_ai_chat', JSON.stringify(chatHistory.slice(-20)));
           if (res.remaining !== undefined) updateLimitBadge(res.remaining);
           if (res.detectedGen) updateGenBadge(res.detectedGen);
