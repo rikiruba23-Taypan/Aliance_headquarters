@@ -170,63 +170,62 @@
       </div>
     </section>
 
-    <!-- 2. РАСЧЁТ ВОЙСК НА МЕДВЕДЯ (РАСПРЕДЕЛЕНИЕ ПО ТИРАМ К5–Т7) -->
+    <!-- 2. РАСЧЁТ ВОЙСК НА МЕДВЕДЯ -->
     <section class="glass-card rounded-3xl p-5 sm:p-7 shadow-xl border border-amber-500/35 space-y-4">
-      <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+      <div class="space-y-3 pb-3 border-b border-slate-800">
         <div>
           <h2 class="text-lg font-extrabold text-white flex items-center gap-2">
             <span>🐻</span>
-            <span>Расчёт войск на Медведя (по тирам К5–Т7)</span>
+            <span>Расчёт войск на Медведя</span>
           </h2>
           <p class="text-xs text-slate-400 mt-0.5">
             Введите наличие каждого вида войск — калькулятор разложит их на <b>Свой сбор</b> и походы <b>В чужие</b>, чтобы войска распределились без остатка.
           </p>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2 text-xs">
-          <button type="button" id="btOnlyFilledBtn" onclick="toggleBearOnlyFilled()"
-            class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-semibold transition flex items-center gap-1.5">
-            <i class="fa-solid fa-filter text-sky-400"></i>
-            <span>Только заполненные</span>
-          </button>
-          <button type="button" onclick="copyBearTroopsCalc()"
-            class="px-3 py-1.5 rounded-xl bg-sky-600/20 hover:bg-sky-600/35 border border-sky-500/40 text-sky-200 font-semibold transition flex items-center gap-1.5">
-            <i class="fa-regular fa-copy"></i>
-            <span>Копировать</span>
-          </button>
-          <button type="button" onclick="resetBearTroops()"
-            class="px-3 py-1.5 rounded-xl bg-rose-950/60 hover:bg-rose-900/70 border border-rose-500/40 text-rose-200 font-semibold transition flex items-center gap-1.5">
-            <i class="fa-solid fa-rotate-left"></i>
-            <span>Сбросить</span>
-          </button>
+        <!-- Слева: режимы расчёта + Особый марш | Справа: Только заполненные / Копировать / Сброс -->
+        <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" id="btModeClassicBtn" onclick="setBearCalcMode('classic')"
+              class="px-3.5 py-1.5 rounded-xl border font-bold transition flex items-center gap-1.5 bg-sky-600/25 border-sky-400 text-white">
+              <span>Поровну</span>
+            </button>
+            <button type="button" id="btModeSmartBtn" onclick="setBearCalcMode('smart')"
+              class="px-3.5 py-1.5 rounded-xl border font-bold transition flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 border-slate-700 text-slate-300">
+              <span>🎯</span><span>Умный расчёт (свои %)</span>
+            </button>
+            <button type="button" id="btSpecialToggleBtn" onclick="toggleBearSpecialMarch()"
+              class="px-3.5 py-1.5 rounded-xl border font-bold transition flex items-center gap-1.5 bg-slate-900 hover:bg-purple-950/50 border-slate-700 hover:border-purple-400/60 text-slate-300">
+              <span>⭐</span><span>Особый марш (в топ-рейд)</span>
+            </button>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-1.5">
+            <button type="button" id="btOnlyFilledBtn" onclick="toggleBearOnlyFilled()"
+              class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-semibold transition flex items-center gap-1.5">
+              <i class="fa-solid fa-filter text-sky-400"></i>
+              <span>Только заполненные</span>
+            </button>
+            <button type="button" onclick="copyBearTroopsCalc()"
+              class="px-3 py-1.5 rounded-xl bg-sky-600/20 hover:bg-sky-600/35 border border-sky-500/40 text-sky-200 font-semibold transition flex items-center gap-1.5">
+              <i class="fa-regular fa-copy"></i>
+              <span>Копировать</span>
+            </button>
+            <button type="button" onclick="resetBearTroops()"
+              class="px-3 py-1.5 rounded-xl bg-rose-950/60 hover:bg-rose-900/70 border border-rose-500/40 text-rose-200 font-semibold transition flex items-center gap-1.5">
+              <i class="fa-solid fa-rotate-left"></i>
+              <span>Сброс</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- Переключатель режима расчёта + кнопка «Особый марш» -->
-      <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
-        <div class="flex flex-wrap items-center gap-2">
-          <button type="button" id="btModeClassicBtn" onclick="setBearCalcMode('classic')"
-            class="px-3.5 py-2 rounded-xl border font-bold transition flex items-center gap-1.5 bg-sky-600/25 border-sky-400 text-white">
-            <span>📊</span><span>Как в таблице (поровну)</span>
-          </button>
-          <button type="button" id="btModeSmartBtn" onclick="setBearCalcMode('smart')"
-            class="px-3.5 py-2 rounded-xl border font-bold transition flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 border-slate-700 text-slate-300">
-            <span>🎯</span><span>Умный расчёт (свои %)</span>
-          </button>
-        </div>
-
-        <button type="button" id="btSpecialToggleBtn" onclick="toggleBearSpecialMarch()"
-          class="px-3.5 py-2 rounded-xl border font-bold transition flex items-center gap-1.5 bg-slate-900 hover:bg-purple-950/50 border-slate-700 hover:border-purple-400/60 text-slate-300">
-          <span>⭐</span><span>Особый марш (в топ-рейд)</span>
-        </button>
-      </div>
-
-      <!-- Панель управления маршами -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5 text-xs">
-        <div class="flex items-center justify-between gap-3 bg-slate-950/90 border border-slate-800 rounded-xl px-3.5 py-2">
-          <label for="bearMarchesSelect" class="font-bold text-amber-300">Маршей доступно:</label>
+      <!-- Панель управления: Маршей доступно + Фильтрация тиров -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-3 bg-slate-900/80 border border-slate-800 rounded-2xl p-3 text-xs items-center">
+        <div class="md:col-span-3 flex items-center justify-between gap-3 bg-slate-950/90 border border-slate-800 rounded-xl px-3.5 py-2">
+          <label for="bearMarchesSelect" class="font-bold text-amber-300 whitespace-nowrap">Маршей доступно:</label>
           <select id="bearMarchesSelect" onchange="recalcBearTroops()"
-            class="bg-slate-900 border border-amber-500/50 rounded-lg px-3 py-1.5 font-mono text-sm font-extrabold text-white focus:outline-none focus:border-amber-400">
+            class="bg-slate-900 border border-amber-500/50 rounded-lg px-2.5 py-1 font-mono text-sm font-extrabold text-white focus:outline-none focus:border-amber-400">
             <option value="1">1</option>
             <option value="2">2</option>
             <option value="3">3</option>
@@ -237,18 +236,17 @@
           </select>
         </div>
 
-        <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-950/90 border border-slate-800 rounded-xl px-3.5 py-2 md:col-span-2">
-          <div class="flex items-center gap-2 flex-wrap">
-            <label for="bearModeSelect" class="font-semibold text-slate-300 shrink-0">Схема маршей:</label>
-            <select id="bearModeSelect" onchange="recalcBearTroops()"
-              class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-sky-200 font-medium focus:outline-none focus:border-sky-400">
-              <option value="plus1" selected>Как в таблице: 1 свой + N чужих</option>
-              <option value="exact">Всего N маршей: 1 свой + (N − 1) чужих</option>
-            </select>
+        <div class="md:col-span-9 flex flex-wrap items-center justify-between gap-2 bg-slate-950/90 border border-slate-800 rounded-xl px-3 py-2 text-[11px]">
+          <div class="flex flex-wrap items-center gap-1">
+            <span class="text-slate-400 font-semibold mr-1">Тиры:</span>
+            <div id="btTierFilterBar" class="flex flex-wrap items-center gap-1"></div>
           </div>
-          <span id="btMarchesBreakdownBadge" class="font-mono text-[11px] px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 text-slate-300">
-            1 свой + 6 чужих
-          </span>
+          <div class="flex items-center gap-1 shrink-0 font-mono">
+            <button type="button" onclick="setBearTierGroup('low')" class="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-[10px] text-sky-300 transition">Т1–Т6</button>
+            <button type="button" onclick="setBearTierGroup('normal')" class="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-[10px] text-amber-300 transition">Т7–Т10</button>
+            <button type="button" onclick="setBearTierGroup('crystal')" class="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-[10px] text-rose-300 transition">К1–К5</button>
+            <button type="button" onclick="setBearTierGroup('all')" class="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-[10px] text-white transition">Все</button>
+          </div>
         </div>
       </div>
 
@@ -391,22 +389,8 @@
       <!-- Компактная 2-колоночная раскладка: слева плотная таблица, справа итоги -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
 
-        <!-- Левая колонка: фильтр тиров + компактная таблица -->
+        <!-- Левая колонка: компактная таблица -->
         <div class="lg:col-span-8 space-y-2.5 min-w-0">
-          <!-- Быстрый выбор отображаемых тиров -->
-          <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-900/75 border border-slate-800 rounded-xl px-3 py-2 text-[11px]">
-            <div class="flex flex-wrap items-center gap-1">
-              <span class="text-slate-400 font-semibold mr-1">Тиры:</span>
-              <div id="btTierFilterBar" class="flex flex-wrap items-center gap-1"></div>
-            </div>
-            <div class="flex items-center gap-1 shrink-0 font-mono">
-              <button type="button" onclick="setBearTierGroup('low')" class="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-[10px] text-sky-300 transition">Т1–Т6</button>
-              <button type="button" onclick="setBearTierGroup('normal')" class="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-[10px] text-amber-300 transition">Т7–Т10</button>
-              <button type="button" onclick="setBearTierGroup('crystal')" class="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-[10px] text-rose-300 transition">К1–К5</button>
-              <button type="button" onclick="setBearTierGroup('all')" class="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-[10px] text-white transition">Все</button>
-            </div>
-          </div>
-
           <div class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950/70">
             <table class="w-full text-left border-collapse text-xs">
               <thead>
@@ -1010,7 +994,6 @@
         if (!st || typeof st !== 'object') return;
         hasSavedBearState = true;
         if (st.marches) document.getElementById('bearMarchesSelect').value = String(st.marches);
-        if (st.mode) document.getElementById('bearModeSelect').value = st.mode;
         if (st.calcMode === 'smart' || st.calcMode === 'classic') bearCalcMode = st.calcMode;
         if (typeof st.specialEnabled === 'boolean') bearSpecialEnabled = st.specialEnabled;
 
@@ -1167,18 +1150,9 @@
 
     function recalcBearTroops() {
       const marches = Math.max(1, Number(document.getElementById('bearMarchesSelect').value) || 6);
-      const mode = document.getElementById('bearModeSelect').value || 'plus1';
+      const mode = 'plus1';
       const specialCount = bearSpecialEnabled ? 1 : 0;
-      const otherCount = mode === 'exact'
-        ? Math.max(0, marches - 1 - specialCount)
-        : Math.max(0, marches - specialCount);
-
-      const breakBadge = document.getElementById('btMarchesBreakdownBadge');
-      if (breakBadge) {
-        breakBadge.textContent = bearSpecialEnabled
-          ? `1 особый + 1 свой + ${otherCount} чужих`
-          : `1 свой + ${otherCount} чужих`;
-      }
+      const otherCount = Math.max(0, marches - specialCount);
 
       const ownCap = Math.max(0, Math.floor(Number(document.getElementById('btOwnCapInput')?.value) || 0));
       const otherCap = Math.max(0, Math.floor(Number(document.getElementById('btOtherCapInput')?.value) || 0));
@@ -1486,7 +1460,7 @@
     function copyBearTroopsCalc() {
       const marches = document.getElementById('bearMarchesSelect').value;
       const modeTitle = bearCalcMode === 'smart' ? 'Умный расчёт' : 'Поровну';
-      const lines = [`🐻 Расчёт войск на Медведя (${modeTitle}, ${document.getElementById('btMarchesBreakdownBadge').textContent}):`];
+      const lines = [`🐻 Расчёт войск на Медведя (${modeTitle}, маршей: ${marches}):`];
       let hasAny = false;
 
       BEAR_TROOP_ROWS.forEach(r => {
