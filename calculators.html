@@ -253,21 +253,63 @@
       </div>
 
       <!-- Настройка «⭐ Особого марша» (видна при включении в обоих режимах) -->
-      <div id="bearSpecialSettings" class="hidden bg-purple-950/25 border border-purple-500/45 rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div class="space-y-0.5">
-          <div class="font-extrabold text-purple-200 flex items-center gap-1.5">
-            <span>⭐</span><span>Особый марш (усиленный вход в рейд топ-лидера)</span>
+      <div id="bearSpecialSettings" class="hidden bg-purple-950/25 border border-purple-500/45 rounded-2xl p-3.5 space-y-3 text-xs">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="space-y-0.5">
+            <div class="font-extrabold text-purple-200 flex items-center gap-1.5">
+              <span>⭐</span><span>Особый марш (усиленный вход в рейд топ-лидера)</span>
+            </div>
+            <p class="text-[11px] text-slate-400">Забирает лучшие тиры (К5 → Т1) под свой лимит. В «Умном расчёте» можно задать ему 1-й приоритет выше «Своего» сбора.</p>
           </div>
-          <p class="text-[11px] text-slate-400">Забирает лучшие тиры (К5 → Т7) под свой лимит. В «Умном расчёте» можно задать ему 1-й приоритет выше «Своего» сбора.</p>
+          <div class="flex flex-wrap items-center gap-2">
+            <label for="btSpecialCapInput" class="font-semibold text-purple-300">Лимит «Особого»:</label>
+            <input id="btSpecialCapInput" type="number" min="1000" step="500" value="150000" oninput="recalcBearTroops()"
+              class="w-32 bg-slate-950 border border-purple-500/50 focus:border-purple-400 rounded-lg px-2.5 py-1.5 font-mono text-sm font-bold text-white focus:outline-none" />
+            <div class="flex items-center gap-1 font-mono text-[10px]">
+              <button type="button" onclick="syncBearSpecialCapToOwn()" class="px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 transition">=Свой</button>
+              <button type="button" onclick="applyBearSpecialBuff(10)" class="px-2 py-1 rounded-lg bg-purple-900/50 hover:bg-purple-800/60 border border-purple-500/40 text-purple-200 transition" title="Лимит «Своего» +10% (бафф)">+10%</button>
+              <button type="button" onclick="applyBearSpecialBuff(20)" class="px-2 py-1 rounded-lg bg-purple-900/50 hover:bg-purple-800/60 border border-purple-500/40 text-purple-200 transition" title="Лимит «Своего» +20% (бафф)">+20%</button>
+            </div>
+          </div>
         </div>
-        <div class="flex flex-wrap items-center gap-2">
-          <label for="btSpecialCapInput" class="font-semibold text-purple-300">Лимит «Особого»:</label>
-          <input id="btSpecialCapInput" type="number" min="1000" step="500" value="150000" oninput="recalcBearTroops()"
-            class="w-32 bg-slate-950 border border-purple-500/50 focus:border-purple-400 rounded-lg px-2.5 py-1.5 font-mono text-sm font-bold text-white focus:outline-none" />
-          <div class="flex items-center gap-1 font-mono text-[10px]">
-            <button type="button" onclick="syncBearSpecialCapToOwn()" class="px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 transition">=Свой</button>
-            <button type="button" onclick="applyBearSpecialBuff(10)" class="px-2 py-1 rounded-lg bg-purple-900/50 hover:bg-purple-800/60 border border-purple-500/40 text-purple-200 transition" title="Лимит «Своего» +10% (бафф)">+10%</button>
-            <button type="button" onclick="applyBearSpecialBuff(20)" class="px-2 py-1 rounded-lg bg-purple-900/50 hover:bg-purple-800/60 border border-purple-500/40 text-purple-200 transition" title="Лимит «Своего» +20% (бафф)">+20%</button>
+
+        <!-- Приоритет набора по порядку клика -->
+        <div class="pt-3 border-t border-purple-500/25 space-y-2">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="font-bold text-purple-200">Приоритет набора (по порядку клика):</span>
+              <span id="btSpecialOrderSummary" class="font-mono text-[11px] px-2 py-0.5 rounded-lg bg-slate-950/90 border border-slate-700/80 text-slate-400">
+                По умолчанию (пропорции / тиры)
+              </span>
+            </div>
+            <button type="button" id="btSpecialOrderResetBtn" onclick="resetBearSpecialOrder()"
+              class="hidden px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-rose-950/70 border border-slate-700 hover:border-rose-400/50 text-[11px] font-semibold text-slate-300 hover:text-rose-200 transition">
+              <i class="fa-solid fa-rotate-left mr-1"></i>Сброс порядка
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <button type="button" id="btSpecOrdBtn_inf" onclick="toggleBearSpecialOrder('inf')"
+              class="px-3 py-2 rounded-xl border text-left transition flex items-center justify-between gap-2 bg-slate-950/85 border-slate-700 hover:border-amber-400/60 text-slate-200">
+              <span class="font-bold flex items-center gap-1.5"><span>🛡️</span><span>Пехота</span></span>
+              <span id="btSpecOrdLbl_inf" class="font-mono text-[10px] px-2 py-0.5 rounded-md bg-slate-900 border border-slate-700 text-slate-400">+ 1 • Макс</span>
+            </button>
+
+            <button type="button" id="btSpecOrdBtn_lan" onclick="toggleBearSpecialOrder('lan')"
+              class="px-3 py-2 rounded-xl border text-left transition flex items-center justify-between gap-2 bg-slate-950/85 border-slate-700 hover:border-sky-400/60 text-slate-200">
+              <span class="font-bold flex items-center gap-1.5"><span>⚔️</span><span>Копейщики</span></span>
+              <span id="btSpecOrdLbl_lan" class="font-mono text-[10px] px-2 py-0.5 rounded-md bg-slate-900 border border-slate-700 text-slate-400">+ 1 • Макс</span>
+            </button>
+
+            <button type="button" id="btSpecOrdBtn_mrk" onclick="toggleBearSpecialOrder('mrk')"
+              class="px-3 py-2 rounded-xl border text-left transition flex items-center justify-between gap-2 bg-slate-950/85 border-slate-700 hover:border-emerald-400/60 text-slate-200">
+              <span class="font-bold flex items-center gap-1.5"><span>🏹</span><span>Стрелки</span></span>
+              <span id="btSpecOrdLbl_mrk" class="font-mono text-[10px] px-2 py-0.5 rounded-md bg-slate-900 border border-slate-700 text-slate-400">+ 1 • Макс</span>
+            </button>
+          </div>
+
+          <div class="text-[10px] text-slate-400">
+            Нажимайте по очереди: <b>1-я кнопка</b> заберёт максимум этого класса, <b>2-я</b> — максимум из оставшегося лимита, <b>3-я</b> — добор остатка. Невыбранные классы в особый марш не попадут.
           </div>
         </div>
       </div>
@@ -358,9 +400,10 @@
               <div id="btTierFilterBar" class="flex flex-wrap items-center gap-1"></div>
             </div>
             <div class="flex items-center gap-1 shrink-0 font-mono">
-              <button type="button" onclick="setBearTierGroup('normal')" class="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-[10px] text-sky-300 transition">Т7–Т10</button>
+              <button type="button" onclick="setBearTierGroup('low')" class="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-[10px] text-sky-300 transition">Т1–Т6</button>
+              <button type="button" onclick="setBearTierGroup('normal')" class="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-[10px] text-amber-300 transition">Т7–Т10</button>
               <button type="button" onclick="setBearTierGroup('crystal')" class="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-[10px] text-rose-300 transition">К1–К5</button>
-              <button type="button" onclick="setBearTierGroup('all')" class="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-[10px] text-amber-300 transition">Все</button>
+              <button type="button" onclick="setBearTierGroup('all')" class="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-[10px] text-white transition">Все</button>
             </div>
           </div>
 
@@ -540,46 +583,95 @@
     let bearOnlyFilled = false;
     let bearCalcMode = 'classic'; // 'classic' | 'smart'
     let bearSpecialEnabled = false;
+    let bearSpecialOrder = []; // Порядок клика для «Особого марша», напр. ['lan', 'mrk', 'inf']
     let hasSavedBearState = false;
     let hasSavedBearCaps = false;
     let pctCapFlashTimer = null;
 
+    // Игровая палитра тиров: Т1–Т2 серые, Т3–Т4 зелёные, Т5–Т6 синие, Т7–Т8 фиолетовые, Т9–Т10 оранжево-золотые, К1–К5 огненно-красные
+    const BEAR_TIER_STYLES = {
+      'К5':  { row: 'bg-red-950/55 border-l-4 border-l-red-500',          name: 'text-rose-200',    btnOn: 'bg-red-500/30 border-red-400 text-rose-100 font-bold',          btnOff: 'bg-slate-950 border-red-500/35 text-rose-300/70 hover:border-red-400 hover:text-rose-200' },
+      'К4':  { row: 'bg-red-950/45 border-l-4 border-l-red-500/90',       name: 'text-rose-200',    btnOn: 'bg-red-500/30 border-red-400 text-rose-100 font-bold',          btnOff: 'bg-slate-950 border-red-500/35 text-rose-300/70 hover:border-red-400 hover:text-rose-200' },
+      'К3':  { row: 'bg-rose-950/45 border-l-4 border-l-rose-500',        name: 'text-rose-200',    btnOn: 'bg-rose-500/30 border-rose-400 text-rose-100 font-bold',        btnOff: 'bg-slate-950 border-rose-500/35 text-rose-300/70 hover:border-rose-400 hover:text-rose-200' },
+      'К2':  { row: 'bg-rose-950/35 border-l-4 border-l-rose-500/80',     name: 'text-rose-200',    btnOn: 'bg-rose-500/30 border-rose-400 text-rose-100 font-bold',        btnOff: 'bg-slate-950 border-rose-500/35 text-rose-300/70 hover:border-rose-400 hover:text-rose-200' },
+      'К1':  { row: 'bg-rose-950/25 border-l-4 border-l-rose-400/75',     name: 'text-rose-200',    btnOn: 'bg-rose-500/30 border-rose-400 text-rose-100 font-bold',        btnOff: 'bg-slate-950 border-rose-500/35 text-rose-300/70 hover:border-rose-400 hover:text-rose-200' },
+
+      'Т10': { row: 'bg-amber-950/45 border-l-4 border-l-amber-400',      name: 'text-amber-200',   btnOn: 'bg-amber-500/30 border-amber-400 text-amber-100 font-bold',     btnOff: 'bg-slate-950 border-amber-500/35 text-amber-300/70 hover:border-amber-400 hover:text-amber-200' },
+      'Т9':  { row: 'bg-orange-950/35 border-l-4 border-l-orange-400',    name: 'text-amber-200',   btnOn: 'bg-orange-500/30 border-orange-400 text-amber-100 font-bold',   btnOff: 'bg-slate-950 border-orange-500/35 text-amber-300/70 hover:border-orange-400 hover:text-amber-200' },
+
+      'Т8':  { row: 'bg-purple-950/45 border-l-4 border-l-purple-400',    name: 'text-purple-200',  btnOn: 'bg-purple-500/30 border-purple-400 text-purple-100 font-bold',  btnOff: 'bg-slate-950 border-purple-500/35 text-purple-300/70 hover:border-purple-400 hover:text-purple-200' },
+      'Т7':  { row: 'bg-purple-950/30 border-l-4 border-l-purple-400/80', name: 'text-purple-200',  btnOn: 'bg-purple-500/30 border-purple-400 text-purple-100 font-bold',  btnOff: 'bg-slate-950 border-purple-500/35 text-purple-300/70 hover:border-purple-400 hover:text-purple-200' },
+
+      'Т6':  { row: 'bg-sky-950/45 border-l-4 border-l-sky-400',          name: 'text-sky-200',     btnOn: 'bg-sky-500/30 border-sky-400 text-sky-100 font-bold',           btnOff: 'bg-slate-950 border-sky-500/35 text-sky-300/70 hover:border-sky-400 hover:text-sky-200' },
+      'Т5':  { row: 'bg-sky-950/30 border-l-4 border-l-sky-400/80',       name: 'text-sky-200',     btnOn: 'bg-sky-500/30 border-sky-400 text-sky-100 font-bold',           btnOff: 'bg-slate-950 border-sky-500/35 text-sky-300/70 hover:border-sky-400 hover:text-sky-200' },
+
+      'Т4':  { row: 'bg-emerald-950/45 border-l-4 border-l-emerald-400',  name: 'text-emerald-200', btnOn: 'bg-emerald-500/30 border-emerald-400 text-emerald-100 font-bold', btnOff: 'bg-slate-950 border-emerald-500/35 text-emerald-300/70 hover:border-emerald-400 hover:text-emerald-200' },
+      'Т3':  { row: 'bg-emerald-950/30 border-l-4 border-l-emerald-400/80', name: 'text-emerald-200', btnOn: 'bg-emerald-500/30 border-emerald-400 text-emerald-100 font-bold', btnOff: 'bg-slate-950 border-emerald-500/35 text-emerald-300/70 hover:border-emerald-400 hover:text-emerald-200' },
+
+      'Т2':  { row: 'bg-slate-800/50 border-l-4 border-l-slate-400',      name: 'text-slate-300',   btnOn: 'bg-slate-600/45 border-slate-400 text-slate-100 font-bold',     btnOff: 'bg-slate-950 border-slate-700 text-slate-400/80 hover:border-slate-500 hover:text-slate-200' },
+      'Т1':  { row: 'bg-slate-800/35 border-l-4 border-l-slate-500',      name: 'text-slate-300',   btnOn: 'bg-slate-600/45 border-slate-400 text-slate-100 font-bold',     btnOff: 'bg-slate-950 border-slate-700 text-slate-400/80 hover:border-slate-500 hover:text-slate-200' }
+    };
+
     const BEAR_TROOP_ROWS = [
-      { id: 'k5_inf', cls: 'inf', tier: 'К5', icon: '🛡️', name: 'Огненный пехотинец (К5)',    bg: 'bg-rose-950/55',    borderTop: 'border-t-2 border-slate-700/90' },
-      { id: 'k5_lan', cls: 'lan', tier: 'К5', icon: '⚔️', name: 'Огненный копейщик (К5)',     bg: 'bg-rose-950/55',    borderTop: '' },
-      { id: 'k5_mrk', cls: 'mrk', tier: 'К5', icon: '🏹', name: 'Огненный стрелок (К5)',      bg: 'bg-rose-950/55',    borderTop: '' },
+      { id: 'k5_inf',  cls: 'inf', tier: 'К5',  icon: '🛡️', name: 'Огненный пехотинец (К5)',    borderTop: 'border-t-2 border-slate-700/90' },
+      { id: 'k5_lan',  cls: 'lan', tier: 'К5',  icon: '⚔️', name: 'Огненный копейщик (К5)',     borderTop: '' },
+      { id: 'k5_mrk',  cls: 'mrk', tier: 'К5',  icon: '🏹', name: 'Огненный стрелок (К5)',      borderTop: '' },
 
-      { id: 'k4_inf', cls: 'inf', tier: 'К4', icon: '🛡️', name: 'Огненный пехотинец (К4)',    bg: 'bg-rose-950/42',    borderTop: 'border-t-2 border-slate-700/90' },
-      { id: 'k4_lan', cls: 'lan', tier: 'К4', icon: '⚔️', name: 'Огненный копейщик (К4)',     bg: 'bg-rose-950/42',    borderTop: '' },
-      { id: 'k4_mrk', cls: 'mrk', tier: 'К4', icon: '🏹', name: 'Огненный стрелок (К4)',      bg: 'bg-rose-950/42',    borderTop: '' },
+      { id: 'k4_inf',  cls: 'inf', tier: 'К4',  icon: '🛡️', name: 'Огненный пехотинец (К4)',    borderTop: 'border-t-2 border-slate-700/90' },
+      { id: 'k4_lan',  cls: 'lan', tier: 'К4',  icon: '⚔️', name: 'Огненный копейщик (К4)',     borderTop: '' },
+      { id: 'k4_mrk',  cls: 'mrk', tier: 'К4',  icon: '🏹', name: 'Огненный стрелок (К4)',      borderTop: '' },
 
-      { id: 'k3_inf', cls: 'inf', tier: 'К3', icon: '🛡️', name: 'Огненный пехотинец (К3)',    bg: 'bg-rose-950/32',    borderTop: 'border-t-2 border-slate-700/90' },
-      { id: 'k3_lan', cls: 'lan', tier: 'К3', icon: '⚔️', name: 'Огненный копейщик (К3)',     bg: 'bg-rose-950/32',    borderTop: '' },
-      { id: 'k3_mrk', cls: 'mrk', tier: 'К3', icon: '🏹', name: 'Огненный стрелок (К3)',      bg: 'bg-rose-950/32',    borderTop: '' },
+      { id: 'k3_inf',  cls: 'inf', tier: 'К3',  icon: '🛡️', name: 'Огненный пехотинец (К3)',    borderTop: 'border-t-2 border-slate-700/90' },
+      { id: 'k3_lan',  cls: 'lan', tier: 'К3',  icon: '⚔️', name: 'Огненный копейщик (К3)',     borderTop: '' },
+      { id: 'k3_mrk',  cls: 'mrk', tier: 'К3',  icon: '🏹', name: 'Огненный стрелок (К3)',      borderTop: '' },
 
-      { id: 'k2_inf', cls: 'inf', tier: 'К2', icon: '🛡️', name: 'Огненный пехотинец (К2)',    bg: 'bg-rose-950/22',    borderTop: 'border-t-2 border-slate-700/90' },
-      { id: 'k2_lan', cls: 'lan', tier: 'К2', icon: '⚔️', name: 'Огненный копейщик (К2)',     bg: 'bg-rose-950/22',    borderTop: '' },
-      { id: 'k2_mrk', cls: 'mrk', tier: 'К2', icon: '🏹', name: 'Огненный стрелок (К2)',      bg: 'bg-rose-950/22',    borderTop: '' },
+      { id: 'k2_inf',  cls: 'inf', tier: 'К2',  icon: '🛡️', name: 'Огненный пехотинец (К2)',    borderTop: 'border-t-2 border-slate-700/90' },
+      { id: 'k2_lan',  cls: 'lan', tier: 'К2',  icon: '⚔️', name: 'Огненный копейщик (К2)',     borderTop: '' },
+      { id: 'k2_mrk',  cls: 'mrk', tier: 'К2',  icon: '🏹', name: 'Огненный стрелок (К2)',      borderTop: '' },
 
-      { id: 'k1_inf', cls: 'inf', tier: 'К1', icon: '🛡️', name: 'Огненный пехотинец (К1)',    bg: 'bg-rose-950/15',    borderTop: 'border-t-2 border-slate-700/90' },
-      { id: 'k1_lan', cls: 'lan', tier: 'К1', icon: '⚔️', name: 'Огненный копейщик (К1)',     bg: 'bg-rose-950/15',    borderTop: '' },
-      { id: 'k1_mrk', cls: 'mrk', tier: 'К1', icon: '🏹', name: 'Огненный стрелок (К1)',      bg: 'bg-rose-950/15',    borderTop: '' },
+      { id: 'k1_inf',  cls: 'inf', tier: 'К1',  icon: '🛡️', name: 'Огненный пехотинец (К1)',    borderTop: 'border-t-2 border-slate-700/90' },
+      { id: 'k1_lan',  cls: 'lan', tier: 'К1',  icon: '⚔️', name: 'Огненный копейщик (К1)',     borderTop: '' },
+      { id: 'k1_mrk',  cls: 'mrk', tier: 'К1',  icon: '🏹', name: 'Огненный стрелок (К1)',      borderTop: '' },
 
-      { id: 't10_inf', cls: 'inf', tier: 'Т10', icon: '🛡️', name: 'Непобедимый пехотинец (Т10)', bg: 'bg-amber-950/35',  borderTop: 'border-t-2 border-slate-700/90' },
-      { id: 't10_lan', cls: 'lan', tier: 'Т10', icon: '⚔️', name: 'Непобедимый копейщик (Т10)',  bg: 'bg-amber-950/35',  borderTop: '' },
-      { id: 't10_mrk', cls: 'mrk', tier: 'Т10', icon: '🏹', name: 'Непобедимый стрелок (Т10)',   bg: 'bg-amber-950/35',  borderTop: '' },
+      { id: 't10_inf', cls: 'inf', tier: 'Т10', icon: '🛡️', name: 'Непобедимый пехотинец (Т10)', borderTop: 'border-t-2 border-slate-700/90' },
+      { id: 't10_lan', cls: 'lan', tier: 'Т10', icon: '⚔️', name: 'Непобедимый копейщик (Т10)',  borderTop: '' },
+      { id: 't10_mrk', cls: 'mrk', tier: 'Т10', icon: '🏹', name: 'Непобедимый стрелок (Т10)',   borderTop: '' },
 
-      { id: 't9_inf', cls: 'inf', tier: 'Т9', icon: '🛡️', name: 'Выдающийся пехотинец (Т9)',  bg: 'bg-sky-950/40',     borderTop: 'border-t-2 border-slate-700/90' },
-      { id: 't9_lan', cls: 'lan', tier: 'Т9', icon: '⚔️', name: 'Выдающийся копейщик (Т9)',   bg: 'bg-sky-950/40',     borderTop: '' },
-      { id: 't9_mrk', cls: 'mrk', tier: 'Т9', icon: '🏹', name: 'Выдающийся стрелок (Т9)',    bg: 'bg-sky-950/40',     borderTop: '' },
+      { id: 't9_inf',  cls: 'inf', tier: 'Т9',  icon: '🛡️', name: 'Выдающийся пехотинец (Т9)',  borderTop: 'border-t-2 border-slate-700/90' },
+      { id: 't9_lan',  cls: 'lan', tier: 'Т9',  icon: '⚔️', name: 'Выдающийся копейщик (Т9)',   borderTop: '' },
+      { id: 't9_mrk',  cls: 'mrk', tier: 'Т9',  icon: '🏹', name: 'Выдающийся стрелок (Т9)',    borderTop: '' },
 
-      { id: 't8_inf', cls: 'inf', tier: 'Т8', icon: '🛡️', name: 'Элитный пехотинец (Т8)',     bg: 'bg-yellow-950/30',  borderTop: 'border-t-2 border-slate-700/90' },
-      { id: 't8_lan', cls: 'lan', tier: 'Т8', icon: '⚔️', name: 'Элитный копейщик (Т8)',      bg: 'bg-yellow-950/30',  borderTop: '' },
-      { id: 't8_mrk', cls: 'mrk', tier: 'Т8', icon: '🏹', name: 'Элитный стрелок (Т8)',       bg: 'bg-yellow-950/30',  borderTop: '' },
+      { id: 't8_inf',  cls: 'inf', tier: 'Т8',  icon: '🛡️', name: 'Элитный пехотинец (Т8)',     borderTop: 'border-t-2 border-slate-700/90' },
+      { id: 't8_lan',  cls: 'lan', tier: 'Т8',  icon: '⚔️', name: 'Элитный копейщик (Т8)',      borderTop: '' },
+      { id: 't8_mrk',  cls: 'mrk', tier: 'Т8',  icon: '🏹', name: 'Элитный стрелок (Т8)',       borderTop: '' },
 
-      { id: 't7_inf', cls: 'inf', tier: 'Т7', icon: '🛡️', name: 'Бесстрашный пехотинец (Т7)', bg: 'bg-emerald-950/30', borderTop: 'border-t-2 border-slate-700/90' },
-      { id: 't7_lan', cls: 'lan', tier: 'Т7', icon: '⚔️', name: 'Бесстрашный копейщик (Т7)',  bg: 'bg-emerald-950/30', borderTop: '' },
-      { id: 't7_mrk', cls: 'mrk', tier: 'Т7', icon: '🏹', name: 'Бесстрашный стрелок (Т7)',   bg: 'bg-emerald-950/30', borderTop: '' }
+      { id: 't7_inf',  cls: 'inf', tier: 'Т7',  icon: '🛡️', name: 'Бесстрашный пехотинец (Т7)', borderTop: 'border-t-2 border-slate-700/90' },
+      { id: 't7_lan',  cls: 'lan', tier: 'Т7',  icon: '⚔️', name: 'Бесстрашный копейщик (Т7)',  borderTop: '' },
+      { id: 't7_mrk',  cls: 'mrk', tier: 'Т7',  icon: '🏹', name: 'Бесстрашный стрелок (Т7)',   borderTop: '' },
+
+      { id: 't6_inf',  cls: 'inf', tier: 'Т6',  icon: '🛡️', name: 'Пехотинец (Т6)',             borderTop: 'border-t-2 border-slate-700/90' },
+      { id: 't6_lan',  cls: 'lan', tier: 'Т6',  icon: '⚔️', name: 'Копейщик (Т6)',              borderTop: '' },
+      { id: 't6_mrk',  cls: 'mrk', tier: 'Т6',  icon: '🏹', name: 'Стрелок (Т6)',               borderTop: '' },
+
+      { id: 't5_inf',  cls: 'inf', tier: 'Т5',  icon: '🛡️', name: 'Пехотинец (Т5)',             borderTop: 'border-t-2 border-slate-700/90' },
+      { id: 't5_lan',  cls: 'lan', tier: 'Т5',  icon: '⚔️', name: 'Копейщик (Т5)',              borderTop: '' },
+      { id: 't5_mrk',  cls: 'mrk', tier: 'Т5',  icon: '🏹', name: 'Стрелок (Т5)',               borderTop: '' },
+
+      { id: 't4_inf',  cls: 'inf', tier: 'Т4',  icon: '🛡️', name: 'Пехотинец (Т4)',             borderTop: 'border-t-2 border-slate-700/90' },
+      { id: 't4_lan',  cls: 'lan', tier: 'Т4',  icon: '⚔️', name: 'Копейщик (Т4)',              borderTop: '' },
+      { id: 't4_mrk',  cls: 'mrk', tier: 'Т4',  icon: '🏹', name: 'Стрелок (Т4)',               borderTop: '' },
+
+      { id: 't3_inf',  cls: 'inf', tier: 'Т3',  icon: '🛡️', name: 'Пехотинец (Т3)',             borderTop: 'border-t-2 border-slate-700/90' },
+      { id: 't3_lan',  cls: 'lan', tier: 'Т3',  icon: '⚔️', name: 'Копейщик (Т3)',              borderTop: '' },
+      { id: 't3_mrk',  cls: 'mrk', tier: 'Т3',  icon: '🏹', name: 'Стрелок (Т3)',               borderTop: '' },
+
+      { id: 't2_inf',  cls: 'inf', tier: 'Т2',  icon: '🛡️', name: 'Пехотинец (Т2)',             borderTop: 'border-t-2 border-slate-700/90' },
+      { id: 't2_lan',  cls: 'lan', tier: 'Т2',  icon: '⚔️', name: 'Копейщик (Т2)',              borderTop: '' },
+      { id: 't2_mrk',  cls: 'mrk', tier: 'Т2',  icon: '🏹', name: 'Стрелок (Т2)',               borderTop: '' },
+
+      { id: 't1_inf',  cls: 'inf', tier: 'Т1',  icon: '🛡️', name: 'Пехотинец (Т1)',             borderTop: 'border-t-2 border-slate-700/90' },
+      { id: 't1_lan',  cls: 'lan', tier: 'Т1',  icon: '⚔️', name: 'Копейщик (Т1)',              borderTop: '' },
+      { id: 't1_mrk',  cls: 'mrk', tier: 'Т1',  icon: '🏹', name: 'Стрелок (Т1)',               borderTop: '' }
     ];
 
     function showToast(msg) {
@@ -594,7 +686,7 @@
       return sessionStorage.getItem('harmony_passcode') || localStorage.getItem('harmony_passcode') || '';
     }
 
-    const BEAR_ALL_TIERS = ['К5', 'К4', 'К3', 'К2', 'К1', 'Т10', 'Т9', 'Т8', 'Т7'];
+    const BEAR_ALL_TIERS = ['К5', 'К4', 'К3', 'К2', 'К1', 'Т10', 'Т9', 'Т8', 'Т7', 'Т6', 'Т5', 'Т4', 'Т3', 'Т2', 'Т1'];
     let bearVisibleTiers = new Set(['Т10', 'Т9', 'Т8', 'Т7']);
 
     function renderBearTierFilterBar() {
@@ -610,16 +702,12 @@
       bar.innerHTML = BEAR_ALL_TIERS.map(t => {
         const isOn = bearVisibleTiers.has(t);
         const hasData = filledTiers.has(t);
-        const isCrystal = t.startsWith('К');
-        const activeCls = isCrystal
-          ? 'bg-rose-500/25 border-rose-400/70 text-rose-200 font-bold'
-          : 'bg-sky-500/25 border-sky-400/70 text-sky-200 font-bold';
-        const inactiveCls = 'bg-slate-950 border-slate-700/80 text-slate-400 hover:text-white hover:border-slate-500';
+        const st = BEAR_TIER_STYLES[t] || BEAR_TIER_STYLES['Т1'];
         const dot = hasData ? '<span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 ml-1"></span>' : '';
 
         return `
           <button type="button" onclick="toggleBearTier('${t}')"
-            class="px-2 py-0.5 rounded-md border font-mono text-[10px] transition flex items-center ${isOn ? activeCls : inactiveCls}">
+            class="px-2 py-0.5 rounded-md border font-mono text-[10px] transition flex items-center ${isOn ? st.btnOn : st.btnOff}">
             <span>${t}</span>${dot}
           </button>
         `;
@@ -639,6 +727,7 @@
     function setBearTierGroup(group) {
       if (group === 'all') bearVisibleTiers = new Set(BEAR_ALL_TIERS);
       else if (group === 'crystal') bearVisibleTiers = new Set(['К5', 'К4', 'К3', 'К2', 'К1']);
+      else if (group === 'low') bearVisibleTiers = new Set(['Т6', 'Т5', 'Т4', 'Т3', 'Т2', 'Т1']);
       else bearVisibleTiers = new Set(['Т10', 'Т9', 'Т8', 'Т7']);
       renderBearTierFilterBar();
       recalcBearTroops();
@@ -648,21 +737,24 @@
       const tbody = document.getElementById('bearTroopsTbody');
       if (!tbody) return;
 
-      tbody.innerHTML = BEAR_TROOP_ROWS.map(r => `
-        <tr id="btRow_${r.id}" class="${r.bg} ${r.borderTop} hover:bg-slate-800/45 transition">
+      tbody.innerHTML = BEAR_TROOP_ROWS.map(r => {
+        const st = BEAR_TIER_STYLES[r.tier] || BEAR_TIER_STYLES['Т1'];
+        return `
+        <tr id="btRow_${r.id}" class="${st.row} ${r.borderTop} hover:brightness-125 transition">
           <td class="py-1 px-2">
             <input id="btIn_${r.id}" type="number" min="0" step="1" placeholder="—"
               oninput="recalcBearTroops()"
               class="no-spin w-full bg-slate-950/90 border border-slate-700/80 focus:border-sky-400 rounded-md px-2 py-0.5 text-xs font-mono font-bold text-white placeholder-slate-600 focus:outline-none transition" />
           </td>
-          <td class="py-1 px-2 text-[11px] sm:text-xs font-medium text-slate-100 whitespace-nowrap">
+          <td class="py-1 px-2 text-[11px] sm:text-xs font-semibold ${st.name} whitespace-nowrap">
             <span class="mr-1">${r.icon}</span><span>${r.name}</span>
           </td>
           <td id="btSpec_${r.id}" class="bt-special-col ${bearSpecialEnabled ? '' : 'hidden'} py-1 px-2 text-right font-mono text-xs font-bold text-purple-300">—</td>
           <td id="btOwn_${r.id}" class="py-1 px-2 text-right font-mono text-xs font-bold text-amber-300">—</td>
           <td id="btOther_${r.id}" class="py-1 px-2.5 text-right font-mono text-xs font-bold text-sky-300">—</td>
         </tr>
-      `).join('');
+      `;
+      }).join('');
     }
 
     function updateBearModeButtonsUI() {
@@ -731,6 +823,85 @@
         (sessionCard && Number(sessionCard.marchCap)) || 150000;
       document.getElementById('btSpecialCapInput').value = Math.round(base * (1 + pct / 100));
       recalcBearTroops();
+    }
+
+    function toggleBearSpecialOrder(cls) {
+      const idx = bearSpecialOrder.indexOf(cls);
+      if (idx !== -1) {
+        bearSpecialOrder.splice(idx, 1);
+      } else {
+        bearSpecialOrder.push(cls);
+      }
+      renderBearSpecialOrderUI();
+      recalcBearTroops();
+    }
+
+    function resetBearSpecialOrder() {
+      bearSpecialOrder = [];
+      renderBearSpecialOrderUI();
+      recalcBearTroops();
+    }
+
+    function renderBearSpecialOrderUI() {
+      const meta = {
+        inf: { label: '🛡️ Пехота',    onBtn: 'bg-amber-500/20 border-amber-400 text-amber-100 shadow-md shadow-amber-950/40',       onBadge: 'bg-amber-400 text-slate-950 font-extrabold border-amber-300',     offHover: 'hover:border-amber-400/60' },
+        lan: { label: '⚔️ Копейщики', onBtn: 'bg-sky-500/20 border-sky-400 text-sky-100 shadow-md shadow-sky-950/40',               onBadge: 'bg-sky-400 text-slate-950 font-extrabold border-sky-300',         offHover: 'hover:border-sky-400/60' },
+        mrk: { label: '🏹 Стрелки',   onBtn: 'bg-emerald-500/20 border-emerald-400 text-emerald-100 shadow-md shadow-emerald-950/40', onBadge: 'bg-emerald-400 text-slate-950 font-extrabold border-emerald-300', offHover: 'hover:border-emerald-400/60' }
+      };
+      const rankLabels = ['1 • Макс', '2 • От остатка', '3 • Добор'];
+      const nextStepLabel = rankLabels[bearSpecialOrder.length] || '';
+
+      ['inf', 'lan', 'mrk'].forEach(cls => {
+        const btn = document.getElementById('btSpecOrdBtn_' + cls);
+        const lbl = document.getElementById('btSpecOrdLbl_' + cls);
+        if (!btn || !lbl) return;
+
+        const pos = bearSpecialOrder.indexOf(cls);
+        if (pos !== -1) {
+          btn.className = `px-3 py-2 rounded-xl border text-left transition flex items-center justify-between gap-2 ${meta[cls].onBtn}`;
+          lbl.textContent = rankLabels[pos];
+          lbl.className = `font-mono text-[10px] px-2 py-0.5 rounded-md border ${meta[cls].onBadge}`;
+        } else {
+          btn.className = `px-3 py-2 rounded-xl border text-left transition flex items-center justify-between gap-2 bg-slate-950/85 border-slate-700 ${meta[cls].offHover} text-slate-300`;
+          lbl.textContent = `+ ${nextStepLabel}`;
+          lbl.className = 'font-mono text-[10px] px-2 py-0.5 rounded-md bg-slate-900 border border-slate-700 text-slate-400';
+        }
+      });
+
+      const sumEl = document.getElementById('btSpecialOrderSummary');
+      const resetBtn = document.getElementById('btSpecialOrderResetBtn');
+      if (resetBtn) resetBtn.classList.toggle('hidden', bearSpecialOrder.length === 0);
+
+      if (sumEl) {
+        if (bearSpecialOrder.length === 0) {
+          sumEl.textContent = 'По умолчанию (пропорции / тиры)';
+          sumEl.className = 'font-mono text-[11px] px-2 py-0.5 rounded-lg bg-slate-950/90 border border-slate-700/80 text-slate-400';
+        } else {
+          sumEl.textContent = bearSpecialOrder.map((c, i) => `${i + 1}) ${meta[c].label}`).join('  →  ');
+          sumEl.className = 'font-mono text-[11px] px-2.5 py-0.5 rounded-lg bg-purple-500/20 border border-purple-400/60 text-purple-100 font-bold';
+        }
+      }
+    }
+
+    /**
+     * Заполняет «⭐ Особый марш» строго по очереди кликов (от К5 к Т1):
+     * 1-й класс забирает максимум возможного, 2-й — максимум остатка лимита, 3-й — добор.
+     */
+    function fillBearSpecialByOrder(availMap, resSpec, cap, orderArr) {
+      let remSpec = Math.max(0, Math.floor(cap));
+      for (const cls of orderArr) {
+        if (remSpec <= 0) break;
+        const rows = BEAR_TROOP_ROWS.filter(r => r.cls === cls);
+        for (const r of rows) {
+          if (remSpec <= 0) break;
+          const av = availMap[r.id] || 0;
+          if (av <= 0) continue;
+          const take = Math.min(av, remSpec);
+          resSpec[r.id] += take;
+          availMap[r.id] -= take;
+          remSpec -= take;
+        }
+      }
     }
 
     function setBearCalcMode(nextMode) {
@@ -868,6 +1039,9 @@
         document.getElementById('btMrkPct').value = safeMrk;
 
         if (st.priority) document.getElementById('btPrioritySelect').value = st.priority;
+        if (Array.isArray(st.specialOrder)) {
+          bearSpecialOrder = st.specialOrder.filter(c => ['inf', 'lan', 'mrk'].includes(c));
+        }
         if (Array.isArray(st.visibleTiers) && st.visibleTiers.length > 0) {
           bearVisibleTiers = new Set(st.visibleTiers);
         }
@@ -883,6 +1057,7 @@
       } catch (e) {}
       updateBearModeButtonsUI();
       updateBearSpecialUI();
+      renderBearSpecialOrderUI();
       updateBearPctBadge(false);
       renderBearTierFilterBar();
     }
@@ -1033,45 +1208,57 @@
         if (val > 0) savedCounts[r.id] = val;
       });
 
-      if (bearCalcMode === 'smart') {
-        let specSpace = specialCap;
-        let ownSpace = ownCap;
-        let otherSpace = otherCount > 0 ? otherCap : 0;
+      const useCustomSpecialOrder = bearSpecialEnabled && specialCap > 0 && bearSpecialOrder.length > 0;
 
-        const runPass = (cls, nSpec, nOwn, nOther) => {
-          const st = allocateBearClass3Way(
-            cls, avail, resSpec, resOwn, resOther,
-            Math.min(specSpace, nSpec),
-            Math.min(ownSpace, nOwn),
-            Math.min(otherSpace, nOther),
-            otherCount,
-            priority
-          );
-          specSpace -= st.usedSpec;
-          ownSpace -= st.usedOwn;
-          otherSpace -= st.usedOther;
+      if (bearCalcMode === 'smart') {
+        const runSmartCycle = (sCap, oCap, jCap, jCnt, prio) => {
+          let sSp = sCap;
+          let oSp = oCap;
+          let jSp = jCnt > 0 ? jCap : 0;
+
+          const pass = (cls, nS, nO, nJ) => {
+            const st = allocateBearClass3Way(
+              cls, avail, resSpec, resOwn, resOther,
+              Math.min(sSp, nS),
+              Math.min(oSp, nO),
+              Math.min(jSp, nJ),
+              jCnt,
+              prio
+            );
+            sSp -= st.usedSpec;
+            oSp -= st.usedOwn;
+            jSp -= st.usedOther;
+          };
+
+          if (infPct > 0) pass('inf', Math.floor(sCap * infPct / 100), Math.floor(oCap * infPct / 100), Math.floor(jCap * infPct / 100));
+          if (lanPct > 0) pass('lan', Math.floor(sCap * lanPct / 100), Math.floor(oCap * lanPct / 100), Math.floor(jCap * lanPct / 100));
+          if (mrkPct > 0) pass('mrk', Math.floor(sCap * mrkPct / 100), Math.floor(oCap * mrkPct / 100), Math.floor(jCap * mrkPct / 100));
+
+          if (sSp > 0 || oSp > 0 || jSp > 0) pass('mrk', sSp, oSp, jSp);
+          if (sSp > 0 || oSp > 0 || jSp > 0) pass('lan', sSp, oSp, jSp);
+          if (sSp > 0 || oSp > 0 || jSp > 0) pass('inf', sSp, oSp, jSp);
         };
 
-        // 1. Заполняем ровно заданные пользователем пропорции (Пех%, Коп%, Стр%)
-        if (infPct > 0) {
-          runPass('inf', Math.floor(specialCap * infPct / 100), Math.floor(ownCap * infPct / 100), Math.floor(otherCap * infPct / 100));
+        if (useCustomSpecialOrder) {
+          if (priority === 'own') {
+            // 1) Сначала Свой по его %, 2) затем Особый строго по порядку клика, 3) затем В чужие
+            runSmartCycle(0, ownCap, 0, 0, 'own');
+            fillBearSpecialByOrder(avail, resSpec, specialCap, bearSpecialOrder);
+            if (otherCount > 0) runSmartCycle(0, 0, otherCap, otherCount, 'even');
+          } else {
+            // 1) Сначала Особый строго по порядку клика, 2) затем Свой и В чужие по своим %
+            fillBearSpecialByOrder(avail, resSpec, specialCap, bearSpecialOrder);
+            runSmartCycle(0, ownCap, otherCap, otherCount, priority === 'special' ? 'own' : 'even');
+          }
+        } else {
+          runSmartCycle(specialCap, ownCap, otherCap, otherCount, priority);
         }
-        if (lanPct > 0) {
-          runPass('lan', Math.floor(specialCap * lanPct / 100), Math.floor(ownCap * lanPct / 100), Math.floor(otherCap * lanPct / 100));
-        }
-        if (mrkPct > 0) {
-          runPass('mrk', Math.floor(specialCap * mrkPct / 100), Math.floor(ownCap * mrkPct / 100), Math.floor(otherCap * mrkPct / 100));
-        }
-
-        // 2. Если осталось свободное место (не хватило какого-то рода войск или сумма % < 100%),
-        //    добиваем марши с приоритетом Стрелки → Копейщики → Пехота
-        if (specSpace > 0 || ownSpace > 0 || otherSpace > 0) runPass('mrk', specSpace, ownSpace, otherSpace);
-        if (specSpace > 0 || ownSpace > 0 || otherSpace > 0) runPass('lan', specSpace, ownSpace, otherSpace);
-        if (specSpace > 0 || ownSpace > 0 || otherSpace > 0) runPass('inf', specSpace, ownSpace, otherSpace);
       } else {
-        // Классический режим: если включён «Особый», он сначала забирает лучшие тиры (К5 → Т7) под свой лимит,
+        // Классический режим: Особый забирает войска первым (по порядку клика либо пропорционально высшим тирам),
         // а остаток каждого ряда делится поровну по формуле таблицы на Свой + В чужие
-        if (bearSpecialEnabled && specialCap > 0) {
+        if (useCustomSpecialOrder) {
+          fillBearSpecialByOrder(avail, resSpec, specialCap, bearSpecialOrder);
+        } else if (bearSpecialEnabled && specialCap > 0) {
           let remSpec = specialCap;
           for (const tier of BEAR_ALL_TIERS) {
             if (remSpec <= 0) break;
@@ -1095,7 +1282,6 @@
                 taken += take;
               });
               let diff = remSpec - taken;
-              // Остаток округления отдаём в приоритете Стрелкам → Копейщикам → Пехоте
               for (const prefCls of ['mrk', 'lan', 'inf']) {
                 if (diff <= 0) break;
                 const row = tierRows.find(r => r.cls === prefCls);
@@ -1199,6 +1385,7 @@
           mode,
           calcMode: bearCalcMode,
           specialEnabled: bearSpecialEnabled,
+          specialOrder: bearSpecialOrder,
           ownCap,
           otherCap,
           specialCap,
