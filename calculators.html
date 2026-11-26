@@ -202,15 +202,22 @@
         </div>
       </div>
 
-      <!-- Переключатель режима расчёта -->
-      <div class="flex flex-wrap items-center gap-2 text-xs">
-        <button type="button" id="btModeClassicBtn" onclick="setBearCalcMode('classic')"
-          class="px-3.5 py-2 rounded-xl border font-bold transition flex items-center gap-1.5 bg-sky-600/25 border-sky-400 text-white">
-          <span>📊</span><span>Как в таблице (поровну)</span>
-        </button>
-        <button type="button" id="btModeSmartBtn" onclick="setBearCalcMode('smart')"
-          class="px-3.5 py-2 rounded-xl border font-bold transition flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 border-slate-700 text-slate-300">
-          <span>🎯</span><span>Умный расчёт (Макс. Стрелки и Копья)</span>
+      <!-- Переключатель режима расчёта + кнопка «Особый марш» -->
+      <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div class="flex flex-wrap items-center gap-2">
+          <button type="button" id="btModeClassicBtn" onclick="setBearCalcMode('classic')"
+            class="px-3.5 py-2 rounded-xl border font-bold transition flex items-center gap-1.5 bg-sky-600/25 border-sky-400 text-white">
+            <span>📊</span><span>Как в таблице (поровну)</span>
+          </button>
+          <button type="button" id="btModeSmartBtn" onclick="setBearCalcMode('smart')"
+            class="px-3.5 py-2 rounded-xl border font-bold transition flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 border-slate-700 text-slate-300">
+            <span>🎯</span><span>Умный расчёт (свои %)</span>
+          </button>
+        </div>
+
+        <button type="button" id="btSpecialToggleBtn" onclick="toggleBearSpecialMarch()"
+          class="px-3.5 py-2 rounded-xl border font-bold transition flex items-center gap-1.5 bg-slate-900 hover:bg-purple-950/50 border-slate-700 hover:border-purple-400/60 text-slate-300">
+          <span>⭐</span><span>Особый марш (в топ-рейд)</span>
         </button>
       </div>
 
@@ -230,13 +237,38 @@
           </select>
         </div>
 
-        <div class="flex items-center justify-between gap-3 bg-slate-950/90 border border-slate-800 rounded-xl px-3.5 py-2 md:col-span-2">
-          <label for="bearModeSelect" class="font-semibold text-slate-300 shrink-0">Схема маршей:</label>
-          <select id="bearModeSelect" onchange="recalcBearTroops()"
-            class="w-full sm:w-auto bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-sky-200 font-medium focus:outline-none focus:border-sky-400">
-            <option value="plus1" selected>Как в таблице: 1 свой + N чужих</option>
-            <option value="exact">Всего N маршей: 1 свой + (N − 1) чужих</option>
-          </select>
+        <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-950/90 border border-slate-800 rounded-xl px-3.5 py-2 md:col-span-2">
+          <div class="flex items-center gap-2 flex-wrap">
+            <label for="bearModeSelect" class="font-semibold text-slate-300 shrink-0">Схема маршей:</label>
+            <select id="bearModeSelect" onchange="recalcBearTroops()"
+              class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-sky-200 font-medium focus:outline-none focus:border-sky-400">
+              <option value="plus1" selected>Как в таблице: 1 свой + N чужих</option>
+              <option value="exact">Всего N маршей: 1 свой + (N − 1) чужих</option>
+            </select>
+          </div>
+          <span id="btMarchesBreakdownBadge" class="font-mono text-[11px] px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 text-slate-300">
+            1 свой + 6 чужих
+          </span>
+        </div>
+      </div>
+
+      <!-- Настройка «⭐ Особого марша» (видна при включении в обоих режимах) -->
+      <div id="bearSpecialSettings" class="hidden bg-purple-950/25 border border-purple-500/45 rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="space-y-0.5">
+          <div class="font-extrabold text-purple-200 flex items-center gap-1.5">
+            <span>⭐</span><span>Особый марш (усиленный вход в рейд топ-лидера)</span>
+          </div>
+          <p class="text-[11px] text-slate-400">Забирает лучшие тиры (К5 → Т7) под свой лимит. В «Умном расчёте» можно задать ему 1-й приоритет выше «Своего» сбора.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <label for="btSpecialCapInput" class="font-semibold text-purple-300">Лимит «Особого»:</label>
+          <input id="btSpecialCapInput" type="number" min="1000" step="500" value="150000" oninput="recalcBearTroops()"
+            class="w-32 bg-slate-950 border border-purple-500/50 focus:border-purple-400 rounded-lg px-2.5 py-1.5 font-mono text-sm font-bold text-white focus:outline-none" />
+          <div class="flex items-center gap-1 font-mono text-[10px]">
+            <button type="button" onclick="syncBearSpecialCapToOwn()" class="px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 transition">=Свой</button>
+            <button type="button" onclick="applyBearSpecialBuff(10)" class="px-2 py-1 rounded-lg bg-purple-900/50 hover:bg-purple-800/60 border border-purple-500/40 text-purple-200 transition" title="Лимит «Своего» +10% (бафф)">+10%</button>
+            <button type="button" onclick="applyBearSpecialBuff(20)" class="px-2 py-1 rounded-lg bg-purple-900/50 hover:bg-purple-800/60 border border-purple-500/40 text-purple-200 transition" title="Лимит «Своего» +20% (бафф)">+20%</button>
+          </div>
         </div>
       </div>
 
@@ -244,19 +276,20 @@
       <div id="bearSmartSettings" class="hidden bg-emerald-950/20 border border-emerald-500/35 rounded-2xl p-4 space-y-3.5 text-xs">
         <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-800/80">
           <div class="font-bold text-emerald-300 flex items-center gap-1.5">
-            <i class="fa-solid fa-bullseye"></i>
-            <span>Приоритет: Стрелки → Копейщики → Пехота (срез пехоты до минимума)</span>
+            <i class="fa-solid fa-sliders"></i>
+            <span>Ручная настройка пропорций (максимум ровно 100%)</span>
           </div>
           <div class="flex flex-wrap items-center gap-1.5">
-            <button type="button" onclick="applyBearSmartPreset(10, 10)" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-emerald-900/50 border border-slate-700 hover:border-emerald-400/60 font-mono text-[11px] text-emerald-200 transition">10/10/80</button>
-            <button type="button" onclick="applyBearSmartPreset(10, 20)" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-emerald-900/50 border border-slate-700 hover:border-emerald-400/60 font-mono text-[11px] text-emerald-200 transition">10/20/70</button>
-            <button type="button" onclick="applyBearSmartPreset(5, 15)" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-emerald-900/50 border border-slate-700 hover:border-emerald-400/60 font-mono text-[11px] text-emerald-200 transition">5/15/80</button>
-            <button type="button" onclick="applyBearSmartPreset(10, 0)" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-emerald-900/50 border border-slate-700 hover:border-emerald-400/60 font-mono text-[11px] text-amber-200 transition">10/0/90 (макс. стр)</button>
+            <button type="button" onclick="applyBearSmartPreset(10, 10, 80)" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-emerald-900/50 border border-slate-700 hover:border-emerald-400/60 font-mono text-[11px] text-emerald-200 transition">10/10/80</button>
+            <button type="button" onclick="applyBearSmartPreset(10, 20, 70)" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-emerald-900/50 border border-slate-700 hover:border-emerald-400/60 font-mono text-[11px] text-emerald-200 transition">10/20/70</button>
+            <button type="button" onclick="applyBearSmartPreset(5, 15, 80)" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-emerald-900/50 border border-slate-700 hover:border-emerald-400/60 font-mono text-[11px] text-emerald-200 transition">5/15/80</button>
+            <button type="button" onclick="applyBearSmartPreset(10, 40, 50)" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-sky-900/50 border border-slate-700 hover:border-sky-400/60 font-mono text-[11px] text-sky-200 transition">10/40/50</button>
+            <button type="button" onclick="applyBearSmartPreset(0, 0, 0)" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-rose-950/60 border border-slate-700 hover:border-rose-400/50 font-mono text-[11px] text-slate-300 transition" title="Обнулить проценты, чтобы ввести свои с нуля">0/0/0</button>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3 space-y-1.5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
+          <div class="lg:col-span-3 bg-slate-950/90 border border-slate-800 rounded-xl p-3 space-y-1.5">
             <div class="flex items-center justify-between">
               <label for="btOwnCapInput" class="font-semibold text-amber-300">Лимит «Свой» марш</label>
               <button type="button" onclick="fillBearCapsFromCard()" class="text-[10px] text-sky-400 hover:underline">Из карточки</button>
@@ -265,7 +298,7 @@
               class="w-full bg-slate-900 border border-amber-500/40 focus:border-amber-400 rounded-lg px-2.5 py-1.5 font-mono text-sm font-bold text-white focus:outline-none" />
           </div>
 
-          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3 space-y-1.5">
+          <div class="lg:col-span-3 bg-slate-950/90 border border-slate-800 rounded-xl p-3 space-y-1.5">
             <div class="flex items-center justify-between gap-1">
               <label for="btOtherCapInput" class="font-semibold text-sky-300">Лимит «В чужие»</label>
               <div class="flex gap-1">
@@ -277,25 +310,37 @@
               class="w-full bg-slate-900 border border-sky-500/40 focus:border-sky-400 rounded-lg px-2.5 py-1.5 font-mono text-sm font-bold text-white focus:outline-none" />
           </div>
 
-          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3 space-y-1.5">
-            <div class="flex items-center justify-between">
-              <span class="font-semibold text-slate-300">Мин. Пех / Коп (%)</span>
-              <span id="btMaxMrkHint" class="font-mono text-[10px] text-emerald-300">Стр до 80%</span>
+          <div class="lg:col-span-4 bg-slate-950/90 border border-slate-800 rounded-xl p-3 space-y-1.5">
+            <div class="flex items-center justify-between gap-2">
+              <span class="font-semibold text-slate-300">Пех / Коп / Стр (%)</span>
+              <span id="btPctSumBadge" class="font-mono text-[10px] px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-bold">✓ 100%</span>
             </div>
-            <div class="grid grid-cols-2 gap-2">
-              <input id="btMinInfPct" type="number" min="0" max="50" value="10" oninput="recalcBearTroops()" title="Минимальный % Пехоты"
-                class="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 rounded-lg px-2 py-1.5 font-mono text-sm font-bold text-amber-300 text-center focus:outline-none" />
-              <input id="btMinLanPct" type="number" min="0" max="50" value="10" oninput="recalcBearTroops()" title="Минимальный % Копейщиков"
-                class="w-full bg-slate-900 border border-slate-700 focus:border-sky-400 rounded-lg px-2 py-1.5 font-mono text-sm font-bold text-sky-300 text-center focus:outline-none" />
+            <div class="grid grid-cols-3 gap-1.5">
+              <div class="space-y-0.5">
+                <div class="text-[9px] font-mono text-amber-300 text-center">🛡️ Пех %</div>
+                <input id="btInfPct" type="number" min="0" max="100" value="10" oninput="onBearPctInput('inf')"
+                  class="no-spin w-full bg-slate-900 border border-slate-700 focus:border-amber-400 rounded-lg px-1.5 py-1 font-mono text-sm font-bold text-amber-300 text-center focus:outline-none" />
+              </div>
+              <div class="space-y-0.5">
+                <div class="text-[9px] font-mono text-sky-300 text-center">⚔️ Коп %</div>
+                <input id="btLanPct" type="number" min="0" max="100" value="10" oninput="onBearPctInput('lan')"
+                  class="no-spin w-full bg-slate-900 border border-slate-700 focus:border-sky-400 rounded-lg px-1.5 py-1 font-mono text-sm font-bold text-sky-300 text-center focus:outline-none" />
+              </div>
+              <div class="space-y-0.5">
+                <div class="text-[9px] font-mono text-emerald-300 text-center">🏹 Стр %</div>
+                <input id="btMrkPct" type="number" min="0" max="100" value="80" oninput="onBearPctInput('mrk')"
+                  class="no-spin w-full bg-slate-900 border border-slate-700 focus:border-emerald-400 rounded-lg px-1.5 py-1 font-mono text-sm font-bold text-emerald-300 text-center focus:outline-none" />
+              </div>
             </div>
           </div>
 
-          <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3 space-y-1.5">
-            <label for="btPrioritySelect" class="block font-semibold text-slate-300">Приоритет топ-стрелков</label>
+          <div class="lg:col-span-2 bg-slate-950/90 border border-slate-800 rounded-xl p-3 space-y-1.5">
+            <label for="btPrioritySelect" class="block font-semibold text-slate-300">Приоритет топ-войск</label>
             <select id="btPrioritySelect" onchange="recalcBearTroops()"
-              class="w-full bg-slate-900 border border-slate-700 focus:border-emerald-400 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none">
-              <option value="even" selected>Равномерно по всем маршам</option>
-              <option value="own">Сначала забить «Свой» сбор</option>
+              class="w-full bg-slate-900 border border-slate-700 focus:border-emerald-400 rounded-lg px-2 py-1.5 text-[11px] text-white focus:outline-none">
+              <option value="even" selected>⚖️ Равномерно</option>
+              <option value="own">👑 Сначала «Свой»</option>
+              <option id="btPrioritySpecialOpt" value="special" class="hidden">⭐ Сначала «Особый»</option>
             </select>
           </div>
         </div>
@@ -305,7 +350,7 @@
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
 
         <!-- Левая колонка: фильтр тиров + компактная таблица -->
-        <div class="lg:col-span-7 space-y-2.5 min-w-0">
+        <div class="lg:col-span-8 space-y-2.5 min-w-0">
           <!-- Быстрый выбор отображаемых тиров -->
           <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-900/75 border border-slate-800 rounded-xl px-3 py-2 text-[11px]">
             <div class="flex flex-wrap items-center gap-1">
@@ -325,7 +370,8 @@
                 <tr class="bg-slate-900/95 border-b border-slate-800 text-slate-300 font-mono uppercase text-[10px]">
                   <th class="py-2 px-2.5 w-28 sm:w-32">Всего:</th>
                   <th class="py-2 px-2">Боец</th>
-                  <th class="py-2 px-2.5 text-right w-20 sm:w-24 text-amber-300">Свой</th>
+                  <th class="bt-special-col hidden py-2 px-2 text-right w-20 sm:w-24 text-purple-300">⭐ Особый</th>
+                  <th class="py-2 px-2 text-right w-20 sm:w-24 text-amber-300">Свой</th>
                   <th class="py-2 px-2.5 text-right w-20 sm:w-24 text-sky-300">В чужие</th>
                 </tr>
               </thead>
@@ -334,7 +380,8 @@
                 <tr class="bg-rose-950/45 border-t-2 border-amber-500/40 font-mono text-xs font-extrabold">
                   <td class="py-2 px-2.5 text-white" id="btSumTotal">0</td>
                   <td class="py-2 px-2 text-amber-300 uppercase tracking-wider">ИТОГО:</td>
-                  <td class="py-2 px-2.5 text-right text-amber-300" id="btSumOwn">0</td>
+                  <td class="bt-special-col hidden py-2 px-2 text-right text-purple-300" id="btSumSpecial">0</td>
+                  <td class="py-2 px-2 text-right text-amber-300" id="btSumOwn">0</td>
                   <td class="py-2 px-2.5 text-right text-sky-300" id="btSumOther">0</td>
                 </tr>
               </tfoot>
@@ -343,8 +390,16 @@
         </div>
 
         <!-- Правая колонка: закреплённая сводка по маршам и остатку -->
-        <div class="lg:col-span-5 lg:sticky lg:top-20 space-y-2.5">
+        <div class="lg:col-span-4 lg:sticky lg:top-20 space-y-2.5">
           <div id="btSummaryCards" class="space-y-2.5 text-xs font-mono">
+            <div id="btSpecialSummaryCard" class="hidden bg-purple-950/35 border border-purple-500/50 rounded-2xl p-3.5 space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="text-purple-300 font-bold">⭐ Особый марш</span>
+                <span id="btSpecialSummaryTotal" class="text-sm font-extrabold text-white">0</span>
+              </div>
+              <div id="btSpecialSummarySplit" class="text-[11px] text-purple-100/90 leading-relaxed">—</div>
+            </div>
+
             <div class="bg-slate-900/90 border border-amber-500/35 rounded-2xl p-3.5 space-y-1.5">
               <div class="flex items-center justify-between">
                 <span class="text-amber-300 font-bold">👑 Свой сбор</span>
@@ -484,8 +539,10 @@
     let sessionCard = null;
     let bearOnlyFilled = false;
     let bearCalcMode = 'classic'; // 'classic' | 'smart'
+    let bearSpecialEnabled = false;
     let hasSavedBearState = false;
     let hasSavedBearCaps = false;
+    let pctCapFlashTimer = null;
 
     const BEAR_TROOP_ROWS = [
       { id: 'k5_inf', cls: 'inf', tier: 'К5', icon: '🛡️', name: 'Огненный пехотинец (К5)',    bg: 'bg-rose-950/55',    borderTop: 'border-t-2 border-slate-700/90' },
@@ -601,7 +658,8 @@
           <td class="py-1 px-2 text-[11px] sm:text-xs font-medium text-slate-100 whitespace-nowrap">
             <span class="mr-1">${r.icon}</span><span>${r.name}</span>
           </td>
-          <td id="btOwn_${r.id}" class="py-1 px-2.5 text-right font-mono text-xs font-bold text-amber-300">—</td>
+          <td id="btSpec_${r.id}" class="bt-special-col ${bearSpecialEnabled ? '' : 'hidden'} py-1 px-2 text-right font-mono text-xs font-bold text-purple-300">—</td>
+          <td id="btOwn_${r.id}" class="py-1 px-2 text-right font-mono text-xs font-bold text-amber-300">—</td>
           <td id="btOther_${r.id}" class="py-1 px-2.5 text-right font-mono text-xs font-bold text-sky-300">—</td>
         </tr>
       `).join('');
@@ -628,15 +686,125 @@
       }
     }
 
+    function updateBearSpecialUI() {
+      const btn = document.getElementById('btSpecialToggleBtn');
+      const panel = document.getElementById('bearSpecialSettings');
+      const card = document.getElementById('btSpecialSummaryCard');
+      const prioOpt = document.getElementById('btPrioritySpecialOpt');
+      const prioSel = document.getElementById('btPrioritySelect');
+
+      if (btn) {
+        btn.className = bearSpecialEnabled
+          ? 'px-3.5 py-2 rounded-xl border font-bold transition flex items-center gap-1.5 bg-purple-600/30 border-purple-400 text-purple-100 shadow-lg shadow-purple-950/50'
+          : 'px-3.5 py-2 rounded-xl border font-bold transition flex items-center gap-1.5 bg-slate-900 hover:bg-purple-950/50 border-slate-700 hover:border-purple-400/60 text-slate-300';
+      }
+      if (panel) panel.classList.toggle('hidden', !bearSpecialEnabled);
+      if (card) card.classList.toggle('hidden', !bearSpecialEnabled);
+      if (prioOpt) prioOpt.classList.toggle('hidden', !bearSpecialEnabled);
+      if (!bearSpecialEnabled && prioSel && prioSel.value === 'special') {
+        prioSel.value = 'even';
+      }
+
+      document.querySelectorAll('.bt-special-col').forEach(el => {
+        el.classList.toggle('hidden', !bearSpecialEnabled);
+      });
+    }
+
+    function toggleBearSpecialMarch() {
+      bearSpecialEnabled = !bearSpecialEnabled;
+      const prioSel = document.getElementById('btPrioritySelect');
+      if (bearSpecialEnabled && prioSel) {
+        prioSel.value = 'special';
+      }
+      updateBearSpecialUI();
+      recalcBearTroops();
+      showToast(bearSpecialEnabled ? '⭐ Особый марш включён' : 'Особый марш выключен');
+    }
+
+    function syncBearSpecialCapToOwn() {
+      document.getElementById('btSpecialCapInput').value = document.getElementById('btOwnCapInput').value || 150000;
+      recalcBearTroops();
+    }
+
+    function applyBearSpecialBuff(pct) {
+      const base = Number(document.getElementById('btOwnCapInput').value) ||
+        (sessionCard && Number(sessionCard.marchCap)) || 150000;
+      document.getElementById('btSpecialCapInput').value = Math.round(base * (1 + pct / 100));
+      recalcBearTroops();
+    }
+
     function setBearCalcMode(nextMode) {
       bearCalcMode = nextMode === 'smart' ? 'smart' : 'classic';
       updateBearModeButtonsUI();
       recalcBearTroops();
     }
 
-    function applyBearSmartPreset(minInf, minLan) {
-      document.getElementById('btMinInfPct').value = minInf;
-      document.getElementById('btMinLanPct').value = minLan;
+    function updateBearPctBadge(clamped = false) {
+      const badge = document.getElementById('btPctSumBadge');
+      if (!badge) return;
+      const pInf = Math.max(0, Math.floor(Number(document.getElementById('btInfPct')?.value) || 0));
+      const pLan = Math.max(0, Math.floor(Number(document.getElementById('btLanPct')?.value) || 0));
+      const pMrk = Math.max(0, Math.floor(Number(document.getElementById('btMrkPct')?.value) || 0));
+      const sum = pInf + pLan + pMrk;
+
+      if (clamped) {
+        badge.textContent = '⛔ Макс. 100% (лимит)';
+        badge.className = 'font-mono text-[10px] px-2 py-0.5 rounded-md bg-rose-500/25 border border-rose-400 text-rose-200 font-bold';
+        clearTimeout(pctCapFlashTimer);
+        pctCapFlashTimer = setTimeout(() => updateBearPctBadge(false), 1600);
+        return;
+      }
+
+      if (sum === 100) {
+        badge.textContent = '✓ 100%';
+        badge.className = 'font-mono text-[10px] px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-bold';
+      } else {
+        badge.textContent = `${sum}% • ост. ${100 - sum}%`;
+        badge.className = 'font-mono text-[10px] px-2 py-0.5 rounded-md bg-sky-500/15 border border-sky-500/40 text-sky-200 font-bold';
+      }
+    }
+
+    /**
+     * Жёсткий триггер максимальной вместимости 100%: не даёт сумме Пех + Коп + Стр превысить 100%.
+     */
+    function onBearPctInput(changedKey) {
+      const ids = { inf: 'btInfPct', lan: 'btLanPct', mrk: 'btMrkPct' };
+      const el = document.getElementById(ids[changedKey]);
+      if (!el) return;
+
+      let otherSum = 0;
+      Object.keys(ids).forEach(k => {
+        if (k !== changedKey) {
+          otherSum += Math.max(0, Math.floor(Number(document.getElementById(ids[k])?.value) || 0));
+        }
+      });
+
+      const maxAllowed = Math.max(0, 100 - otherSum);
+      const rawStr = String(el.value || '').trim();
+      let val = rawStr === '' ? 0 : Math.floor(Number(rawStr) || 0);
+      let wasClamped = false;
+
+      if (val < 0) {
+        val = 0;
+        el.value = 0;
+      } else if (val > maxAllowed) {
+        val = maxAllowed;
+        el.value = maxAllowed;
+        wasClamped = true;
+      }
+
+      updateBearPctBadge(wasClamped);
+      recalcBearTroops();
+    }
+
+    function applyBearSmartPreset(inf, lan, mrk) {
+      const iVal = Math.max(0, Math.min(100, inf));
+      const lVal = Math.max(0, Math.min(100 - iVal, lan));
+      const mVal = Math.max(0, Math.min(100 - iVal - lVal, mrk));
+      document.getElementById('btInfPct').value = iVal;
+      document.getElementById('btLanPct').value = lVal;
+      document.getElementById('btMrkPct').value = mVal;
+      updateBearPctBadge(false);
       recalcBearTroops();
     }
 
@@ -648,6 +816,7 @@
       }
       document.getElementById('btOwnCapInput').value = cap;
       document.getElementById('btOtherCapInput').value = cap;
+      document.getElementById('btSpecialCapInput').value = cap;
       recalcBearTroops();
       showToast('Подставлен размер марша из карточки');
     }
@@ -672,6 +841,8 @@
         if (st.marches) document.getElementById('bearMarchesSelect').value = String(st.marches);
         if (st.mode) document.getElementById('bearModeSelect').value = st.mode;
         if (st.calcMode === 'smart' || st.calcMode === 'classic') bearCalcMode = st.calcMode;
+        if (typeof st.specialEnabled === 'boolean') bearSpecialEnabled = st.specialEnabled;
+
         if (st.ownCap && Number(st.ownCap) > 0) {
           document.getElementById('btOwnCapInput').value = Number(st.ownCap);
           hasSavedBearCaps = true;
@@ -680,10 +851,23 @@
           document.getElementById('btOtherCapInput').value = Number(st.otherCap);
           hasSavedBearCaps = true;
         }
-        if (st.minInfPct !== undefined) document.getElementById('btMinInfPct').value = Number(st.minInfPct);
-        if (st.minLanPct !== undefined) document.getElementById('btMinLanPct').value = Number(st.minLanPct);
-        if (st.priority) document.getElementById('btPrioritySelect').value = st.priority;
+        if (st.specialCap && Number(st.specialCap) > 0) {
+          document.getElementById('btSpecialCapInput').value = Number(st.specialCap);
+          hasSavedBearCaps = true;
+        }
 
+        const initInf = st.infPct !== undefined ? Number(st.infPct) : (st.minInfPct !== undefined ? Number(st.minInfPct) : 10);
+        const initLan = st.lanPct !== undefined ? Number(st.lanPct) : (st.minLanPct !== undefined ? Number(st.minLanPct) : 10);
+        const safeInf = Math.max(0, Math.min(100, Math.floor(initInf) || 0));
+        const safeLan = Math.max(0, Math.min(100 - safeInf, Math.floor(initLan) || 0));
+        const rawMrk = st.mrkPct !== undefined ? Number(st.mrkPct) : (100 - safeInf - safeLan);
+        const safeMrk = Math.max(0, Math.min(100 - safeInf - safeLan, Math.floor(rawMrk) || 0));
+
+        document.getElementById('btInfPct').value = safeInf;
+        document.getElementById('btLanPct').value = safeLan;
+        document.getElementById('btMrkPct').value = safeMrk;
+
+        if (st.priority) document.getElementById('btPrioritySelect').value = st.priority;
         if (Array.isArray(st.visibleTiers) && st.visibleTiers.length > 0) {
           bearVisibleTiers = new Set(st.visibleTiers);
         }
@@ -698,84 +882,109 @@
         }
       } catch (e) {}
       updateBearModeButtonsUI();
+      updateBearSpecialUI();
+      updateBearPctBadge(false);
       renderBearTierFilterBar();
     }
 
     /**
-     * Распределяет доступный пул войск одного класса (от высших тиров К5 к низшим Т7)
-     * между 1 «Своим» маршем (потребность needOwn) и K маршами «В чужие» (потребность needOther в каждый).
+     * Распределяет пул одного класса войск (от высших тиров К5 к низшим Т7)
+     * между «Особым» (0 или 1), «Своим» (1) и «В чужие» (otherCount).
      */
-    function allocateBearClassPool(cls, availMap, resOwn, resOther, needOwn, needOther, otherCount, ownFirst) {
+    function allocateBearClass3Way(cls, availMap, resSpec, resOwn, resOther, needSpec, needOwn, needOther, otherCount, priority) {
+      let remSpec = Math.max(0, Math.floor(needSpec));
       let remOwn = Math.max(0, Math.floor(needOwn));
       let remOther = otherCount > 0 ? Math.max(0, Math.floor(needOther)) : 0;
       const rows = BEAR_TROOP_ROWS.filter(r => r.cls === cls);
 
-      if (ownFirst) {
-        // Сначала до отказа заполняем Свой марш лучшими тирами
+      const takeSingle = (targetMap, needAmt) => {
+        let left = needAmt;
         for (const r of rows) {
-          if (remOwn <= 0) break;
+          if (left <= 0) break;
           const av = availMap[r.id] || 0;
           if (av <= 0) continue;
-          const take = Math.min(av, remOwn);
-          resOwn[r.id] += take;
+          const take = Math.min(av, left);
+          targetMap[r.id] += take;
           availMap[r.id] -= take;
-          remOwn -= take;
+          left -= take;
         }
-        // Затем делим оставшиеся лучшие тиры поровну в чужие сборы
-        if (otherCount > 0) {
-          for (const r of rows) {
-            if (remOther <= 0) break;
-            const av = availMap[r.id] || 0;
-            if (av < otherCount) continue;
-            const takeEach = Math.min(remOther, Math.floor(av / otherCount));
-            if (takeEach > 0) {
-              resOther[r.id] += takeEach;
-              availMap[r.id] -= takeEach * otherCount;
-              remOther -= takeEach;
-            }
+        return left;
+      };
+
+      const takeOther = (needEach) => {
+        let left = needEach;
+        if (otherCount <= 0) return left;
+        for (const r of rows) {
+          if (left <= 0) break;
+          const av = availMap[r.id] || 0;
+          if (av < otherCount) continue;
+          const takeEach = Math.min(left, Math.floor(av / otherCount));
+          if (takeEach > 0) {
+            resOther[r.id] += takeEach;
+            availMap[r.id] -= takeEach * otherCount;
+            left -= takeEach;
           }
         }
+        return left;
+      };
+
+      if (priority === 'special') {
+        remSpec = takeSingle(resSpec, remSpec);
+        remOwn = takeSingle(resOwn, remOwn);
+        remOther = takeOther(remOther);
+      } else if (priority === 'own') {
+        remOwn = takeSingle(resOwn, remOwn);
+        remSpec = takeSingle(resSpec, remSpec);
+        remOther = takeOther(remOther);
       } else {
-        // Равномерное распределение каждого тира между Своим и Чужими пропорционально свободному месту
+        // Равномерное распределение каждого тира пропорционально оставшимся потребностям
         for (const r of rows) {
-          const totalNeed = remOwn + otherCount * remOther;
+          const totalNeed = remSpec + remOwn + otherCount * remOther;
           if (totalNeed <= 0) break;
           const av = availMap[r.id] || 0;
           if (av <= 0) continue;
 
           const usable = Math.min(av, totalNeed);
-          let giveOwn = 0;
-          let giveOther = 0;
+          let giveSpec = 0, giveOwn = 0, giveOther = 0;
 
-          if (otherCount === 0 || remOther === 0) {
-            giveOwn = Math.min(remOwn, usable);
-          } else if (usable === totalNeed) {
+          if (usable === totalNeed) {
+            giveSpec = remSpec;
             giveOwn = remOwn;
             giveOther = remOther;
           } else {
-            giveOther = Math.min(remOther, Math.floor(usable * (remOther / totalNeed)));
-            giveOwn = Math.min(remOwn, usable - otherCount * giveOther);
-            let left = usable - giveOwn - otherCount * giveOther;
-            if (left >= otherCount && giveOther < remOther) {
-              const addOther = Math.min(remOther - giveOther, Math.floor(left / otherCount));
-              giveOther += addOther;
-              left -= addOther * otherCount;
+            giveOther = (otherCount > 0 && remOther > 0) ? Math.min(remOther, Math.floor(usable * (remOther / totalNeed))) : 0;
+            giveSpec = remSpec > 0 ? Math.min(remSpec, Math.floor(usable * (remSpec / totalNeed))) : 0;
+            giveOwn = remOwn > 0 ? Math.min(remOwn, Math.floor(usable * (remOwn / totalNeed))) : 0;
+
+            let left = usable - giveSpec - giveOwn - otherCount * giveOther;
+            if (left > 0 && giveSpec < remSpec) {
+              const add = Math.min(remSpec - giveSpec, left);
+              giveSpec += add;
+              left -= add;
             }
             if (left > 0 && giveOwn < remOwn) {
-              const addOwn = Math.min(remOwn - giveOwn, left);
-              giveOwn += addOwn;
+              const add = Math.min(remOwn - giveOwn, left);
+              giveOwn += add;
+              left -= add;
+            }
+            if (otherCount > 0 && left >= otherCount && giveOther < remOther) {
+              const add = Math.min(remOther - giveOther, Math.floor(left / otherCount));
+              giveOther += add;
             }
           }
 
+          resSpec[r.id] += giveSpec;
           resOwn[r.id] += giveOwn;
           resOther[r.id] += giveOther;
-          availMap[r.id] -= (giveOwn + otherCount * giveOther);
+          availMap[r.id] -= (giveSpec + giveOwn + otherCount * giveOther);
+          remSpec -= giveSpec;
           remOwn -= giveOwn;
           remOther -= giveOther;
         }
       }
 
       return {
+        usedSpec: Math.max(0, Math.floor(needSpec)) - remSpec,
         usedOwn: Math.max(0, Math.floor(needOwn)) - remOwn,
         usedOther: (otherCount > 0 ? Math.max(0, Math.floor(needOther)) : 0) - remOther
       };
@@ -784,21 +993,30 @@
     function recalcBearTroops() {
       const marches = Math.max(1, Number(document.getElementById('bearMarchesSelect').value) || 6);
       const mode = document.getElementById('bearModeSelect').value || 'plus1';
-      const otherCount = mode === 'exact' ? Math.max(0, marches - 1) : marches;
+      const specialCount = bearSpecialEnabled ? 1 : 0;
+      const otherCount = mode === 'exact'
+        ? Math.max(0, marches - 1 - specialCount)
+        : Math.max(0, marches - specialCount);
+
+      const breakBadge = document.getElementById('btMarchesBreakdownBadge');
+      if (breakBadge) {
+        breakBadge.textContent = bearSpecialEnabled
+          ? `1 особый + 1 свой + ${otherCount} чужих`
+          : `1 свой + ${otherCount} чужих`;
+      }
 
       const ownCap = Math.max(0, Math.floor(Number(document.getElementById('btOwnCapInput')?.value) || 0));
       const otherCap = Math.max(0, Math.floor(Number(document.getElementById('btOtherCapInput')?.value) || 0));
-      const minInfPct = Math.max(0, Math.min(100, Number(document.getElementById('btMinInfPct')?.value) || 0));
-      const minLanPct = Math.max(0, Math.min(100 - minInfPct, Number(document.getElementById('btMinLanPct')?.value) || 0));
-      const priority = document.getElementById('btPrioritySelect')?.value || 'even';
+      const specialCap = bearSpecialEnabled ? Math.max(0, Math.floor(Number(document.getElementById('btSpecialCapInput')?.value) || 0)) : 0;
 
-      const mrkHintEl = document.getElementById('btMaxMrkHint');
-      if (mrkHintEl) {
-        mrkHintEl.textContent = `Стр до ${Math.max(0, 100 - minInfPct - minLanPct)}%`;
-      }
+      const infPct = Math.max(0, Math.min(100, Math.floor(Number(document.getElementById('btInfPct')?.value) || 0)));
+      const lanPct = Math.max(0, Math.min(100 - infPct, Math.floor(Number(document.getElementById('btLanPct')?.value) || 0)));
+      const mrkPct = Math.max(0, Math.min(100 - infPct - lanPct, Math.floor(Number(document.getElementById('btMrkPct')?.value) || 0)));
+      const priority = document.getElementById('btPrioritySelect')?.value || 'even';
 
       const totals = {};
       const avail = {};
+      const resSpec = {};
       const resOwn = {};
       const resOther = {};
       const savedCounts = {};
@@ -809,71 +1027,113 @@
         const val = raw !== '' ? Math.max(0, Math.floor(Number(raw) || 0)) : 0;
         totals[r.id] = val;
         avail[r.id] = val;
+        resSpec[r.id] = 0;
         resOwn[r.id] = 0;
         resOther[r.id] = 0;
         if (val > 0) savedCounts[r.id] = val;
       });
 
       if (bearCalcMode === 'smart') {
-        const ownFirst = priority === 'own';
+        let specSpace = specialCap;
         let ownSpace = ownCap;
         let otherSpace = otherCount > 0 ? otherCap : 0;
 
-        // 1. Минимальная пехота (с высших тиров)
-        const infFloorOwn = Math.floor(ownCap * (minInfPct / 100));
-        const infFloorOther = Math.floor(otherCap * (minInfPct / 100));
-        const st1 = allocateBearClassPool('inf', avail, resOwn, resOther, Math.min(ownSpace, infFloorOwn), Math.min(otherSpace, infFloorOther), otherCount, ownFirst);
-        ownSpace -= st1.usedOwn;
-        otherSpace -= st1.usedOther;
+        const runPass = (cls, nSpec, nOwn, nOther) => {
+          const st = allocateBearClass3Way(
+            cls, avail, resSpec, resOwn, resOther,
+            Math.min(specSpace, nSpec),
+            Math.min(ownSpace, nOwn),
+            Math.min(otherSpace, nOther),
+            otherCount,
+            priority
+          );
+          specSpace -= st.usedSpec;
+          ownSpace -= st.usedOwn;
+          otherSpace -= st.usedOther;
+        };
 
-        // 2. Минимальные копейщики (если задан порог > 0)
-        if (minLanPct > 0) {
-          const lanFloorOwn = Math.floor(ownCap * (minLanPct / 100));
-          const lanFloorOther = Math.floor(otherCap * (minLanPct / 100));
-          const st2 = allocateBearClassPool('lan', avail, resOwn, resOther, Math.min(ownSpace, lanFloorOwn), Math.min(otherSpace, lanFloorOther), otherCount, ownFirst);
-          ownSpace -= st2.usedOwn;
-          otherSpace -= st2.usedOther;
+        // 1. Заполняем ровно заданные пользователем пропорции (Пех%, Коп%, Стр%)
+        if (infPct > 0) {
+          runPass('inf', Math.floor(specialCap * infPct / 100), Math.floor(ownCap * infPct / 100), Math.floor(otherCap * infPct / 100));
+        }
+        if (lanPct > 0) {
+          runPass('lan', Math.floor(specialCap * lanPct / 100), Math.floor(ownCap * lanPct / 100), Math.floor(otherCap * lanPct / 100));
+        }
+        if (mrkPct > 0) {
+          runPass('mrk', Math.floor(specialCap * mrkPct / 100), Math.floor(ownCap * mrkPct / 100), Math.floor(otherCap * mrkPct / 100));
         }
 
-        // 3. Максимум СТРЕЛКОВ во всё свободное место
-        const st3 = allocateBearClassPool('mrk', avail, resOwn, resOther, ownSpace, otherSpace, otherCount, ownFirst);
-        ownSpace -= st3.usedOwn;
-        otherSpace -= st3.usedOther;
-
-        // 4. Остаток свободного места забиваем КОПЕЙЩИКАМИ
-        const st4 = allocateBearClassPool('lan', avail, resOwn, resOther, ownSpace, otherSpace, otherCount, ownFirst);
-        ownSpace -= st4.usedOwn;
-        otherSpace -= st4.usedOther;
-
-        // 5. Если всё ещё есть пустое место в марше — добираем ПЕХОТОЙ
-        if (ownSpace > 0 || otherSpace > 0) {
-          allocateBearClassPool('inf', avail, resOwn, resOther, ownSpace, otherSpace, otherCount, ownFirst);
-        }
+        // 2. Если осталось свободное место (не хватило какого-то рода войск или сумма % < 100%),
+        //    добиваем марши с приоритетом Стрелки → Копейщики → Пехота
+        if (specSpace > 0 || ownSpace > 0 || otherSpace > 0) runPass('mrk', specSpace, ownSpace, otherSpace);
+        if (specSpace > 0 || ownSpace > 0 || otherSpace > 0) runPass('lan', specSpace, ownSpace, otherSpace);
+        if (specSpace > 0 || ownSpace > 0 || otherSpace > 0) runPass('inf', specSpace, ownSpace, otherSpace);
       } else {
-        // Классический режим 1-в-1 из таблицы
+        // Классический режим: если включён «Особый», он сначала забирает лучшие тиры (К5 → Т7) под свой лимит,
+        // а остаток каждого ряда делится поровну по формуле таблицы на Свой + В чужие
+        if (bearSpecialEnabled && specialCap > 0) {
+          let remSpec = specialCap;
+          for (const tier of BEAR_ALL_TIERS) {
+            if (remSpec <= 0) break;
+            const tierRows = BEAR_TROOP_ROWS.filter(r => r.tier === tier);
+            const tierSum = tierRows.reduce((acc, r) => acc + (avail[r.id] || 0), 0);
+            if (tierSum <= 0) continue;
+
+            if (tierSum <= remSpec) {
+              tierRows.forEach(r => {
+                resSpec[r.id] = avail[r.id];
+                remSpec -= avail[r.id];
+                avail[r.id] = 0;
+              });
+            } else {
+              const ratio = remSpec / tierSum;
+              let taken = 0;
+              tierRows.forEach(r => {
+                const take = Math.min(avail[r.id], Math.floor(avail[r.id] * ratio));
+                resSpec[r.id] += take;
+                avail[r.id] -= take;
+                taken += take;
+              });
+              let diff = remSpec - taken;
+              // Остаток округления отдаём в приоритете Стрелкам → Копейщикам → Пехоте
+              for (const prefCls of ['mrk', 'lan', 'inf']) {
+                if (diff <= 0) break;
+                const row = tierRows.find(r => r.cls === prefCls);
+                if (row && avail[row.id] > 0) {
+                  const add = Math.min(avail[row.id], diff);
+                  resSpec[row.id] += add;
+                  avail[row.id] -= add;
+                  diff -= add;
+                }
+              }
+              remSpec = 0;
+            }
+          }
+        }
+
         BEAR_TROOP_ROWS.forEach(r => {
-          const total = totals[r.id];
-          if (total <= 0) return;
+          const rem = avail[r.id];
+          if (rem <= 0) return;
           if (otherCount === 0) {
             resOther[r.id] = 0;
-            resOwn[r.id] = total;
+            resOwn[r.id] = rem;
           } else {
-            const otherVal = Math.floor(total / (otherCount + 1));
+            const otherVal = Math.floor(rem / (otherCount + 1));
             resOther[r.id] = otherVal;
-            resOwn[r.id] = total - (otherCount * otherVal);
+            resOwn[r.id] = rem - (otherCount * otherVal);
           }
         });
       }
 
-      let sumTotal = 0;
-      let sumOwn = 0;
-      let sumOther = 0;
+      let sumTotal = 0, sumSpec = 0, sumOwn = 0, sumOther = 0;
+      const specByCls = { inf: 0, lan: 0, mrk: 0 };
       const ownByCls = { inf: 0, lan: 0, mrk: 0 };
       const otherByCls = { inf: 0, lan: 0, mrk: 0 };
       const leftByCls = { inf: 0, lan: 0, mrk: 0 };
 
       BEAR_TROOP_ROWS.forEach(r => {
         const inp = document.getElementById('btIn_' + r.id);
+        const specEl = document.getElementById('btSpec_' + r.id);
         const ownEl = document.getElementById('btOwn_' + r.id);
         const otherEl = document.getElementById('btOther_' + r.id);
         const rowEl = document.getElementById('btRow_' + r.id);
@@ -881,17 +1141,25 @@
 
         const total = totals[r.id];
         if (total > 0) {
+          const sv = bearSpecialEnabled ? resSpec[r.id] : 0;
           const ov = resOwn[r.id];
           const jv = resOther[r.id];
-          const leftover = Math.max(0, total - ov - otherCount * jv);
+          const leftover = Math.max(0, total - sv - ov - otherCount * jv);
 
           sumTotal += total;
+          sumSpec += sv;
           sumOwn += ov;
           sumOther += jv;
+
+          specByCls[r.cls] += sv;
           ownByCls[r.cls] += ov;
           otherByCls[r.cls] += jv;
           leftByCls[r.cls] += leftover;
 
+          if (specEl) {
+            specEl.textContent = sv > 0 ? sv.toLocaleString('ru-RU') : '0';
+            specEl.classList.toggle('opacity-40', sv === 0);
+          }
           ownEl.textContent = ov > 0 ? ov.toLocaleString('ru-RU') : '0';
           otherEl.textContent = jv > 0 ? jv.toLocaleString('ru-RU') : '0';
           ownEl.classList.toggle('opacity-40', ov === 0);
@@ -901,6 +1169,10 @@
           inp.classList.remove('border-slate-700/80');
           rowEl.classList.remove('hidden');
         } else {
+          if (specEl) {
+            specEl.textContent = '—';
+            specEl.classList.remove('opacity-40');
+          }
           ownEl.textContent = '—';
           otherEl.textContent = '—';
           ownEl.classList.remove('opacity-40');
@@ -912,11 +1184,13 @@
       });
 
       document.getElementById('btSumTotal').textContent = sumTotal.toLocaleString('ru-RU');
+      const sumSpecEl = document.getElementById('btSumSpecial');
+      if (sumSpecEl) sumSpecEl.textContent = sumSpec.toLocaleString('ru-RU');
       document.getElementById('btSumOwn').textContent = sumOwn.toLocaleString('ru-RU');
       document.getElementById('btSumOther').textContent = sumOther.toLocaleString('ru-RU');
 
       renderBearTierFilterBar();
-      updateBearSummaryCards(sumTotal, sumOwn, sumOther, ownByCls, otherByCls, leftByCls, otherCount);
+      updateBearSummaryCards(sumTotal, sumSpec, sumOwn, sumOther, specByCls, ownByCls, otherByCls, leftByCls, otherCount);
       updateBearCapHint(sumOwn, sumOther);
 
       try {
@@ -924,10 +1198,13 @@
           marches,
           mode,
           calcMode: bearCalcMode,
+          specialEnabled: bearSpecialEnabled,
           ownCap,
           otherCap,
-          minInfPct,
-          minLanPct,
+          specialCap,
+          infPct,
+          lanPct,
+          mrkPct,
           priority,
           visibleTiers: Array.from(bearVisibleTiers),
           counts: savedCounts
@@ -943,9 +1220,14 @@
       return `🛡️ ${pInf}% (${clsObj.inf.toLocaleString('ru-RU')}) • ⚔️ ${pLan}% (${clsObj.lan.toLocaleString('ru-RU')}) • 🏹 ${pMrk}% (${clsObj.mrk.toLocaleString('ru-RU')})`;
     }
 
-    function updateBearSummaryCards(sumTotal, sumOwn, sumOther, ownByCls, otherByCls, leftByCls, otherCount) {
+    function updateBearSummaryCards(sumTotal, sumSpec, sumOwn, sumOther, specByCls, ownByCls, otherByCls, leftByCls, otherCount) {
       const box = document.getElementById('btSummaryCards');
       if (!box) return;
+
+      if (bearSpecialEnabled) {
+        document.getElementById('btSpecialSummaryTotal').textContent = sumSpec.toLocaleString('ru-RU');
+        document.getElementById('btSpecialSummarySplit').textContent = formatBearSplitLine(specByCls, sumSpec);
+      }
 
       document.getElementById('btOwnSummaryTotal').textContent = sumOwn.toLocaleString('ru-RU');
       document.getElementById('btOwnSummarySplit').textContent = formatBearSplitLine(ownByCls, sumOwn);
@@ -954,7 +1236,7 @@
       document.getElementById('btOtherSummaryTotal').textContent = sumOther.toLocaleString('ru-RU');
       document.getElementById('btOtherSummarySplit').textContent = otherCount > 0
         ? formatBearSplitLine(otherByCls, sumOther)
-        : 'Нет маршей в чужие сборы';
+        : 'Нет обычных маршей в чужие сборы';
 
       const leftTotal = leftByCls.inf + leftByCls.lan + leftByCls.mrk;
       document.getElementById('btLeftoverTotal').textContent = leftTotal.toLocaleString('ru-RU');
@@ -979,11 +1261,11 @@
 
       hint.classList.remove('hidden');
       if (sumOwn <= myMarch && sumOther <= myMarch) {
-        hint.className = 'rounded-xl px-3.5 py-2 text-xs font-mono border bg-emerald-950/40 border-emerald-500/40 text-emerald-200';
+        hint.className = 'rounded-2xl px-3.5 py-2.5 text-[11px] font-mono leading-relaxed border bg-emerald-950/40 border-emerald-500/40 text-emerald-200';
         hint.textContent = `✓ Отряды помещаются в ваш марш (${myMarch.toLocaleString('ru-RU')}).`;
       } else {
-        hint.className = 'rounded-xl px-3.5 py-2 text-xs font-mono border bg-amber-950/45 border-amber-500/45 text-amber-200';
-        hint.textContent = `⚠️ Отряд превышает ваш марш (${myMarch.toLocaleString('ru-RU')}). Переключитесь на «🎯 Умный расчёт», чтобы автоматически срезать лишнюю пехоту и отдать максимум места стрелкам и копейщикам.`;
+        hint.className = 'rounded-2xl px-3.5 py-2.5 text-[11px] font-mono leading-relaxed border bg-amber-950/45 border-amber-500/45 text-amber-200';
+        hint.textContent = `⚠️ Отряд превышает ваш марш (${myMarch.toLocaleString('ru-RU')}). Переключитесь на «🎯 Умный расчёт», чтобы задать точные % и лимиты.`;
       }
     }
 
@@ -1016,8 +1298,8 @@
 
     function copyBearTroopsCalc() {
       const marches = document.getElementById('bearMarchesSelect').value;
-      const modeTitle = bearCalcMode === 'smart' ? 'Умный расчёт — макс. урон' : 'Поровну';
-      const lines = [`🐻 Расчёт войск на Медведя (${modeTitle}, маршей: ${marches}):`];
+      const modeTitle = bearCalcMode === 'smart' ? 'Умный расчёт' : 'Поровну';
+      const lines = [`🐻 Расчёт войск на Медведя (${modeTitle}, ${document.getElementById('btMarchesBreakdownBadge').textContent}):`];
       let hasAny = false;
 
       BEAR_TROOP_ROWS.forEach(r => {
@@ -1027,7 +1309,12 @@
           hasAny = true;
           const ownTxt = document.getElementById('btOwn_' + r.id).textContent;
           const otherTxt = document.getElementById('btOther_' + r.id).textContent;
-          lines.push(`• ${r.name}: Свой ${ownTxt} | В чужие ${otherTxt}`);
+          if (bearSpecialEnabled) {
+            const specTxt = document.getElementById('btSpec_' + r.id).textContent;
+            lines.push(`• ${r.name}: ⭐ Особый ${specTxt} | Свой ${ownTxt} | В чужие ${otherTxt}`);
+          } else {
+            lines.push(`• ${r.name}: Свой ${ownTxt} | В чужие ${otherTxt}`);
+          }
         }
       });
 
@@ -1036,8 +1323,11 @@
         return;
       }
 
-      lines.push(`ИТОГО Свой: ${document.getElementById('btSumOwn').textContent} (${document.getElementById('btOwnSummarySplit').textContent})`);
-      lines.push(`ИТОГО В чужие (${document.getElementById('btOtherMultLabel').textContent}): ${document.getElementById('btSumOther').textContent} (${document.getElementById('btOtherSummarySplit').textContent})`);
+      if (bearSpecialEnabled) {
+        lines.push(`⭐ Особый: ${document.getElementById('btSumSpecial').textContent} (${document.getElementById('btSpecialSummarySplit').textContent})`);
+      }
+      lines.push(`👑 Свой: ${document.getElementById('btSumOwn').textContent} (${document.getElementById('btOwnSummarySplit').textContent})`);
+      lines.push(`🤝 В чужие (${document.getElementById('btOtherMultLabel').textContent}): ${document.getElementById('btSumOther').textContent} (${document.getElementById('btOtherSummarySplit').textContent})`);
       navigator.clipboard.writeText(lines.join('\n')).then(() => showToast('Расчёт на Медведя скопирован!'));
     }
 
@@ -1068,6 +1358,7 @@
         if (!hasSavedBearCaps) {
           document.getElementById('btOwnCapInput').value = Number(sessionCard.marchCap);
           document.getElementById('btOtherCapInput').value = Number(sessionCard.marchCap);
+          document.getElementById('btSpecialCapInput').value = Number(sessionCard.marchCap);
         }
       }
 
