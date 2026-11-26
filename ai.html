@@ -333,10 +333,10 @@
 
     function escapeHtml(str) {
       return String(str || '')
-        .replace(/&/g, '&')
-        .replace(/</g, '<')
-        .replace(/>/g, '>')
-        .replace(/"/g, '"');
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
     }
 
     function countConfiguredHeroes(card) {
@@ -836,10 +836,15 @@
       currentCard = data.myCard || null;
 
       document.getElementById('userInfoLine').textContent = `${currentUser.nick} (${currentUser.alliance || 'Основа'} • ${currentUser.role || 'Боец'})`;
-      updateLimitBadge((currentUser.isOfficer || currentUser.isOwner) ? '∞' : '10');
+      const initLimit = (data.aiRemaining !== undefined)
+        ? data.aiRemaining
+        : ((currentUser.isOfficer || currentUser.isOwner) ? '∞' : '10');
+      updateLimitBadge(initLimit);
       updateProfileStatus();
 
-      if (detectedServerGen) {
+      if (data.detectedGen) {
+        updateGenBadge(data.detectedGen);
+      } else if (detectedServerGen) {
         updateGenBadge(detectedServerGen);
       }
 
